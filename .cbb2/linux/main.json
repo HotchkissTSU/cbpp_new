@@ -1,0 +1,82 @@
+{
+	"name":"CB++ main project file",
+
+	"base":{
+        "compiler" : "g++",
+        "from_obj" : 0,
+        "dynamic" : ["lib"],
+        "static" : ["lib"],
+        "link_static":[],
+		"link_dynamic":[],
+        "comp_params":"-std=c++17 -fPIC",
+		"link_params":"",
+        "out_libfile":"lib",
+        "include":["src", "src/cbpp"],
+        "obj":".obj",
+        "out":""
+	},
+
+	"targets":{
+		"cbep":{
+			"type" : "EXE",
+			"out":"game",
+            "link_static" : ["cbpp", "z", "GLX", "glfw3"],
+            "static" : ["game/bin"],
+            "link_params" : "-Wl,-rpath=./bin",
+            "comp_params":"-std=c++17 -O2",
+			"src":["src/cbep/*.cpp"]
+        },
+        
+        "cbpp":{
+            "type" : "OBJ",
+            "include" : ["src/cbpp/include", "src"],
+            "obj":".obj/cbpp",
+            "src":["src/cbpp/*.cpp", "src/cbpp/entity/*.cpp"]
+        },
+
+        "yyjson" : {
+            "compiler" : "gcc",
+            "type" : "OBJ",
+            "obj":".obj/yyjson",
+            "src":["src/yyjson/*.c"],
+            "include":["src/yyjson"],
+            "comp_params":"-fPIC -O2"
+        },
+
+        "libz" : {
+            "type" : "DLL",
+            "compiler" : "gcc",
+            "comp_params" : "-D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -O2 -fPIC",
+            "src" : ["src/zlib/*.c"],
+            "obj" : ".obj",
+            "include" : "src/zlib",
+            "out" : "game/bin"
+        },
+
+        "cdf" : {
+            "compiler":"gcc",
+            "type" : "OBJ",
+            "obj":".obj",
+            "src":["src/cdf/*.c"],
+            "include":["src/cdf", "src/zlib"],
+            "comp_params":"-fPIC -O2 -DCDF_USE_ZLIB"
+        },
+
+        "gl":{
+            "type" : "OBJ",
+            "compiler" : "gcc",
+            "comp_params" : "-O2 -fPIC",
+            "include" : [ "src/gl" ],
+            "src" : ["src/gl/gl40.c"],
+            "obj" : ".obj/gl"
+        },
+
+        "libcbpp" : {
+            "type" : "DLL",
+            "from_obj" : 1,
+            "out" : "game/bin",
+            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/yyjson/*.o", ".obj/*.o"],
+            "link_static" : ["z"]
+        }
+	}
+}

@@ -1,0 +1,10 @@
+{
+    "paths" : {
+        "root"      :   "assets",       // The root directory of this game. All other search paths are relative to it
+        "sprite"    :   ["sprites"],
+        "locale"    :   ["locale"],
+        "audio"     :   ["audio"],
+        "map"       :   ["maps"],
+        "model"     :   ["models"]
+    }
+}

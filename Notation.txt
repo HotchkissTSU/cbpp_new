@@ -1,0 +1,40 @@
+			CB++ NAMING GUIDELINES
+
+Enumeration naming:
+	enum EMyEnumeration {
+		EMyEnumeration_Value_1,
+		EMyEnumeration_Value_2,
+		...
+	};
+
+Interface classes` names are prefixed with a capital "I".
+
+Big prefixes:
+	s_*	-	A static variable
+	g_*	-	A global variable
+			(has a priority over s_*)
+
+	t_*	-	A non-typename template argument
+			(like "template<int t_iArg> class ...")
+
+	i_*	-	GLSL interface block
+	u_*	-	GLSL uniform variable
+	a_*	-	GLSL vertex attributes
+
+Prefixes:
+	i	-	Any integer
+	f	-	Any floating-point value
+	v	-	A geometrical vector
+	p	-	Any pointer
+	fp	-	A function pointer
+	a	-	A static array
+	s	-	A string / char* array
+	c	-	CDF API objects
+	j	-	JSON API objects
+	b	-	A boolean value
+	d	-	Any key-value like container
+
+Entity classes naming:
+    base_*  -   Baseclass entities for others to inherit from
+    prop_*  -   Interactive thingies in the map
+    dev_*   -   Developer map entities like scripts or controllers

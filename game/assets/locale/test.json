@@ -1,0 +1,13 @@
+{
+    "pretty_name" : "CBPP test locale",
+    "entries" : {
+        "entity" : {
+            "CPointEntity" : {
+                "position" : "Позиция",
+                "position_desc" : "Местоположение объекта в мире",
+                "angle" : "Угол",
+                "angle_desc" : "Поворот объекта"
+            }
+        }
+    }
+}
