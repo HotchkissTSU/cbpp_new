@@ -17,7 +17,7 @@ namespace cbpp {
         Vec2f m_vPos;
         float m_fAngle;
 
-        CPointEntity* m_pParent = NULL;     // Kinda obvious
+        CPointEntity* m_pParent = NULL;
         CArray<CPointEntity*> m_aChildren;
 
         protected:
@@ -40,6 +40,7 @@ namespace cbpp {
         
             virtual void Think() = 0;
             virtual void Render() = 0;
+            virtual void NetSync() = 0;
 
             CPointEntity();
 

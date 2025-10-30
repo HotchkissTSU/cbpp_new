@@ -24,7 +24,8 @@
             "static" : ["game/bin"],
             "link_params" : "-Wl,-rpath=./bin",
             "comp_params":"-std=c++17 -O2",
-			"src":["src/cbep/*.cpp"]
+			"src":["src/cbep/*.cpp"],
+            "obj":".obj/cbep"
         },
         
         "cbpp":{
@@ -62,13 +63,13 @@
             "comp_params":"-fPIC -O2 -DCDF_USE_ZLIB"
         },
 
-        "gl":{
+        "enet":{
             "type" : "OBJ",
             "compiler" : "gcc",
             "comp_params" : "-O2 -fPIC",
-            "include" : [ "src/gl" ],
-            "src" : ["src/gl/gl40.c"],
-            "obj" : ".obj/gl"
+            "include" : [ "src" ],
+            "src" : ["src/enet/enet_impl.c"],
+            "obj" : ".obj/cbpp"
         },
 
         "libcbpp" : {
