@@ -29,8 +29,7 @@ namespace cbpp {
                 CbArrayPropertyEx(m_vPos,   "vPosition", 
                                             "#entity.CPointEntity.position", 
                                             "#entity.CPointEntity.position_desc", 
-                                            EGenericType::Float, 
-                                            2);
+                                            EGenericType::Float, 2);
 
                 CbPropertyEx(m_fAngle,      "fAngle", 
                                             "#entity.CPointEntity.angle", 

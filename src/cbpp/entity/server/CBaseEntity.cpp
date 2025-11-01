@@ -85,6 +85,10 @@ namespace cbpp {
         return "base";
     }
 
+    bool CBaseEntity::IsAbstract() const {
+        return true;
+    }
+
     CBaseEntity::~CBaseEntity() {
         delete m_pFirstProp;
     }

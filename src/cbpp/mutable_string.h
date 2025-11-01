@@ -33,6 +33,8 @@ namespace cbpp {
             size_t LengthUpdate();
 
             CString& operator=(const CString& Other);
+            CString& operator=(const char* sOther);
+
             CString& operator+=(const CString& Other);
             CString& operator+=(char iOther);
 

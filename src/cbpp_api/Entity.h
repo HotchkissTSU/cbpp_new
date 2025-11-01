@@ -38,14 +38,14 @@
 
     CbProperties { CbProperty(...), CbProperty(...), ... }
 */
-#define CbProperties virtual const char* Class() const; virtual void ConstructProps()
+#define CbProperties virtual const char* Class() const; virtual bool IsAbstract() const; virtual void ConstructProps()
 
 /*
     Declare that this entity class has no own properties
     
     Expands to CbProperties() {}
 */
-#define CbNoProperties virtual const char* Class() const; virtual void ConstructProps() {}
+#define CbNoProperties virtual const char* Class() const; virtual bool IsAbstract() const; virtual void ConstructProps() {}
 
 /*
     Declare a property
@@ -97,13 +97,17 @@
 #define CbRegisterEntity(cpp_class, classname)                                                                                  \
     cbpp::CBaseEntity* __entfact_##cpp_class() { cpp_class* eNew = cbpp::New<cpp_class>(); return eNew; }                       \
     static cbpp::CEntityRegistrator g_hEntityReg_##cpp_class(classname, __entfact_##cpp_class);                                 \
-    const char* cpp_class::Class() const { return classname; }
+    const char* cpp_class::Class() const { return classname; }                                                                  \
+    bool cpp_class::IsAbstract() const { return false; }
 
 // Register an abstract entity - it cannot be created via the default engine call and instead is used as a basis for other entities
-#define CbAbstractEntity(cpp_class, classname) const char* cpp_class::Class() const { return classname; }
+#define CbAbstractEntity(cpp_class, classname)                                                                                  \
+    const char* cpp_class::Class() const { return classname; }                                                                  \
+    bool cpp_class::IsAbstract() const { return true; }
 
 namespace cbpp {
     typedef uint32_t eid_t;
+    
 
     /*
         Generic type marks for UI input
@@ -154,6 +158,8 @@ namespace cbpp {
 
         public:
             CbNoProperties;
+
+            virtual bool IsAbstract() const;
 
             virtual void Think() = 0;
             virtual void Render() = 0;
