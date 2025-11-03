@@ -4,6 +4,7 @@
 
 #include "cbpp/cbdef.h"
 #include "cbpp/network.h"
+#include "cbpp_api/Entity.h"
 
 void InitGLFW() {
     CBPP_ASSERT(glfwInit() == 0, "Failed to initialize GLFW");
@@ -15,6 +16,8 @@ CbNetMessage(cbpp_test) {
 
 int main(int argc, char** argv) {
     InitGLFW();
+
+    cbpp::CBaseEntity* pEntity = cbpp::CreateEntityClass("test_entity");
 
     return EXIT_SUCCESS;
 }

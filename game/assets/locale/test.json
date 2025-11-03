@@ -3,6 +3,8 @@
     "entries" : {
         "entity" : {
             "CPointEntity" : {
+                "about" : "@file_path_relative_to_locale_search_group.txt",
+
                 "position" : "Позиция",
                 "position_desc" : "Местоположение объекта в мире",
                 "angle" : "Угол",

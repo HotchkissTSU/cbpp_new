@@ -38,14 +38,16 @@
 
     CbProperties { CbProperty(...), CbProperty(...), ... }
 */
-#define CbProperties virtual const char* Class() const; virtual bool IsAbstract() const; virtual void ConstructProps()
+#define CbProperties virtual const char* Class() const; virtual bool IsAbstract() const override; virtual void ConstructProps()
 
 /*
     Declare that this entity class has no own properties
     
     Expands to CbProperties() {}
 */
-#define CbNoProperties virtual const char* Class() const; virtual bool IsAbstract() const; virtual void ConstructProps() {}
+#define CbNoProperties virtual const char* Class() const; virtual bool IsAbstract() const override; virtual void ConstructProps() {}
+
+#define _CbNoPropertiesBase virtual const char* Class() const; virtual bool IsAbstract() const; virtual void ConstructProps() {}
 
 /*
     Declare a property
@@ -67,7 +69,7 @@
     name - internal property name
     pname - "pretty" name, accepts locale keys
     desc - description, accepts locale keys
-    type - general type, or GType_Incompat if something uncommon 
+    type - general type, or EGenericType::Incompat if something uncommon 
 */
 #define CbArrayPropertyEx(val, name, pname, desc, type, length) cbpp::New<cbpp::CProperty<decltype(val)>>(&val, this, name, pname, desc, type, length)
 
@@ -78,7 +80,7 @@
     val - name of the class`es field to describe
     name - internal property name
     pname - "pretty" name or locale key
-    type - general type, or GType_Incompat if something uncommon 
+    type - general type, or EGenericType::Incompat if something uncommon 
 */
 #define CbArrayProperty(val, name, pname, type, length) cbpp::New<cbpp::CProperty<decltype(val)>>(&val, this, name, pname, CBPP_DEFAULT_ENTITY_DESC, type, length)
 
@@ -89,7 +91,7 @@
     name - internal property name
     pname - "pretty" name, accepts locale keys
     desc - description, accepts locale keys
-    type - general type, or GType_Incompat if something uncommon 
+    type - general type, or EGenericType::Incompat if something uncommon 
 */
 #define CbPropertyEx(val, name, pname, desc, type) new cbpp::CProperty<decltype(val)>(&val, this, name, pname, desc, type, 1)
 
@@ -107,7 +109,6 @@
 
 namespace cbpp {
     typedef uint32_t eid_t;
-    
 
     /*
         Generic type marks for UI input
@@ -157,9 +158,7 @@ namespace cbpp {
             void SetUID(eid_t iNewID);
 
         public:
-            CbNoProperties;
-
-            virtual bool IsAbstract() const;
+            _CbNoPropertiesBase;
 
             virtual void Think() = 0;
             virtual void Render() = 0;

@@ -4,8 +4,7 @@
 /*
     Environment variables
 
-    These are used to track engine`s state. There are different namespaces for
-    variables (engine / module / map / session / etc.)
+    These are used to track engine`s state.
 */
 
 #include <stdint.h>
@@ -15,11 +14,6 @@
 #include "cbpp_api/Array.h"
 
 namespace cbpp {
-    // Namespace for environment variables
-    class CEVarScope {
-        
-    };
-
     // Environment variable type
     enum class EEVarType : uint32_t {
         Integer,
@@ -28,19 +22,20 @@ namespace cbpp {
     };
 
     enum class EEVarFlags : uint32_t {
-        Persist     =   1 << 0,             //  Save this variable between engine sessions
-        NetSync     =   1 << 1,             //  Server will send this variable to clients
-        Protected   =   1 << 2,             //  When NetSyncing, only server will be able to change this variable
-        Admin       =   1 << 3,             //  When NetSyncing, only operators will be able to change this variable
+        Persist         =   1 << 0,             //  Save this variable between engine sessions
+        NetSync         =   1 << 1,             //  This variable will be synced
+        Protected       =   1 << 2,             //  When NetSyncing, only server will be able to change this variable
+        RootProtected   =   1 << 3,             //  When NetSyncing, only operators will be able to change this variable
+        ClientLocal     =   1 << 4,             //  This variable is local for every client
     };
-
+    
     // An environment variable
     class CEnvVar {
         union {
-            int32_t i;
-            float f;
-            CString s;  // EnvVar string value can`t be NULL! We use "" instead
-        } m_Data;
+            int32_t m_i;
+            float m_f;
+            CString m_s;  // EnvVar string value can`t be NULL! We use "" instead
+        };
         
         EEVarType m_iType = EEVarType::Integer;
 
@@ -64,6 +59,7 @@ namespace cbpp {
             bool SetValue(const char* sValue);
 
             bool GetBool() const;
+            operator bool() const;
 
             ~CEnvVar();
     };

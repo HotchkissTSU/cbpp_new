@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <type_traits>
+#include <utility>
 
 #include "cbpp/error.h"
 
@@ -73,7 +74,7 @@ namespace cbpp {
 
 	void Free(void* pMemory);
 
-    template <typename T, typename... args_t> void ConstructBufferPrimitive(T* pBuffer, T& Value, args_t... Args) {
+    template <typename T, typename... args_t> void ConstructBufferPrimitive(T* pBuffer, T& Value, args_t&&... Args) {
         memcpy(pBuffer, &Value, sizeof(T));
     }
 
@@ -81,12 +82,12 @@ namespace cbpp {
         Attempt to call a specified constructor for this buffer.
         Primitive types are copied from the first variadic argument.
     */
-    template <typename T, typename... args_t> void ConstructBuffer(T* pBuffer, args_t... Args) {
+    template <typename T, typename... args_t> void ConstructBuffer(T* pBuffer, args_t&&... Args) {
         if constexpr (std::is_fundamental_v<T>) {
-            ConstructBufferPrimitive(pBuffer, Args...);
+            ConstructBufferPrimitive(pBuffer, std::forward<args_t>(Args)...);
         } else {
             static_assert(std::is_constructible_v<T, args_t...>, "No suitable constructor");
-            new(pBuffer) T(Args...);
+            new(pBuffer) T(std::forward<args_t>(Args)...);
         }
     }
 
@@ -117,9 +118,9 @@ namespace cbpp {
     }
 
     // Allocate a new object
-    template <typename T, typename... args_t> T* New(args_t... Args) {
+    template <typename T, typename... args_t> T* New(args_t&&... Args) {
         T* pBuffer = Malloc<T>();
-        ConstructBuffer(pBuffer, Args...);
+        new(pBuffer) T(std::forward<args_t>(Args)...);
         return pBuffer;
     }
 
@@ -127,11 +128,11 @@ namespace cbpp {
     template <typename T, typename... args_t> T* NewA(size_t iAmount, args_t... Args) {
         T* pBuffer = Malloc<T>(iAmount);
         for(size_t i = 0; i < iAmount; i++) {
-            ConstructBuffer(&pBuffer[i], Args...);
+            new(&pBuffer[i]) T(std::forward<args_t>(Args)...);
         }
         return pBuffer;
     }
-
+    
     // Properly deallocate an object
     template <typename T> void Delete(T* pObject) {
         if constexpr ( std::is_destructible_v<T> ) {
