@@ -1,5 +1,4 @@
 game/bin/*
-game/cbep
-game/bin/cbep
+game/cbsv
 .obj/*
 README
