@@ -121,7 +121,7 @@ namespace cbpp {
                 return m_iSize - 1;
             }
 
-            size_t PushBack(T Value) {
+            /*size_t PushBack(T Value) {
                 m_iSize += 1;
                 const size_t iNewAllocSize = CArray_CalculateLength(m_iAllocated, m_iSize);
 
@@ -133,7 +133,7 @@ namespace cbpp {
                 memset(&m_pMemory[m_iSize - 1], 0, sizeof(T));
                 m_pMemory[m_iSize - 1] = Value;
                 return m_iSize - 1;
-            }
+            }*/
 
             /*
                 Locate COMPARE and replace it with VALUE, or push VALUE at the end of the array

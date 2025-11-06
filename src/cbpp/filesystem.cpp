@@ -10,7 +10,8 @@ namespace cbpp {
     CAssetPathGroup::CAssetPathGroup(const char* sFallback) : m_sFallbackPath(sFallback) {}
 
     void CAssetPathGroup::PushPath(const char* sPath) {
-        m_aPaths.PushBack(sPath);
+        CImmutableString sTmp(sPath);
+        m_aPaths.PushBack(sTmp);
     }
 
     size_t CAssetPathGroup::Length() { return m_aPaths.Length(); }

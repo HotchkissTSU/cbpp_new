@@ -1,0 +1,16 @@
+#!/bin/sh
+
+echo "Setting up the project..."
+
+mkdir .obj
+    mkdir .obj/cbpp -v
+        mkdir .obj/cbpp/cl -v
+        mkdir .obj/cbpp/sv -v
+
+    mkdir .obj/cbep -v
+        mkdir .obj/cbep/sv -v
+        mkdir .obj/cbep/cl -v
+    
+    mkdir .obj/gl -v
+    mkdir .obj/zlib -v
+    mkdir .obj/yyjson -v

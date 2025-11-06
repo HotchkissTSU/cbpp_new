@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "Removing all object files..."
+find .obj -name "*.o" -delete -print

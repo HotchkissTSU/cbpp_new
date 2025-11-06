@@ -38,9 +38,8 @@ namespace cbpp {
 	template <typename T> T* Malloc(size_t iCount) noexcept {
 		const size_t iMemorySize = sizeof(T) * iCount;
 		T* pMemory = (T*) GetAllocatorData().fpMalloc( iMemorySize );
-		if(pMemory == NULL) {
-			//CbThrowErrorf("Allocation of size %lu has failed", iMemorySize);
-		}
+
+        CbAssert(pMemory == NULL, "Allocation failure");
 
         GetMallocCounter()++;
 		return pMemory;
@@ -65,12 +64,11 @@ namespace cbpp {
 
 		const size_t iMemorySize = sizeof(T) * iNewSize;
 		T* pTemp = (T*) GetAllocatorData().fpRealloc( pMemory, iMemorySize );
-		if(pTemp == NULL) {
-			//CbThrowErrorf("%lx reallocation to size %lu has failed", pMemory, iMemorySize);
-		}
+
+        CbAssert(pTemp == NULL, "Reallocation failure");
 
 		return pTemp;
-	}
+    }
 
 	void Free(void* pMemory);
 

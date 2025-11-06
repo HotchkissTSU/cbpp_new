@@ -10,10 +10,11 @@ namespace cbpp {
 
         public:
             CTestEntity();
-            ~CTestEntity();
+            virtual ~CTestEntity() override;
 
-            void Think() {}
-            void Render() {}
+            void Think() override;
+            void Render() override {}
+            void NetSync() override {};
 
             CbProperties {
                 CbProperty(m_fNumber1, "test_fNum1", "bebra", EGenericType::Float);

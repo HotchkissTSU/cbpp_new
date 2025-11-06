@@ -33,12 +33,8 @@ namespace cbpp {
     }
 
     CEntityRegistrator::entfact_t CEntityRegistrator::GetFactoryPointer(const char* sClassName) {
-        CBPP_ASSERT( GetEntityFactories().count(sClassName) == 0, "Unregistered entity class" );
+        CbAssert( GetEntityFactories().count(sClassName) == 0, "Unregistered entity class" );
         return GetEntityFactories().at(sClassName);
-    }
-
-    CBaseEntity* CreateEntityClass(const char* sClassName) {
-        return CEntityRegistrator::GetFactoryPointer(sClassName)();
     }
 
     IProperty* IProperty::Next() { return m_pNext; }
@@ -79,6 +75,10 @@ namespace cbpp {
         }
 
         return NULL;
+    }
+
+    void CBaseEntity::Think() {
+        printf("CBaseEntity thinker\n");
     }
 
     const char* CBaseEntity::Class() const {

@@ -8,7 +8,7 @@
         "static" : ["lib"],
         "link_static":[],
 		"link_dynamic":[],
-        "comp_params":"-std=c++17 -fPIC",
+        "comp_params":"-std=c++17 -fPIC -g3",
 		"link_params":"",
         "out_libfile":"lib",
         "include":["src", "src/cbpp"],
@@ -17,22 +17,29 @@
 	},
 
 	"targets":{
-		"cbep":{
+		"cbsv":{
 			"type" : "EXE",
 			"out":"game",
-            "link_static" : ["cbpp", "z", "GLX", "glfw3"],
+            "link_static" : ["cbsv", "z", "GLX", "glfw3"],
             "static" : ["game/bin"],
             "link_params" : "-Wl,-rpath=./bin",
-            "comp_params":"-std=c++17 -O2",
+            "comp_params":"-std=c++17 -g3",
 			"src":["src/cbep/*.cpp"],
             "obj":".obj/cbep"
         },
         
-        "cbpp":{
+        "cbpp_client":{
             "type" : "OBJ",
             "include" : ["src/cbpp/include", "src"],
-            "obj":".obj/cbpp",
-            "src":["src/cbpp/*.cpp", "src/cbpp/entity/*.cpp"]
+            "obj":".obj/cbpp/cl",
+            "src":["src/cbpp/*.cpp", "src/cbpp/entity/client/*.cpp", "src/cbpp/entity/shared/*.cpp"]
+        },
+
+        "cbpp_server":{
+            "type" : "OBJ",
+            "include" : ["src/cbpp/include", "src"],
+            "obj":".obj/cbpp/sv",
+            "src":["src/cbpp/*.cpp", "src/cbpp/entity/server/*.cpp", "src/cbpp/entity/shared/*.cpp"]
         },
 
         "yyjson" : {
@@ -49,7 +56,7 @@
             "compiler" : "gcc",
             "comp_params" : "-D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -O2 -fPIC",
             "src" : ["src/zlib/*.c"],
-            "obj" : ".obj",
+            "obj" : ".obj/zlib",
             "include" : "src/zlib",
             "out" : "game/bin"
         },
@@ -63,20 +70,19 @@
             "comp_params":"-fPIC -O2 -DCDF_USE_ZLIB"
         },
 
-        "enet":{
-            "type" : "OBJ",
-            "compiler" : "gcc",
-            "comp_params" : "-O2 -fPIC",
-            "include" : [ "src" ],
-            "src" : ["src/enet/enet_impl.c"],
-            "obj" : ".obj/cbpp"
-        },
-
-        "libcbpp" : {
+        "libcbsv" : {
             "type" : "DLL",
             "from_obj" : 1,
             "out" : "game/bin",
-            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/yyjson/*.o", ".obj/*.o"],
+            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/yyjson/*.o", ".obj/*.o", ".obj/cbpp/sv/*.o"],
+            "link_static" : ["z"]
+        },
+
+        "libcbcl" : {
+            "type" : "DLL",
+            "from_obj" : 1,
+            "out" : "game/bin",
+            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/yyjson/*.o", ".obj/*.o", ".obj/cbpp/cl/*.o"],
             "link_static" : ["z"]
         }
 	}

@@ -37,9 +37,9 @@ namespace cbpp {
                                             EGenericType::Float);
             }
         
-            virtual void Think() = 0;
-            virtual void Render() = 0;
-            virtual void NetSync() = 0;
+            virtual void Think() override;
+            virtual void Render() override = 0;
+            virtual void NetSync() override = 0;
 
             CPointEntity();
 
@@ -54,13 +54,19 @@ namespace cbpp {
             CArray<CPointEntity*>& GetChildren();
             bool HasChild(const CPointEntity* pChild) const;
 
+            // Get the forward vector of the entity
+            Vec2f Forward() const;
+
+            // Get the right vector of the entity
+            Vec2f Right() const;
+
             Vec2f& LocalPosition();
             float& LocalAngle();
             
             Vec2f Position();
             float Angle();
 
-            virtual ~CPointEntity() = 0;
+            virtual ~CPointEntity() override;
     };
     CbAbstractEntity(CPointEntity, "base_point");
 }

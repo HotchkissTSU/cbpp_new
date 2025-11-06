@@ -6,6 +6,10 @@ namespace cbpp {
         printf("test entity created!\n");
     }
 
+    void CTestEntity::Think() {
+        printf("CTestEntity thinker\n");
+    }
+
     CTestEntity::~CTestEntity() {
 
     }

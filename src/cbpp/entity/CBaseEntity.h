@@ -33,7 +33,7 @@ namespace cbpp {
             CProperty(type_t* pData, CBaseEntity* eMaster, const char* sName, const char* sPrettyName, const char* sDesc, EGenericType iType, size_t iSize) : 
                     m_sName(sName), m_sDesc(sDesc), m_pData(pData), m_eMaster(eMaster), m_iType(iType), m_iSize(iSize), m_sPrettyName(sPrettyName)
             {
-                CBPP_ASSERT((pData == NULL) || (eMaster == NULL) || (sName) == NULL, "Invalid input data");
+                CbAssert((pData == NULL) || (eMaster == NULL) || (sName) == NULL, "Invalid input data");
                 eMaster->PushProperty((IProperty*)(this));
             }
 

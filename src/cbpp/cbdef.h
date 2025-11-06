@@ -28,17 +28,16 @@
     #define CBPP_ON_DEBUG(code)
 #endif
 
-#define CBPP_ASSERT(expr, msg) if((bool)(expr) == true) {\
+#define CbAssert(expr, msg) if((bool)(expr) == true) {\
     printf("File: '%s', Line: %lu\nAssertion [ %s ] has failed: %s\n", __FILE__, __LINE__, #expr, msg); exit(EXIT_FAILURE); }
-
-#define CBPP_ASSERTF(expr, msg, ...) if((bool)(expr) == true) {\
-    printf("File: '%s', Line: %lu\nAssertion [ %s ] has failed: "msg"\n", __FILE__, __LINE__, #expr, __VA_ARGS__); exit(EXIT_FAILURE); }
 
 #define forever while(1)
 //#define for_bitmask(iter, bword, current_bit) for((iter)=0;(iter)<sizeof(bword)*8;(iter)++,(current_bit)=((bword)&(1<<(iter)))>>(iter))
 
 // The smallest possible number to consider in calculations
 #define CBPP_EPSILON 1e-10f
+
+#define CBPP_PI 3.14159265358979323846f
 
 /*
     We are building a serverside library by default

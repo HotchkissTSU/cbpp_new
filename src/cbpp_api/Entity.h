@@ -160,7 +160,7 @@ namespace cbpp {
         public:
             _CbNoPropertiesBase;
 
-            virtual void Think() = 0;
+            virtual void Think();
             virtual void Render() = 0;
             virtual void NetSync() = 0;
 
