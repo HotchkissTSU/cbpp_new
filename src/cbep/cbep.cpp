@@ -10,15 +10,14 @@ void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
 }
 
-CbNetMessage(cbpp_test) {
-    return true;
-}
-
 int main(int argc, char** argv) {
     InitGLFW();
 
     cbpp::CBaseEntity* pEntity = cbpp::CreateEntityClass("test_entity");
     pEntity->Think();
+
+    cbpp::net::CIPAddress test("192.168.1.255:22856");
+    test.Print();
 
     return EXIT_SUCCESS;
 }

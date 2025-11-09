@@ -3,7 +3,9 @@
 
 /*
 	Memory management call wrappers. 
-    This is possible to replace the allocator if keeping the "malloc"-ish interface
+    
+    Engine allocator is fully replaceable, if the new one keeps
+    the exact malloc/realloc/free C interface
 */
 
 #include <string.h>
@@ -39,7 +41,7 @@ namespace cbpp {
 		const size_t iMemorySize = sizeof(T) * iCount;
 		T* pMemory = (T*) GetAllocatorData().fpMalloc( iMemorySize );
 
-        CbAssert(pMemory == NULL, "Allocation failure");
+        CbAssertf(pMemory == NULL, "Allocation of size %zu has failed", iMemorySize);
 
         GetMallocCounter()++;
 		return pMemory;
@@ -65,55 +67,12 @@ namespace cbpp {
 		const size_t iMemorySize = sizeof(T) * iNewSize;
 		T* pTemp = (T*) GetAllocatorData().fpRealloc( pMemory, iMemorySize );
 
-        CbAssert(pTemp == NULL, "Reallocation failure");
+        CbAssertf(pTemp == NULL, "Reallocation of 0x%x to size %zu has failed", pMemory, iMemorySize);
 
 		return pTemp;
     }
 
 	void Free(void* pMemory);
-
-    template <typename T, typename... args_t> void ConstructBufferPrimitive(T* pBuffer, T& Value, args_t&&... Args) {
-        memcpy(pBuffer, &Value, sizeof(T));
-    }
-
-    /*
-        Attempt to call a specified constructor for this buffer.
-        Primitive types are copied from the first variadic argument.
-    */
-    template <typename T, typename... args_t> void ConstructBuffer(T* pBuffer, args_t&&... Args) {
-        if constexpr (std::is_fundamental_v<T>) {
-            ConstructBufferPrimitive(pBuffer, std::forward<args_t>(Args)...);
-        } else {
-            static_assert(std::is_constructible_v<T, args_t...>, "No suitable constructor");
-            new(pBuffer) T(std::forward<args_t>(Args)...);
-        }
-    }
-
-    /*
-        Attempt to call a copy constructor for this buffer.
-        Primitive types are simply copied.
-    */
-    template <typename T> void ConstructBuffer(T* pBuffer, T& Value) {
-        if constexpr (std::is_fundamental_v<T>) {
-            memcpy(pBuffer, &Value, sizeof(T));
-        } else {
-            static_assert(std::is_copy_constructible_v<T>, "No copy constructor");
-            new(pBuffer) T(Value);
-        }
-    }
-
-    /*
-        Attempt to call a default constructor for this buffer.
-        Primitive types are zeroed.
-    */
-    template <typename T> void ConstructBuffer(T* pBuffer) {
-        if constexpr (std::is_fundamental_v<T>) {
-            memset(pBuffer, 0, sizeof(T));
-        } else {
-            static_assert(std::is_default_constructible_v<T>, "No default constructor");
-            new(pBuffer) T();
-        }
-    }
 
     // Allocate a new object
     template <typename T, typename... args_t> T* New(args_t&&... Args) {

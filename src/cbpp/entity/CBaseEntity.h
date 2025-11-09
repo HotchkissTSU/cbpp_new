@@ -1,11 +1,6 @@
 #ifndef CBPP_ENTITY_BASE_H
 #define CBPP_ENTITY_BASE_H
 
-/*
-    CB++ entity API
-    For the entity class creation example go to 'CTestEntity.h and .cpp'
-*/
-
 #include <stddef.h>
 #include <stdint.h>
 #include <map>

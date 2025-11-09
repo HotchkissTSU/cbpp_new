@@ -44,10 +44,12 @@ namespace cbpp {
     }
 
     void CPointEntity::Think() {
+        CBaseEntity::Think();
         printf("CPointEntity thinker\n");
     }
 
     // PARENTING
+    // TODO: All these server-side calls must send some neat sync packages
 
     CPointEntity* CPointEntity::GetParent() { return m_pParent; }
     CArray<CPointEntity*>& CPointEntity::GetChildren() { return m_aChildren; }
@@ -87,7 +89,7 @@ namespace cbpp {
         if(m_pParent != NULL) {     // Changing our parent
             m_vPos = m_pParent->Position() + m_vPos;    // (1)
             m_pParent->RemoveChild(this);
-            CPointEntity* pOldParent = m_pParent;       // (1) and (2) - recalculating our offset to retain our world position after the operation
+            CPointEntity* pOldParent = m_pParent;       // (1) and (2) - recalculating offset to retain our world position after the operation
             m_pParent = pNewParent;
             pNewParent->PushChild(this);
             m_vPos = m_vPos - m_pParent->Position();    // (2)

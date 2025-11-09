@@ -115,6 +115,7 @@ namespace cbpp {
     */
     enum class EGenericType : uint32_t {
         Incompat,
+        Byte,
         Integer32,
         Integer64,
         Float,

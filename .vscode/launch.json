@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "cbep",
+            "name": "cbsv",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/game/cbep",
+            "program": "${workspaceFolder}/game/cbsv",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/game",
