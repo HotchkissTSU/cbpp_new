@@ -16,6 +16,34 @@ namespace cbpp {
         0
     };
 
+    constexpr size_t GetGenericTypeSize(EGenericType iCode) {
+        switch (iCode) {
+            case EGenericType::Byte:
+                return 1;
+
+            case EGenericType::Color:
+                return 4;
+
+            case EGenericType::Float:
+                return sizeof(float);
+
+            case EGenericType::Integer32:
+                return sizeof(int32_t);
+
+            case EGenericType::Integer64:
+                return sizeof(int64_t);
+
+            case EGenericType::Vector2D:
+                return sizeof(float)*2;
+
+            case EGenericType::Vector3D:
+                return sizeof(float)*3;
+
+            default:
+                return 0;
+        }
+    }
+    
     std::map<CConstString, CEntityRegistrator::entfact_t>& GetEntityFactories() {
         static std::map<CConstString, CEntityRegistrator::entfact_t> s_dEntityDict;
         return s_dEntityDict;
@@ -33,7 +61,7 @@ namespace cbpp {
     }
 
     CEntityRegistrator::entfact_t CEntityRegistrator::GetFactoryPointer(const char* sClassName) {
-        CbAssert( GetEntityFactories().count(sClassName) == 0, "Unregistered entity class" );
+        CbAssertf( GetEntityFactories().count(sClassName) == 0, "Unregistered entity class: '%s'", sClassName );
         return GetEntityFactories().at(sClassName);
     }
 

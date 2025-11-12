@@ -12,6 +12,8 @@
 
 #include "cbpp_api/Entity.h"
 
+#define CBPP_ENTMAP_SIZE 512
+
 namespace cbpp {
     class CBaseEntity;
 
@@ -49,7 +51,8 @@ namespace cbpp {
                     return NULL;
                 }
 
-                return (void*)((size_t)m_pData + iIndex*g_aGTypesSize[(uint32_t)m_iType]);
+                //return (void*)((size_t)m_pData + iIndex*g_aGTypesSize[(uint32_t)m_iType]);
+                return (void*)(&m_pData[iIndex]);
             }
 
             size_t Length() {
@@ -62,7 +65,7 @@ namespace cbpp {
                 }
             }
     };
-        
+    
     class CEntityRegistrator {
         public:
             typedef CBaseEntity* (*entfact_t)();

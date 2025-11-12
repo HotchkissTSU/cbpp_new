@@ -7,6 +7,7 @@ namespace cbpp {
     }
 
     void CTestEntity::Think() {
+        CBaseEntity::Think();
         printf("CTestEntity thinker\n");
     }
 

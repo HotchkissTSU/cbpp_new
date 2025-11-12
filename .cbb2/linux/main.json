@@ -14,9 +14,19 @@
         "include":["src", "src/cbpp"],
         "obj":".obj",
         "out":""
-	},
+    },
 
 	"targets":{
+        "cbb3":{
+			"type" : "EXE",
+			"out":"game/bin",
+            "link_static" : ["cbcl"],
+            "static" : ["game/bin"],
+            "link_params" : "-Wl,-rpath=.",
+            "comp_params":"-std=c++17 -g3",
+			"src":["src/cbb3/*.cpp"],
+            "obj":".obj/cbep"
+        },
 		"cbsv":{
 			"type" : "EXE",
 			"out":"game",
@@ -32,14 +42,21 @@
             "type" : "OBJ",
             "include" : ["src/cbpp/include", "src"],
             "obj":".obj/cbpp/cl",
-            "src":["src/cbpp/*.cpp", "src/cbpp/entity/client/*.cpp", "src/cbpp/entity/shared/*.cpp"]
+            "src":["src/cbpp/entity/client/*.cpp"]
+        },
+
+        "cbpp_shared":{
+            "type" : "OBJ",
+            "include" : ["src/cbpp/include", "src"],
+            "obj":".obj/cbpp",
+            "src":["src/cbpp/*.cpp", "src/cbpp/entity/shared/*.cpp"]
         },
 
         "cbpp_server":{
             "type" : "OBJ",
             "include" : ["src/cbpp/include", "src"],
             "obj":".obj/cbpp/sv",
-            "src":["src/cbpp/*.cpp", "src/cbpp/entity/server/*.cpp", "src/cbpp/entity/shared/*.cpp"]
+            "src":["src/cbpp/entity/server/*.cpp"]
         },
 
         "yyjson" : {

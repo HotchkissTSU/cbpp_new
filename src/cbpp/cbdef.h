@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 // Currently, i only have a linux computer, so some W*ndows-dependent code is yet impossible to write and test
 #define CBPP_NO_WINDOWS_ASSERT static_assert(false, "Non-implemented Windows-dependent code here");
@@ -29,10 +30,11 @@
 #endif
 
 #define CbAssert(expr, msg) if((bool)(expr) == true) {\
-    printf("File: '%s', Line: %lu\nAssertion [ %s ] has failed: %s\n", __FILE__, __LINE__, #expr, msg); exit(EXIT_FAILURE); }
+    printf("File: '%s', Line: %lu\nAssertion [ %s ] has failed: %s\n", strrchr(__FILE__, '/')+1, __LINE__, #expr, msg); exit(EXIT_FAILURE); }
 
 #define CbAssertf(expr, msg, ...) if((bool)(expr) == true) {\
-    char __buff[256]; snprintf(__buff, sizeof(__buff), msg, __VA_ARGS__); }
+    char __buff[256]; snprintf(__buff, sizeof(__buff), msg, __VA_ARGS__);\
+    printf("File: '%s', Line: %lu\nAssertion [ %s ] has failed: %s\n", strrchr(__FILE__, '/')+1, __LINE__, #expr, __buff); exit(EXIT_FAILURE); }
 
 #define forever while(1)
 //#define for_bitmask(iter, bword, current_bit) for((iter)=0;(iter)<sizeof(bword)*8;(iter)++,(current_bit)=((bword)&(1<<(iter)))>>(iter))
@@ -57,4 +59,4 @@
 
 #endif
 
-#define CBPP_DEFAULT_PORT 42069
+#define CBPP_DEFAULT_PORT 32512

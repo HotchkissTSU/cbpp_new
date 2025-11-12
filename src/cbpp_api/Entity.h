@@ -113,7 +113,7 @@ namespace cbpp {
     /*
         Generic type marks for UI input
     */
-    enum class EGenericType : uint32_t {
+    enum class EGenericType : uint16_t {
         Incompat,
         Byte,
         Integer32,
@@ -122,8 +122,11 @@ namespace cbpp {
         Vector2D,
         Vector3D,
         Color,
-        String
+        String,
+        AssetPath
     };
+
+    constexpr size_t GetGenericTypeSize(EGenericType iCode);
 
     class CBaseEntity;
 
