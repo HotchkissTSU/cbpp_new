@@ -28,7 +28,7 @@ namespace cbpp {
         friend const CLocaleManager* GetLocaleManager();
 
         CLocale* m_pCurrentLocale = NULL;
-        CImmutableString m_sDefaultFallback = CImmutableString(CBPP_LOCALE_FALLBACK);
+        const CImmutableString m_sDefaultFallback = CBPP_LOCALE_FALLBACK;
 
         std::map<CImmutableString, CLocale> m_dLocales;
 

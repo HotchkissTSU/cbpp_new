@@ -1,0 +1,11 @@
+{
+    "pretty_name" : "Русский",
+    "entries" : {
+        "entity" : {
+            "env_test" : {
+                "m_iTest" : "amongus",
+                "m_iTest_desc" : "amongus description"
+            }
+        }
+    }
+}

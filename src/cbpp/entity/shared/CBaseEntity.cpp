@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "cbpp/vector.h"
+#include "cbpp/ent_register.h"
 
 namespace cbpp {
     const size_t g_aGTypesSize[] = {
@@ -29,9 +30,6 @@ namespace cbpp {
 
             case EGenericType::Integer32:
                 return sizeof(int32_t);
-
-            case EGenericType::Integer64:
-                return sizeof(int64_t);
 
             case EGenericType::Vector2D:
                 return sizeof(float)*2;
@@ -64,9 +62,6 @@ namespace cbpp {
         CbAssertf( GetEntityFactories().count(sClassName) == 0, "Unregistered entity class: '%s'", sClassName );
         return GetEntityFactories().at(sClassName);
     }
-
-    IProperty* IProperty::Next() { return m_pNext; }
-    void IProperty::SetNextNode(IProperty* pNext) { m_pNext = pNext; }
 
     eid_t CBaseEntity::UID() const { return m_iUID; }
     void CBaseEntity::SetUID(eid_t iNewID) { m_iUID = iNewID; }

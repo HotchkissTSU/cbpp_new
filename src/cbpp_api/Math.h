@@ -14,6 +14,18 @@ namespace cbpp {
         return (V > Min) && (V < Max);
     }
 
+    template <typename num_t> num_t Clamp(num_t Value, num_t Min, num_t Max) {
+        if(Value > Max) {
+            return Max;
+        }
+
+        if(Value < Min) {
+            return Min;
+        }
+
+        return Value;
+    }
+
     Vec2f VectorFromAngle(float fAng) {
         fAng = fAng - CBPP_PI*2 * std::floor(fAng / CBPP_PI*2); // Normalize our angle
         const Vec2f vRaw( std::cos(fAng), std::sin(fAng) );
