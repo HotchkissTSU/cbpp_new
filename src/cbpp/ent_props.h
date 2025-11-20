@@ -26,6 +26,13 @@
 #define CbStringProperty(_member)\
     cbpp::New<CStringProperty>(this, #_member, &_member);
 
+/*
+    Enumeration property.
+    Value names accept locale keys.
+    Use like:
+
+    CbEnumProperty(m_iMyMember, "val_A", 1, "val_B", 2, ...);
+*/
 #define CbEnumProperty(_member, ...)\
     cbpp::New<CEnumProperty>(this, #_member, &_member, __VA_ARGS__);
 
@@ -174,16 +181,19 @@ namespace cbpp {
 
             void ProcessPair() {};
 
-            template <typename... args_t> void ProcessPair(const char* sName, uint16_t iValue, args_t... Args) {
-                Pair Pair { sName, iValue };
+            template <typename value_t, typename... args_t> void ProcessPair(const char* sName, value_t iValue, args_t... Args) {
+                Pair Pair { sName, (uint16_t)iValue };
                 m_aPairs.PushBack(Pair);
                 ProcessPair(Args...);
                 m_iCounter++;
             }
 
+        // This constructor just has to take void* as a member pointer, because Retard++ cant perform an implicit cast
+        // from the enum type to the integer
+
         public:
-            template <typename... args_t> CEnumProperty(CBaseEntity* eMaster, const char* sName, uint16_t* pData, args_t... Args) :
-            container_t(eMaster, sName, pData, 1, EGenericType::Enum)
+            template <typename... args_t> CEnumProperty(CBaseEntity* eMaster, const char* sName, void* pData, args_t... Args) :
+            container_t(eMaster, sName, (uint16_t*)pData, 1, EGenericType::Enum)
             {
                 ProcessPair(Args...);
                 m_aPairs.Shrink();
