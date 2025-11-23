@@ -5,43 +5,7 @@
 #include "cbpp/vector.h"
 #include "cbpp/ent_register.h"
 
-namespace cbpp {
-    const size_t g_aGTypesSize[] = {
-        0,
-        sizeof(int32_t),
-        sizeof(int64_t),
-        sizeof(float),
-        sizeof(float)*2,
-        sizeof(float)*3,
-        sizeof(uint8_t)*4,
-        0
-    };
-
-    constexpr size_t GetGenericTypeSize(EGenericType iCode) {
-        switch (iCode) {
-            case EGenericType::Byte:
-                return 1;
-
-            case EGenericType::Color:
-                return 4;
-
-            case EGenericType::Float:
-                return sizeof(float);
-
-            case EGenericType::Integer32:
-                return sizeof(int32_t);
-
-            case EGenericType::Vector2D:
-                return sizeof(float)*2;
-
-            case EGenericType::Vector3D:
-                return sizeof(float)*3;
-
-            default:
-                return 0;
-        }
-    }
-    
+namespace cbpp {    
     std::map<CConstString, CEntityRegistrator::entfact_t>& GetEntityFactories() {
         static std::map<CConstString, CEntityRegistrator::entfact_t> s_dEntityDict;
         return s_dEntityDict;
@@ -110,6 +74,10 @@ namespace cbpp {
 
     bool CBaseEntity::IsAbstract() const {
         return true;
+    }
+
+    const char* CBaseEntity::Name() const {
+        return m_sWorldName;
     }
 
     CBaseEntity::~CBaseEntity() {

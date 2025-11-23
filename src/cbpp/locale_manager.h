@@ -12,39 +12,33 @@
 #define CBPP_LOCALE_FALLBACK "(NULL)"
 
 namespace cbpp {
+    // Points inside current locale`s table
+    class CLocaleString {
+        friend class CLocale;
+
+        CImmutableString* m_pData;
+
+        CLocaleString(CImmutableString* pData) : m_pData(pData) {}
+
+        public:
+            CLocaleString() = delete;
+            CLocaleString(const CLocaleString& Other) = delete;
+            CLocaleString& operator=(const CLocaleString& Other) = delete;
+
+            const char* String() const;
+            operator const char* ();
+
+            static const char* GetFallbackString();
+    };
+    
     class CLocale {
-        CImmutableString m_sPrettyName;
-        std::map<CImmutableString, CImmutableString> m_dEntries;
+        typedef std::map<CImmutableString, CImmutableString> table_t;
+
+        table_t m_dStrings;
 
         public:
-            CLocale(const char* sPrettyName);
 
-            void PushString(const char* sKey, const char* sString);
-            const char* GetString(const char* sKey) const;
-            const char* PrettyName() const;
     };
-
-    class CLocaleManager {
-        friend const CLocaleManager* GetLocaleManager();
-
-        CLocale* m_pCurrentLocale = NULL;
-        const CImmutableString m_sDefaultFallback = CBPP_LOCALE_FALLBACK;
-
-        std::map<CImmutableString, CLocale> m_dLocales;
-
-        CLocaleManager() = default;
-
-        public:
-            const CLocale* CurrentLocale();
-            void SetLocale(const char* sLocaleName);
-            bool MountLocale(const char* sName);
-
-            const char* GetString(const char* sKey) const;
-
-            ~CLocaleManager();
-    };
-
-    const CLocaleManager* GetLocaleManager();
 }
 
 #endif

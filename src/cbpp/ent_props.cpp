@@ -6,6 +6,14 @@
 namespace cbpp {
     IProperty::IProperty(CBaseEntity* eMaster, const char* sName) : m_eMaster(eMaster), m_sName(sName) {
         eMaster->PushProperty(this);
+
+        char aLocKeyBuff[128];
+
+        snprintf(aLocKeyBuff, sizeof(aLocKeyBuff), "#entity.%s.%s", eMaster->Class(), sName); // property name
+        printf("Property '%s' -> '%s' (name)\n", sName, aLocKeyBuff);
+
+        snprintf(aLocKeyBuff, sizeof(aLocKeyBuff), "#entity.%s.%s_desc", eMaster->Class(), sName); // property description
+        printf("Property '%s' -> '%s' (desc)\n", sName, aLocKeyBuff);
     }
 
     const char* IProperty::Name() {
@@ -47,10 +55,25 @@ namespace cbpp {
         return *m_pData;
     }
 
+    // CBoolProperty
+
+    void CBoolProperty::SetValue(bool bValue) {
+        (*m_pData) = bValue;
+    }
+
+    bool CBoolProperty::GetValue() {
+        return *m_pData;
+    }
+
     // CEnumProperty
 
     void CEnumProperty::SetValue(uint16_t iValue) {
-        *(m_pData) = iValue;
+        // check if new value exists in this enum
+        for(size_t i = 0; i < m_pRegistry->m_aPairs.Length(); i++) {
+            if(iValue == m_pRegistry->m_aPairs.At(i).iValue) {
+                (*m_pData) = iValue;
+            }
+        }
     }
 
     uint16_t CEnumProperty::GetValue() {
@@ -58,6 +81,6 @@ namespace cbpp {
     }
 
     const CEnumProperty::pairs_t& CEnumProperty::GetPairs() const {
-        return m_aPairs;
+        return m_pRegistry->m_aPairs;
     }
 }

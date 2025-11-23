@@ -3,14 +3,12 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <map>
-#include <new>
-#include <typeinfo>
 
 #include "cbpp/cbdef.h"
 #include "cbpp/const_string.h"
+#include "cbpp/mutable_string.h"
 
-#include "cbpp_api/Entity.h"
+#include "cbpp/property_interface.h"
 
 #define CBPP_ENTMAP_SIZE 512
 #define CBPP_DEFAULT_ENTITY_NAME "<UNNAMED>"
@@ -34,6 +32,8 @@ namespace cbpp {
 
             virtual bool IsAbstract() const;
             virtual const char* Class() const;
+
+            const char* Name() const;
 
             void PushProperty(IProperty* pProp);
             IProperty* GetProperties();

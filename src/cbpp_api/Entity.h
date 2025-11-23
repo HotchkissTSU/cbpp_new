@@ -25,10 +25,6 @@
 #define CBPP_ENTITY_API_H
 
 #include <stddef.h>
-#include <stdint.h>
-
-#include "cbpp/malloc_wrapper.h"
-#include "cbpp/mutable_string.h"
 
 #include "cbpp/ent_props.h"
 #include "cbpp/ent_register.h"

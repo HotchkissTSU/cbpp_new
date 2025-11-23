@@ -6,6 +6,7 @@
 
 namespace cbpp {
     enum class EAssetPath : uint32_t {
+        Invalid,
         Generic,
         Sprite,
         Locale,

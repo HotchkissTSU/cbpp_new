@@ -50,6 +50,18 @@ namespace cbpp {
 
             bool IsOpen();
     };
+
+    // File from the virtual FS
+    class CVirtualFile : public IFile {
+        
+    };
+
+    enum class EFileSystem {
+        Physical,               // OS filesystem
+        Virtual                 // Engine virtual FS
+    };
+
+    void ParsePath(const char* sPath);
 }
 
 #endif

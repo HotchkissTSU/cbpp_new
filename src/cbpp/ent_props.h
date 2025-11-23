@@ -1,7 +1,5 @@
 /*
-    Entity properties
-
-    Allow marking certain class members, so they will be visible and editable in runtime
+    Properties implementation
 */
 
 #ifndef CBPP_ENTPROPS_H
@@ -14,72 +12,38 @@
 #include "cbpp/malloc_wrapper.h"
 
 #include "cbpp_api/Array.h"
+#include "cbpp_api/Filesystem.h"
 
-#define CBPP_DEFAULT_PROPERTY_DESC "Default description"
+#include "cbpp/entity/CBaseEntity.h"
 
 #define CbIntProperty(_member, _min, _max, _arrlen)\
-    cbpp::New<CIntProperty>(this, #_member, &_member, _arrlen, _min, _max);
+    cbpp::New<CIntProperty>(this, #_member, &_member, _arrlen, _min, _max)
 
 #define CbFloatProperty(_member, _min, _max, _arrlen)\
-    cbpp::New<CFloatProperty>(this, #_member, &_member, _arrlen, _min, _max);
+    cbpp::New<CFloatProperty>(this, #_member, &_member, _arrlen, _min, _max)
+
+#define CbBoolProperty(_member)\
+    cbpp::New<CBoolProperty>(this, #_member, &_member)
 
 #define CbStringProperty(_member)\
-    cbpp::New<CStringProperty>(this, #_member, &_member);
+    cbpp::New<CStringProperty>(this, #_member, &_member, EAsserPath::Invalid)
 
-/*
-    Enumeration property.
-    Value names accept locale keys.
-    Use like:
+#define CbAssetPathProperty(_member, _asset_grp)\
+    cbpp::New<CStringProperty>(this, #_member, &_member, _asset_grp)
 
-    CbEnumProperty(m_iMyMember, "val_A", 1, "val_B", 2, ...);
-*/
+#define CbVector2Property(_member)\
+    cbpp::New<CFloatProperty>(this, #_member, (float*)(&_member), 2, __FLT_MIN__, __FLT_MAX__)
+
+#define CbVector3Property(_member)\
+    cbpp::New<CFloatProperty>(this, #_member, (float*)(&_member), 3, __FLT_MIN__, __FLT_MAX__)
+
 #define CbEnumProperty(_member, ...)\
     cbpp::New<CEnumProperty>(this, #_member, &_member, __VA_ARGS__);
 
+// Start describing this entity`s properties
 #define CbProperties virtual const char* Class() const; virtual bool IsAbstract() const; virtual void ConstructProps()
 
 namespace cbpp {
-    /*
-        Generic type marks (for UI input mostly)
-    */
-    enum class EGenericType : uint16_t {
-        Incompat,
-        Byte,
-        Bool,
-        Integer32,
-        Float,
-        Vector2D,
-        Vector3D,
-        Color,
-        String,
-        AssetPath,
-        Enum
-    };
-
-    class CBaseEntity;
-
-    class IProperty {
-        protected:
-            IProperty* m_pNext = NULL;
-            CBaseEntity* m_eMaster = NULL;
-            const char *m_sName = NULL;
-        public:
-            IProperty(CBaseEntity* eMaster, const char* sName);
-
-            IProperty* Next();
-            void SetNextNode(IProperty* pNext);
-
-            const char* Name();
-            const char* PrettyName();
-            const char* Description();
-
-            virtual EGenericType Type() = 0;
-
-            CBaseEntity* Master();
-
-            virtual ~IProperty();
-    };
-
     // Property storage
     template <typename T> class CBaseProperty : public IProperty {
         protected:
@@ -91,20 +55,20 @@ namespace cbpp {
             CBaseProperty(CBaseEntity* eMaster, const char* sName, T* pData, size_t iLength, EGenericType iType) : 
                         m_pData(pData), m_iType(iType), m_iLength(iLength), IProperty(eMaster, sName) {}
 
-            void* GetBuffer() {
-                return (void*)(m_pData);
+            T* GetBuffer() {
+                return m_pData;
             }
 
             size_t Sizeof() {
                 return sizeof(T);
             }
 
-            void* Index(size_t iIndex) {
+            T* Index(size_t iIndex) {
                 if(iIndex > m_iLength) {
-                    return (void*)m_pData;
+                    return m_pData;
                 }
 
-                return (void*)(&m_pData[iIndex]);
+                return &m_pData[iIndex];
             }
 
             size_t Length() {
@@ -115,11 +79,10 @@ namespace cbpp {
                 return m_iType;
             }
 
-            virtual void SetValue(T Value) = 0;
-            virtual T GetValue() = 0;
-
             virtual ~CBaseProperty() override = default;
     };
+
+    // Property implementations with custom behaviour
 
     class CIntProperty final : public CBaseProperty<int32_t> {
         typedef CBaseProperty<int32_t> container_t;
@@ -156,12 +119,31 @@ namespace cbpp {
             virtual ~CFloatProperty() override = default;
     };
 
+    class CBoolProperty final : public CBaseProperty<bool> {
+        typedef CBaseProperty<bool> container_t;
+
+        public:
+            CBoolProperty(CBaseEntity* eMaster, const char* sName, bool* pValue) :
+                                                                        container_t(eMaster, sName, pValue, 1, EGenericType::Bool) {}
+
+            void SetValue(bool bValue);
+            bool GetValue();
+
+            virtual ~CBoolProperty() = default;
+    };
+
     class CStringProperty final : public CBaseProperty<CString> {
         typedef CBaseProperty<CString> container_t;
 
+        EAssetPath m_iAssetGroup = EAssetPath::Invalid;
+
         public:
-            CStringProperty(CBaseEntity* eMaster, const char* sName, CString* pData) : 
-                            container_t(eMaster, sName, pData, 1, EGenericType::String) {}
+            CStringProperty(CBaseEntity* eMaster, const char* sName, CString* pData, EAssetPath iAssetGrp) : 
+                            container_t(eMaster, sName, pData, 1, EGenericType::String), m_iAssetGroup(iAssetGrp) {}
+
+            bool IsAssetPath() const;
+
+            virtual ~CStringProperty() = default;
     };
 
     class CEnumProperty final : public CBaseProperty<uint16_t> {
@@ -176,33 +158,60 @@ namespace cbpp {
             typedef CArray<Pair> pairs_t;
 
         private:
-            uint16_t m_iCounter = 0;
-            pairs_t m_aPairs;
+            struct Reg {
+                uint16_t m_iCounter = 0;
+                pairs_t m_aPairs;
 
-            void ProcessPair() {};
+                void ProcessPair(const char*, const char*) {};
 
-            template <typename value_t, typename... args_t> void ProcessPair(const char* sName, value_t iValue, args_t... Args) {
-                Pair Pair { sName, (uint16_t)iValue };
-                m_aPairs.PushBack(Pair);
-                ProcessPair(Args...);
-                m_iCounter++;
-            }
+                template <typename value_t, typename... args_t> 
+                void ProcessPair(const char* sMasterClass, const char* sPropName, const char* sName, value_t iValue, args_t... Args) {
+                    char sLocKeyBuff[128];
 
-        // This constructor just has to take void* as a member pointer, because Retard++ cant perform an implicit cast
-        // from the enum type to the integer
+                    snprintf(sLocKeyBuff, sizeof(sLocKeyBuff), "#entity.%s.%s.%s", sMasterClass, sPropName, sName);
+                    printf("Enum '%s' entry -> '%s' (name)\n", sPropName, sLocKeyBuff);
+
+                    snprintf(sLocKeyBuff, sizeof(sLocKeyBuff), "#entity.%s.%s.%s_desc", sMasterClass, sPropName, sName);
+                    printf("Enum '%s' entry -> '%s' (desc)\n", sPropName, sLocKeyBuff);
+
+                    Pair Pair { sName, (uint16_t)iValue };
+                    m_aPairs.PushBack(Pair);
+                    ProcessPair(sMasterClass, sPropName, Args...);
+                    m_iCounter++;
+                }
+
+                template <typename... args_t> Reg(const char* sMasterClass, const char* sPropName, args_t... Args) {
+                    ProcessPair(sMasterClass, sPropName, Args...);
+                    m_aPairs.Shrink();
+                }
+            };
+
+            Reg* m_pRegistry;
+
+        // This constructor just has to take void* as a member pointer argument, because Retard++ cant 
+        // perform an implicit cast from the enum type to the integer
 
         public:
             template <typename... args_t> CEnumProperty(CBaseEntity* eMaster, const char* sName, void* pData, args_t... Args) :
             container_t(eMaster, sName, (uint16_t*)pData, 1, EGenericType::Enum)
             {
-                ProcessPair(Args...);
-                m_aPairs.Shrink();
+                static Reg s_PairsReg(eMaster->Class(), m_sName, Args...); // we do only construct this list once for each enumeration
+                m_pRegistry = &s_PairsReg;
+
+                char aLocKeyBuff[128];
+
+                for(size_t i = 0; i < m_pRegistry->m_aPairs.Length(); i++) {
+                    snprintf(aLocKeyBuff, 128, "#entity.%s.%s.%s", m_eMaster->Class(), m_sName, m_pRegistry->m_aPairs[i].sName);
+                    printf("%s\n", aLocKeyBuff);
+                }
             }
 
             void SetValue(uint16_t iValue);
             uint16_t GetValue();
 
             const pairs_t& GetPairs() const;
+
+            virtual ~CEnumProperty() = default;
     };
 }
 

@@ -4,6 +4,7 @@
 
 #include "cbpp/cbdef.h"
 #include "cbpp_api/Entity.h"
+#include "cbpp/filesystem.h"
 
 void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
@@ -28,6 +29,8 @@ int main(int argc, char** argv) {
         }
         pCurrent = pCurrent->Next();
     }
+
+    cbpp::ParsePath("FS:/scripts/map_test/client/fx.ysl");
 
     return EXIT_SUCCESS;
 }
