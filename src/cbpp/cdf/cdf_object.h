@@ -5,7 +5,9 @@
 #include <stdint.h>
 
 namespace cbpp::cdf {
-    enum class EObjectClass : uint16_t {
+    typedef int32_t int_t;
+
+    enum class EObjectClass : int_t {
 
     };
 
@@ -14,6 +16,13 @@ namespace cbpp::cdf {
             virtual size_t Sizeof() const = 0;
             virtual size_t Length() const = 0;
             virtual EObjectClass Class() const = 0;
+    };
+
+    template <typename T> class CObjectStorage {
+        private:
+            T* m_pData = NULL;
+            int_t m_iLength = 0;
+            EObjectClass m_iClass;
     };
 }
 

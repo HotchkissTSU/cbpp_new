@@ -14,7 +14,7 @@ namespace cbpp {
         return (V > Min) && (V < Max);
     }
 
-    template <typename num_t> num_t Clamp(num_t Value, num_t Min, num_t Max) {
+    template <typename A, typename B, typename C> A Clamp(A Value, B Min, C Max) {
         if(Value > Max) {
             return Max;
         }

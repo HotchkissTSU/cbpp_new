@@ -197,13 +197,6 @@ namespace cbpp {
             {
                 static Reg s_PairsReg(eMaster->Class(), m_sName, Args...); // we do only construct this list once for each enumeration
                 m_pRegistry = &s_PairsReg;
-
-                char aLocKeyBuff[128];
-
-                for(size_t i = 0; i < m_pRegistry->m_aPairs.Length(); i++) {
-                    snprintf(aLocKeyBuff, 128, "#entity.%s.%s.%s", m_eMaster->Class(), m_sName, m_pRegistry->m_aPairs[i].sName);
-                    printf("%s\n", aLocKeyBuff);
-                }
             }
 
             void SetValue(uint16_t iValue);

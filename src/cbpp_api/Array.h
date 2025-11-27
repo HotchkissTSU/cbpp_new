@@ -40,9 +40,7 @@ namespace cbpp {
 
             T& At(size_t iIndex) {
                 #ifdef CBPP_DEBUG
-                if(iIndex >= m_iSize) {
-                    CbThrowErrorf("CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
-                }
+                    CbAssertf(iIndex >= m_iSize, "CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
                 #endif
 
                 return m_pMemory[iIndex];
@@ -50,19 +48,15 @@ namespace cbpp {
             
             T const& At(size_t iIndex) const {
                 #ifdef CBPP_DEBUG
-                if(iIndex >= m_iSize) {
-                    CbThrowErrorf("CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
-                }
+                    CbAssertf(iIndex >= m_iSize, "CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
                 #endif
 
                 return const_cast<T const&>(m_pMemory[iIndex]);
             }
-
+            
             T& operator[] (size_t iIndex) {
                 #ifdef CBPP_DEBUG
-                if(iIndex >= m_iSize) {
-                    CbThrowErrorf("CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
-                }
+                    CbAssertf(iIndex >= m_iSize, "CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
                 #endif
 
                 return m_pMemory[iIndex];
@@ -70,12 +64,18 @@ namespace cbpp {
 
             T const& operator[] (size_t iIndex) const {
                 #ifdef CBPP_DEBUG
-                if(iIndex >= m_iSize) {
-                    CbThrowErrorf("CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
-                }
+                    CbAssertf(iIndex >= m_iSize, "CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
                 #endif
 
                 return const_cast<T const&>(m_pMemory[iIndex]);
+            }
+
+            T& Last() {
+                return m_pMemory[m_iSize-1];
+            }
+
+            T const& Last() const {
+                return m_pMemory[m_iSize-1];
             }
             
             void Shrink() {
@@ -93,7 +93,7 @@ namespace cbpp {
 
             // Simply allocate a new place without invoking a copy operator
             // You MUST fill it with any valid data manually, or our destructor will perform a sexy and loud segfault
-            size_t  PushEmpty() {
+            size_t PushEmpty() {
                 m_iSize += 1;
                 const size_t iNewAllocSize = CArray_CalculateLength(m_iAllocated, m_iSize);
 
@@ -121,20 +121,6 @@ namespace cbpp {
                 return m_iSize - 1;
             }
 
-            /*size_t PushBack(T Value) {
-                m_iSize += 1;
-                const size_t iNewAllocSize = CArray_CalculateLength(m_iAllocated, m_iSize);
-
-                if(iNewAllocSize != m_iAllocated) {
-                    m_iAllocated = iNewAllocSize;
-                    m_pMemory = Realloc<T>(m_pMemory, m_iAllocated);
-                }
-
-                memset(&m_pMemory[m_iSize - 1], 0, sizeof(T));
-                m_pMemory[m_iSize - 1] = Value;
-                return m_iSize - 1;
-            }*/
-
             /*
                 Locate COMPARE and replace it with VALUE, or push VALUE at the end of the array
                 COMPARE and VALUE must have a defined comparison operator between each other
@@ -149,20 +135,6 @@ namespace cbpp {
 
                 return this->PushBack(Value);
             }
-            
-            /*size_t PushBack(T&& Value) {
-                m_iSize += 1;
-                const size_t iNewAllocSize = CArray_CalculateLength(m_iAllocated, m_iSize);
-
-                if(iNewAllocSize != m_iAllocated) {
-                    m_iAllocated = iNewAllocSize;
-                    m_pMemory = Realloc<T>(m_pMemory, m_iAllocated);
-                }
-
-                memset(&m_pMemory[m_iSize - 1], 0, sizeof(T));
-                m_pMemory[m_iSize - 1] = Value;
-                return m_iSize - 1;
-            }*/
 
             void PopBack() {
                 m_pMemory[m_iSize-1].~T();

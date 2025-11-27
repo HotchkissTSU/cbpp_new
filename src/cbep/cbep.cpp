@@ -6,6 +6,8 @@
 #include "cbpp_api/Entity.h"
 #include "cbpp/filesystem.h"
 
+#include "cbpp_api/Table.h"
+
 void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
 }
@@ -31,6 +33,19 @@ int main(int argc, char** argv) {
     }
 
     cbpp::ParsePath("FS:/scripts/map_test/client/fx.ysl");
+
+    cbpp::CTable<int, float> dTest;
+    
+    for(int i = 200; i > 0; i--) {
+        dTest[i] = i*10.0f;
+    }
+    
+    forever {
+        int iIndex;
+        scanf("%d", &iIndex); //putc('\n', stdout);
+
+        printf("Table[%d] = %f\n", iIndex, *(dTest.At(iIndex)));
+    }
 
     return EXIT_SUCCESS;
 }
