@@ -19,23 +19,30 @@ namespace cbpp {
         m_sData[iLength] = '\0';
         memcpy(m_sData, Other.String(), iLength);
     }
-
+    
     CImmutableString& CImmutableString::operator=(const CImmutableString& Other) {
         const size_t iLength = Other.Length();
         m_sData = Realloc<char>(m_sData, iLength+1);
 
         return *this;
     }
-    
+
     bool CImmutableString::operator==(const char* sOther) const {
+        if(sOther == NULL && m_sData == NULL) { return true; }
+        if(sOther == NULL) { return false; }
+        if(m_sData == NULL) { return false; }
         return strcmp(sOther, m_sData) == 0;
     }
 
     bool CImmutableString::operator<(const char* sOther) const {
+        if(sOther == NULL) { return false; }
+        if(m_sData == NULL) { return true; }
         return strcmp(sOther, m_sData) < 0;
     }
 
     bool CImmutableString::operator>(const char* sOther) const {
+        if(sOther == NULL) { return true; }
+        if(m_sData == NULL) { return false; }
         return strcmp(sOther, m_sData) > 0;
     }
 

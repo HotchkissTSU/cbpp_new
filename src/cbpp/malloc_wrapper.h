@@ -82,7 +82,7 @@ namespace cbpp {
     }
 
     // Allocate a new array of objects
-    template <typename T, typename... args_t> T* NewA(size_t iAmount, args_t... Args) {
+    template <typename T, typename... args_t> T* NewA(size_t iAmount, args_t&&... Args) {
         T* pBuffer = Malloc<T>(iAmount);
         for(size_t i = 0; i < iAmount; i++) {
             new(&pBuffer[i]) T(std::forward<args_t>(Args)...);

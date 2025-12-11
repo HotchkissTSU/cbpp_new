@@ -17,28 +17,28 @@
 #include "cbpp/entity/CBaseEntity.h"
 
 #define CbIntProperty(_member, _min, _max, _arrlen)\
-    cbpp::New<CIntProperty>(this, #_member, &_member, _arrlen, _min, _max)
+    cbpp::New<CIntProperty>(this, #_member, &_member, sizeof(_member), _arrlen, _min, _max)
 
 #define CbFloatProperty(_member, _min, _max, _arrlen)\
-    cbpp::New<CFloatProperty>(this, #_member, &_member, _arrlen, _min, _max)
+    cbpp::New<CFloatProperty>(this, #_member, &_member, sizeof(_member), _arrlen, _min, _max)
 
 #define CbBoolProperty(_member)\
-    cbpp::New<CBoolProperty>(this, #_member, &_member)
+    cbpp::New<CBoolProperty>(this, #_member, &_member, sizeof(_member))
 
 #define CbStringProperty(_member)\
-    cbpp::New<CStringProperty>(this, #_member, &_member, EAsserPath::Invalid)
+    cbpp::New<CStringProperty>(this, #_member, &_member, sizeof(_member), EAsserPath::Invalid)
 
 #define CbAssetPathProperty(_member, _asset_grp)\
-    cbpp::New<CStringProperty>(this, #_member, &_member, _asset_grp)
+    cbpp::New<CStringProperty>(this, #_member, &_member, sizeof(_member), _asset_grp)
 
 #define CbVector2Property(_member)\
-    cbpp::New<CFloatProperty>(this, #_member, (float*)(&_member), 2, __FLT_MIN__, __FLT_MAX__)
+    cbpp::New<CFloatProperty>(this, #_member, (float*)(&_member), sizeof(_member), 2, __FLT_MIN__, __FLT_MAX__)
 
 #define CbVector3Property(_member)\
-    cbpp::New<CFloatProperty>(this, #_member, (float*)(&_member), 3, __FLT_MIN__, __FLT_MAX__)
+    cbpp::New<CFloatProperty>(this, #_member, (float*)(&_member), sizeof(_member), 3, __FLT_MIN__, __FLT_MAX__)
 
 #define CbEnumProperty(_member, ...)\
-    cbpp::New<CEnumProperty>(this, #_member, &_member, __VA_ARGS__);
+    cbpp::New<CEnumProperty>(this, #_member, &_member, sizeof(_member), __VA_ARGS__)
 
 // Start describing this entity`s properties
 #define CbProperties virtual const char* Class() const; virtual bool IsAbstract() const; virtual void ConstructProps()
@@ -52,8 +52,12 @@ namespace cbpp {
             EGenericType m_iType = EGenericType::Bool;
 
         public:
-            CBaseProperty(CBaseEntity* eMaster, const char* sName, T* pData, size_t iLength, EGenericType iType) : 
-                        m_pData(pData), m_iType(iType), m_iLength(iLength), IProperty(eMaster, sName) {}
+            CBaseProperty(CBaseEntity* eMaster, const char* sName, T* pData, size_t iSize, size_t iLength, EGenericType iType) : 
+                        m_pData(pData), m_iType(iType), m_iLength(iLength), IProperty(eMaster, sName) 
+            {
+                const size_t iExpect = sizeof(T) * iLength;
+                CbAssertf(iExpect > iSize, "Too small '%s.%s' property buffer size: expected %zu, got %zu", eMaster->Class(), sName, iExpect, iSize);
+            }
 
             T* GetBuffer() {
                 return m_pData;
@@ -90,11 +94,11 @@ namespace cbpp {
         const int32_t m_iMin = 0, m_iMax = 100;
 
         public:
-            CIntProperty(CBaseEntity* eMaster, const char* sName, int32_t* pValue, size_t iLength, 
+            CIntProperty(CBaseEntity* eMaster, const char* sName, int32_t* pValue, size_t iSize, size_t iLength, 
                                                                         int32_t iMin, int32_t iMax) : 
                                                                         m_iMin(iMin), 
                                                                         m_iMax(iMax), 
-                                                                        container_t(eMaster, sName, pValue, iLength, EGenericType::Integer32) {}
+                                                                        container_t(eMaster, sName, pValue, iSize, iLength, EGenericType::Integer32) {}
 
             void SetValue(int32_t iValue);
             int32_t GetValue();
@@ -108,10 +112,10 @@ namespace cbpp {
         const float m_fMin = 0.0f, m_fMax = 100.0f;
 
         public:
-            CFloatProperty(CBaseEntity* eMaster, const char* sName, float* pValue, size_t iLength, float fMin, float fMax) : 
+            CFloatProperty(CBaseEntity* eMaster, const char* sName, float* pValue, size_t iSize, size_t iLength, float fMin, float fMax) : 
                                                                         m_fMin(fMin), 
                                                                         m_fMax(fMax), 
-                                                                        container_t(eMaster, sName, pValue, iLength, EGenericType::Float) {}
+                                                                        container_t(eMaster, sName, pValue, iSize, iLength, EGenericType::Float) {}
 
             void SetValue(float iValue);
             float GetValue();
@@ -123,8 +127,8 @@ namespace cbpp {
         typedef CBaseProperty<bool> container_t;
 
         public:
-            CBoolProperty(CBaseEntity* eMaster, const char* sName, bool* pValue) :
-                                                                        container_t(eMaster, sName, pValue, 1, EGenericType::Bool) {}
+            CBoolProperty(CBaseEntity* eMaster, const char* sName, bool* pValue, size_t iSize) :
+                                                                        container_t(eMaster, sName, pValue, iSize, 1, EGenericType::Bool) {}
 
             void SetValue(bool bValue);
             bool GetValue();
@@ -138,8 +142,8 @@ namespace cbpp {
         EAssetPath m_iAssetGroup = EAssetPath::Invalid;
 
         public:
-            CStringProperty(CBaseEntity* eMaster, const char* sName, CString* pData, EAssetPath iAssetGrp) : 
-                            container_t(eMaster, sName, pData, 1, EGenericType::String), m_iAssetGroup(iAssetGrp) {}
+            CStringProperty(CBaseEntity* eMaster, const char* sName, CString* pData, size_t iSize, EAssetPath iAssetGrp) : 
+                            container_t(eMaster, sName, pData, iSize, 1, EGenericType::String), m_iAssetGroup(iAssetGrp) {}
 
             bool IsAssetPath() const;
 
@@ -169,10 +173,10 @@ namespace cbpp {
                     char sLocKeyBuff[128];
 
                     snprintf(sLocKeyBuff, sizeof(sLocKeyBuff), "#entity.%s.%s.%s", sMasterClass, sPropName, sName);
-                    printf("Enum '%s' entry -> '%s' (name)\n", sPropName, sLocKeyBuff);
+                    //printf("Enum '%s' entry -> '%s' (name)\n", sPropName, sLocKeyBuff);
 
                     snprintf(sLocKeyBuff, sizeof(sLocKeyBuff), "#entity.%s.%s.%s_desc", sMasterClass, sPropName, sName);
-                    printf("Enum '%s' entry -> '%s' (desc)\n", sPropName, sLocKeyBuff);
+                    //printf("Enum '%s' entry -> '%s' (desc)\n", sPropName, sLocKeyBuff);
 
                     Pair Pair { sName, (uint16_t)iValue };
                     m_aPairs.PushBack(Pair);
@@ -192,8 +196,8 @@ namespace cbpp {
         // perform an implicit cast from the enum type to the integer
 
         public:
-            template <typename... args_t> CEnumProperty(CBaseEntity* eMaster, const char* sName, void* pData, args_t... Args) :
-            container_t(eMaster, sName, (uint16_t*)pData, 1, EGenericType::Enum)
+            template <typename... args_t> CEnumProperty(CBaseEntity* eMaster, const char* sName, void* pData, size_t iSize, args_t... Args) :
+            container_t(eMaster, sName, (uint16_t*)pData, iSize, 1, EGenericType::Enum)
             {
                 static Reg s_PairsReg(eMaster->Class(), m_sName, Args...); // we do only construct this list once for each enumeration
                 m_pRegistry = &s_PairsReg;

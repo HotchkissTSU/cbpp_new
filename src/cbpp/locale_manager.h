@@ -2,9 +2,9 @@
 #define CBPP_LOCALE_MANAGER_H
 
 #include <stddef.h>
-#include <map>
 
 #include "cbpp/immutable_string.h"
+#include "cbpp_api/Table.h"
 
 // Which character to use as a mark that the string is a locale key
 #define CBPP_LOCALE_KEY_MARK '#'
@@ -32,9 +32,9 @@ namespace cbpp {
     };
     
     class CLocale {
-        typedef std::map<CImmutableString, CImmutableString> table_t;
+        typedef CTable<CImmutableString, CImmutableString> table_t;
 
-        table_t m_dStrings;
+        table_t m_dLocale;
 
         public:
 

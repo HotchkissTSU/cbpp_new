@@ -9,7 +9,7 @@ namespace cbpp {
     */
     class CImmutableString {
         protected:
-            char* m_sData;
+            char* m_sData = NULL;
         
         public:
             CImmutableString();

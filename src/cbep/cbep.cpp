@@ -7,6 +7,7 @@
 #include "cbpp/filesystem.h"
 
 #include "cbpp_api/Table.h"
+#include "cbpp_api/String.h"
 
 void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
@@ -34,17 +35,25 @@ int main(int argc, char** argv) {
 
     cbpp::ParsePath("FS:/scripts/map_test/client/fx.ysl");
 
-    cbpp::CTable<int, float> dTest;
-    
-    for(int i = 200; i > 0; i--) {
-        dTest[i] = i*10.0f;
-    }
-    
-    forever {
-        int iIndex;
-        scanf("%d", &iIndex); //putc('\n', stdout);
+    cbpp::CBinTable<cbpp::CConstString, float> dTest;
 
-        printf("Table[%d] = %f\n", iIndex, *(dTest.At(iIndex)));
+    const char* aNames[] = {
+        "reklov", //0
+        "sineman", //100
+        "nonexistent_kitsune", //200
+        "trastar",//300
+        "amazing_table_model"  //400
+    };
+
+    for(int i = 0; i < 5; i++) {
+        dTest.Insert(aNames[i], i*100);
+    }
+
+    dTest.Print();
+
+    for(int i = 0; i < 5; i++) {
+        float* pValue = dTest.At(aNames[i]);
+        printf("%s = %f\n", aNames[i], pValue == NULL ? -1.0f : *pValue);
     }
 
     return EXIT_SUCCESS;

@@ -27,6 +27,7 @@ namespace cbpp {
     }
 
     Vec2f VectorFromAngle(float fAng);
+    float AngleFromVector(Vec2f vVec);
 }
 
 #endif

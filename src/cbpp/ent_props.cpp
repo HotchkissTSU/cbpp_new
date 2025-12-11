@@ -6,14 +6,6 @@
 namespace cbpp {
     IProperty::IProperty(CBaseEntity* eMaster, const char* sName) : m_eMaster(eMaster), m_sName(sName) {
         eMaster->PushProperty(this);
-
-        char aLocKeyBuff[128];
-
-        snprintf(aLocKeyBuff, sizeof(aLocKeyBuff), "#entity.%s.%s", eMaster->Class(), sName); // property name
-        printf("Property '%s' -> '%s' (name)\n", sName, aLocKeyBuff);
-
-        snprintf(aLocKeyBuff, sizeof(aLocKeyBuff), "#entity.%s.%s_desc", eMaster->Class(), sName); // property description
-        printf("Property '%s' -> '%s' (desc)\n", sName, aLocKeyBuff);
     }
 
     const char* IProperty::Name() {
