@@ -9,6 +9,8 @@
 #include "cbpp_api/Table.h"
 #include "cbpp_api/String.h"
 
+#include <string>
+
 void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
 }
@@ -16,7 +18,7 @@ void InitGLFW() {
 int main(int argc, char** argv) {
     InitGLFW();
 
-    cbpp::CBaseEntity* pEntity = cbpp::CreateEntityClass("ent_test");
+    /*cbpp::CBaseEntity* pEntity = cbpp::CreateEntityClass("ent_test");
 
     cbpp::IProperty* pCurrent = pEntity->GetProperties();
     while(pCurrent) {
@@ -31,30 +33,32 @@ int main(int argc, char** argv) {
             }
         }
         pCurrent = pCurrent->Next();
-    }
+    }*/
 
-    cbpp::ParsePath("FS:/scripts/map_test/client/fx.ysl");
+    //cbpp::ParsePath("FS:/scripts/map_test/client/fx.ysl");
 
-    cbpp::CBinTable<cbpp::CConstString, float> dTest;
+    cbpp::CBinTable<cbpp::CString, cbpp::CString> dTest;
 
     const char* aNames[] = {
-        "reklov", //0
-        "sineman", //100
-        "nonexistent_kitsune", //200
-        "trastar",//300
-        "amazing_table_model"  //400
+        "test_key_1",
+        "test_key_2",
+        "test_key_3", 
+        "test_key_4",
+        "test_key_5" 
     };
 
+    char sBuff[32];
     for(int i = 0; i < 5; i++) {
-        dTest.Insert(aNames[i], i*100);
+        snprintf(sBuff, 32, "test_value_%d", i);
+        dTest[aNames[i]] = sBuff;
     }
 
     dTest.Print();
 
-    for(int i = 0; i < 5; i++) {
-        float* pValue = dTest.At(aNames[i]);
-        printf("%s = %f\n", aNames[i], pValue == NULL ? -1.0f : *pValue);
-    }
+    dTest.Erase("test_key_2");
+    printf("PURGE\n");
+
+    dTest.Print();
 
     return EXIT_SUCCESS;
 }

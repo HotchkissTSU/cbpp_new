@@ -6,7 +6,7 @@
 
 #include "cbpp/cbdef.h"
 #include "cbpp/const_string.h"
-#include "cbpp/mutable_string.h"
+#include "cbpp/cbstring.h"
 
 #include "cbpp/property_interface.h"
 

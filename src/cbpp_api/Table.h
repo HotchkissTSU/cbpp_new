@@ -1,5 +1,7 @@
 /*
     A simple array-based associative table with log2(N) access complexity
+
+    Best for rare insertions and frequent reads.
 */
 
 #ifndef CBPP_BINARY_MAP_H
@@ -9,64 +11,84 @@
 #include "cbpp_api/Math.h"
 
 namespace cbpp {
-    /*
-        Associative array based on binary search.
-    */
-    template<typename key_t, typename value_t> class CBinTable {
+    template <typename key_t, typename value_t> class CBinTable {
         struct Pair {
             key_t Key;
             value_t Value;
+            
+            Pair() = default;
+            Pair(const key_t& k, const value_t& v) : Key(k), Value(v) {}
+            Pair(key_t&& k, value_t&& v) : Key(std::move(k)), Value(std::move(v)) {}
+            
+            bool operator==(const Pair& other) const { return Key == other.Key; }
+            bool operator<(const Pair& other) const { return Key < other.Key; }
         };
-
+        
         CArray<Pair> m_aData;
         
         int64_t BinarySearch(const key_t& Key) const {
+            if (m_aData.Length() == 0) {
+                return -1;  // -(0 + 1) = -1
+            }
+            
             int64_t iL = 0;
-            int64_t iR = m_aData.Length() - 1;
+            int64_t iR = (int64_t)(m_aData.Length()) - 1;
             
             while (iL <= iR) {
-                // Безопасное вычисление середины, избегаем переполнения
                 int64_t iM = iL + (iR - iL) / 2;
+                const key_t& midKey = m_aData[iM].Key;
                 
-                if (m_aData[iM].Key == Key) {
-                    return iM; // Точное совпадение
-                } else if (m_aData[iM].Key < Key) {
+                if (midKey == Key) {
+                    return iM;
+                } else if (midKey < Key) {
                     iL = iM + 1;
-                } else { // key < data[mid].first
+                } else {
                     iR = iM - 1;
                 }
             }
-            
-            return -iL - 1; // No key was found, return the insertion index
+        
+            return -iL - 1;
         }
         
         public:
             CBinTable() = default;
+
+            const CArray<Pair>& Data() {
+                return m_aData;
+            }
             
-            // Insert an element
             void Insert(const key_t& Key, const value_t& Value) {
-                if(m_aData.Length() == 0) {
-                    m_aData.PushBack( Pair{Key, Value} );
+                if (m_aData.Size() == 0) {
+                    m_aData.EmplaceBack(Key, Value);
                     return;
                 }
-
+                
                 int64_t iPos = BinarySearch(Key);
                 
                 if (iPos >= 0) {
-                    m_aData[iPos].Value = Value;
+                    m_aData[(size_t)iPos].Value = Value;
                 } else {
-                    int64_t iInsertPos = -iPos - 1;
-
-                    m_aData.PushEmpty();
-                    
-                    for (int64_t i = m_aData.Length() - 1; i > iInsertPos; --i) {
-                        m_aData[i] = m_aData[i - 1];
-                    }
-
-                    m_aData[iInsertPos] = Pair {Key, Value};
+                    size_t iInsertPos = (size_t)(-iPos - 1);
+                    m_aData.InsertAt(iInsertPos, Key, Value);
                 }
             }
             
+            void Insert(key_t&& Key, value_t&& Value) {
+                if (m_aData.Size() == 0) {
+                    m_aData.EmplaceBack(std::move(Key), std::move(Value));
+                    return;
+                }
+                
+                int64_t iPos = BinarySearch(Key);
+                
+                if (iPos >= 0) {
+                    m_aData[(size_t)iPos].Value = std::move(Value);
+                } else {
+                    size_t iInsertPos = (size_t)(-iPos - 1);
+                    m_aData.InsertAt(iInsertPos, std::move(Key), std::move(Value));
+                }
+            }
+
             bool HasKey(const key_t& Key) const {
                 return BinarySearch(Key) >= 0;
             }
@@ -74,7 +96,7 @@ namespace cbpp {
             value_t* At(const key_t& Key) {
                 int64_t iPos = BinarySearch(Key);
                 if (iPos >= 0) {
-                    return &m_aData[iPos].Value;
+                    return &m_aData[(size_t)iPos].Value;
                 }
                 return NULL;
             }
@@ -82,59 +104,56 @@ namespace cbpp {
             const value_t* At(const key_t& Key) const {
                 int64_t iPos = BinarySearch(Key);
                 if (iPos >= 0) {
-                    return const_cast<const value_t*>(&m_aData[iPos].Value);
+                    return &m_aData[(size_t)iPos].Value;
                 }
                 return NULL;
             }
             
             value_t& operator[](const key_t& Key) {
-                if(m_aData.Length() == 0) {
-                    m_aData.PushBack( Pair {Key, value_t()} );
-                }
-
                 int64_t iPos = BinarySearch(Key);
-
+                
                 if (iPos >= 0) {
-                    return m_aData[iPos].Value;
+                    return m_aData[(size_t)iPos].Value;
                 } else {
-                    int64_t iInsertPos = -iPos - 1;
-
-                    m_aData.PushEmpty();
-
-                    for (int64_t i = m_aData.Length() - 1; i > iInsertPos; --i) {
-                        m_aData[i] = std::move(m_aData[i - 1]);
-                    }
-
-                    m_aData[iInsertPos] = Pair {Key, value_t()};
+                    size_t iInsertPos = (size_t)(-iPos - 1);
+                    value_t DefaultValue{};
+                    m_aData.InsertAt(iInsertPos, Key, std::move(DefaultValue));
                     return m_aData[iInsertPos].Value;
                 }
-            }
-            
-            size_t Length() const {
-                return m_aData.Length();
             }
             
             bool Erase(const key_t& Key) {
                 int64_t iPos = BinarySearch(Key);
                 if (iPos >= 0) {
-                    
-                    for (size_t i = iPos; i < m_aData.Length() - 1; i++) {
-                        m_aData[i] = std::move(m_aData[i + 1]);
-                    }
-                    m_aData.PopBack();
-
+                    m_aData.RemoveAt((size_t)iPos);
                     return true;
                 }
                 return false;
             }
-            
+
             void Clear() {
                 m_aData.Clear();
             }
 
-            void Print() {
-                for(size_t i = 0; i < m_aData.Length(); i++) {
-                    printf("Pair [%d]: {'%s' = %f}\n", i, (const char*)(m_aData[i].Key), m_aData[i].Value);
+            void Shrink() {
+                m_aData.Shrink();
+            }
+
+            size_t Size() const noexcept {
+                return m_aData.Size();
+            }
+            
+            size_t Length() const noexcept {
+                return m_aData.Size();
+            }
+
+            void Reserve(size_t iCapacity) {
+                m_aData.Reserve(iCapacity);
+            }
+            
+            void Print() const {
+                for (size_t i = 0; i < m_aData.Length(); ++i) {
+                    printf("Pair[%i]: K '%s' V '%s'\n", i, m_aData[i].Key.String(), m_aData[i].Value.String());
                 }
             }
     };

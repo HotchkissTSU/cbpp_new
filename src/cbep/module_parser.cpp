@@ -3,11 +3,13 @@
 /*
     Functions for gamefile parsing
 */
-
+/*
+/*
 bool MountSearchPaths(yyjson_val* jPaths) {
-    if( !yyjson_is_obj(jPaths) ) {
-        return false;
-    }
+    //if( !yyjson_is_obj(jPaths) ) {
+     //   return false;
+    //}
 
     return false;
 }
+*/

@@ -8,7 +8,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "cbpp/mutable_string.h"
 #include "cbpp/malloc_wrapper.h"
 
 #include "cbpp_api/Array.h"
