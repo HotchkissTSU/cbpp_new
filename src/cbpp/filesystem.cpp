@@ -5,7 +5,56 @@
 
 #include "cbpp/cbdef.h"
 #include "cbpp/bit.h"
+#include "cbpp/malloc_wrapper.h"
+
 #include "cbpp_api/Math.h"
+
+// Generic interface
+namespace cbpp {
+    IFile* OpenFile(const char* sPath, const char* sModes) {
+        CFile* pFile = New<CFile>();
+        bool bOpen = pFile->Open(sPath, sModes);
+
+        if(bOpen) {
+            return static_cast<IFile*>(pFile);
+        }else{
+            Delete(pFile);
+            return NULL;
+        }
+    }
+
+    void CloseFile(IFile* hFile) {
+        if(hFile != NULL) {
+            hFile->Close();
+        }
+    }
+}
+
+// CFile
+namespace cbpp {
+    bool CFile::IsOpen() {
+        return m_hFile != NULL;
+    }
+
+    bool CFile::Open(const char* sPath, const char* sModes) {
+        m_hFile = fopen(sPath, sModes);
+        return m_hFile != NULL;
+    }
+
+    void CFile::Close() {
+        if(m_hFile != NULL) {
+            fclose(m_hFile);
+        }
+    }
+
+    size_t CFile::Write(size_t iCount, const void* pData) {
+        return fwrite(pData, 1, iCount, m_hFile);
+    }
+
+    size_t CFile::Read(size_t iCount, void* pData) {
+        return fwrite(pData, 1, iCount, m_hFile);
+    }
+}
 
 namespace cbpp {
     void ParsePath(const char* sPath) {

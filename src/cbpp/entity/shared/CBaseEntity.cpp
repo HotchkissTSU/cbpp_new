@@ -5,28 +5,7 @@
 #include "cbpp/vector.h"
 #include "cbpp/ent_register.h"
 
-namespace cbpp {    
-    std::map<CConstString, CEntityRegistrator::entfact_t>& GetEntityFactories() {
-        static std::map<CConstString, CEntityRegistrator::entfact_t> s_dEntityDict;
-        return s_dEntityDict;
-    }
-
-    CEntityRegistrator::CEntityRegistrator(const char* sClassName, entfact_t fpFactory) {
-        /*
-            Entity registrator objects are static, so there is a possibility that they will
-            duplicate among different compiler translation units. This isn`t very bad, but
-            we better avoid unneccecary data overwriting.
-        */
-        if(GetEntityFactories().count(sClassName) == 0){
-            GetEntityFactories()[sClassName] = fpFactory;
-        }
-    }
-
-    CEntityRegistrator::entfact_t CEntityRegistrator::GetFactoryPointer(const char* sClassName) {
-        CbAssertf( GetEntityFactories().count(sClassName) == 0, "Unregistered entity class: '%s'", sClassName );
-        return GetEntityFactories().at(sClassName);
-    }
-
+namespace cbpp {
     eid_t CBaseEntity::UID() const { return m_iUID; }
     void CBaseEntity::SetUID(eid_t iNewID) { m_iUID = iNewID; }
 

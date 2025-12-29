@@ -1,9 +1,8 @@
 #ifndef CBPP_ENTREG_H
 #define CBPP_ENTREG_H
 
-#include <map>
-
 #include "cbpp/const_string.h"
+#include "cbpp_api/Table.h"
 
 // Register an entity to allow its creation via the text label
 #define CbRegisterEntity(cpp_class, classname)                                                                                  \
@@ -28,7 +27,9 @@ namespace cbpp {
             static entfact_t GetFactoryPointer(const char* sClassName);
     };
 
-    std::map<CConstString, CEntityRegistrator::entfact_t>& GetEntityFactories();
+    typedef CBinTable<CConstString, CEntityRegistrator::entfact_t> entmap_t;
+
+    entmap_t& GetEntityFactories();
 }
 
 #endif

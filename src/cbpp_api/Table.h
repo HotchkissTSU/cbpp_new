@@ -1,9 +1,3 @@
-/*
-    A simple array-based associative table with log2(N) access complexity
-
-    Best for rare insertions and frequent reads.
-*/
-
 #ifndef CBPP_BINARY_MAP_H
 #define CBPP_BINARY_MAP_H
 
@@ -11,6 +5,12 @@
 #include "cbpp_api/Math.h"
 
 namespace cbpp {
+    /*
+        Key-Value table based on the almighty binary search
+
+        Read / Search - O(log2N)
+        Write / Erase - O(N)
+    */
     template <typename key_t, typename value_t> class CBinTable {
         struct Pair {
             key_t Key;
@@ -19,6 +19,8 @@ namespace cbpp {
             Pair() = default;
             Pair(const key_t& k, const value_t& v) : Key(k), Value(v) {}
             Pair(key_t&& k, value_t&& v) : Key(std::move(k)), Value(std::move(v)) {}
+
+            Pair(Pair&& other) : Key(std::move(other.Key)), Value(std::move(other.Value)) {}
             
             bool operator==(const Pair& other) const { return Key == other.Key; }
             bool operator<(const Pair& other) const { return Key < other.Key; }
@@ -51,6 +53,9 @@ namespace cbpp {
         }
         
         public:
+            typedef value_t value_type;
+            typedef key_t key_type;
+
             CBinTable() = default;
 
             const CArray<Pair>& Data() {
@@ -59,7 +64,8 @@ namespace cbpp {
             
             void Insert(const key_t& Key, const value_t& Value) {
                 if (m_aData.Size() == 0) {
-                    m_aData.EmplaceBack(Key, Value);
+                    Pair Pair(std::move(Key), std::move(Value));
+                    m_aData.PushBack(std::move(Pair));
                     return;
                 }
                 
@@ -69,13 +75,17 @@ namespace cbpp {
                     m_aData[(size_t)iPos].Value = Value;
                 } else {
                     size_t iInsertPos = (size_t)(-iPos - 1);
-                    m_aData.InsertAt(iInsertPos, Key, Value);
+
+                    Pair Pair(std::move(Key), std::move(Value));
+
+                    m_aData.InsertAt(iInsertPos, std::move(Pair));
                 }
             }
             
             void Insert(key_t&& Key, value_t&& Value) {
                 if (m_aData.Size() == 0) {
-                    m_aData.EmplaceBack(std::move(Key), std::move(Value));
+                    Pair Pair(Key, Value);
+                    m_aData.PushBack(std::move(Pair));
                     return;
                 }
                 
@@ -85,7 +95,10 @@ namespace cbpp {
                     m_aData[(size_t)iPos].Value = std::move(Value);
                 } else {
                     size_t iInsertPos = (size_t)(-iPos - 1);
-                    m_aData.InsertAt(iInsertPos, std::move(Key), std::move(Value));
+
+                    Pair Pair(Key, Value);
+
+                    m_aData.InsertAt(iInsertPos, std::move(Pair));
                 }
             }
 
@@ -116,8 +129,11 @@ namespace cbpp {
                     return m_aData[(size_t)iPos].Value;
                 } else {
                     size_t iInsertPos = (size_t)(-iPos - 1);
-                    value_t DefaultValue{};
-                    m_aData.InsertAt(iInsertPos, Key, std::move(DefaultValue));
+
+                    value_t DefaultValue;
+                    Pair Pair(std::move(Key), std::move(DefaultValue));
+
+                    m_aData.InsertAt(iInsertPos, std::move(Pair));
                     return m_aData[iInsertPos].Value;
                 }
             }
@@ -139,22 +155,16 @@ namespace cbpp {
                 m_aData.Shrink();
             }
 
-            size_t Size() const noexcept {
+            size_t Size() const {
                 return m_aData.Size();
             }
             
-            size_t Length() const noexcept {
+            size_t Length() const {
                 return m_aData.Size();
             }
 
             void Reserve(size_t iCapacity) {
                 m_aData.Reserve(iCapacity);
-            }
-            
-            void Print() const {
-                for (size_t i = 0; i < m_aData.Length(); ++i) {
-                    printf("Pair[%i]: K '%s' V '%s'\n", i, m_aData[i].Key.String(), m_aData[i].Value.String());
-                }
             }
     };
 }

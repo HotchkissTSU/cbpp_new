@@ -52,6 +52,7 @@ namespace cbpp {
     CString::~CString() {
         if (m_sData != NULL) {
             Free(m_sData);
+            m_sData = NULL;
         }
     }
 

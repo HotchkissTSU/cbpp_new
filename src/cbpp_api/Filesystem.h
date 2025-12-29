@@ -21,13 +21,21 @@ namespace cbpp {
         General file I/O interface
     */
     class IFile {
-        friend IFile* OpenFile(EAssetPath iPathGroup, const char* sShortPath);
-        friend void CloseFile(IFile* hFile);
+        friend IFile* OpenFile(const char*, const char*);
+        friend void CloseFile(IFile*);
 
-        virtual bool Open(const char* sFullPath, const char* sModes) = 0;
-        virtual void Close() = 0;
+        protected:
+            virtual bool Open(const char* sFullPath, const char* sModes) = 0;
+            virtual void Close() = 0;
 
         public:
+            IFile() = default;
+            IFile(const IFile&) = delete;
+            IFile(IFile&&) = delete;
+
+            IFile& operator=(IFile&&) = delete;
+            IFile& operator=(const IFile&) = delete;
+
             // Write some data into the file. Returns actual amount of bytes written
             virtual size_t Write(size_t iCount, const void* pData) = 0;
 
@@ -38,14 +46,8 @@ namespace cbpp {
     };
 
 
-    IFile* OpenFile(EAssetPath iPathGroup, const char* sShortPath, const char* sModes);
-
-    // Open a file without path resolving
-    IFile* OpenFileDirect(const char* sPath, const char* sModes);
-
+    IFile* OpenFile(const char* sPath, const char* sModes);
     void CloseFile(IFile* hFile);
-
-    void RegisterSearchPath(EAssetPath iGroup, const char* sPath);
 }
 
 #endif

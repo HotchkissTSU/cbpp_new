@@ -10,7 +10,6 @@
 
 #include "cbpp/property_interface.h"
 
-#define CBPP_ENTMAP_SIZE 512
 #define CBPP_DEFAULT_ENTITY_NAME "<UNNAMED>"
 
 namespace cbpp {

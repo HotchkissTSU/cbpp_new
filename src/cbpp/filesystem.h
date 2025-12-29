@@ -11,22 +11,35 @@
 
 namespace cbpp {
     // File from OS disk
-    class CFile : public IFile {
+    class CFile final : public IFile {
+        friend IFile* OpenFile(const char*, const char*);
+        friend void CloseFile(IFile*);
+
         FILE* m_hFile = NULL;
 
-        bool Open(const char* sFullPath, const char* sModes);
-        void Close();
+        bool Open(const char* sFullPath, const char* sModes) override;
+        void Close() override;
 
         public:
-            size_t Write(size_t iCount, const void* pData);
-            size_t Read(size_t iCount, void* pData);
+            size_t Write(size_t iCount, const void* pData) override;
+            size_t Read(size_t iCount, void* pData) override;
 
-            bool IsOpen();
+            bool IsOpen() override;
     };
 
     // File from the virtual FS
-    class CVirtualFile : public IFile {
-        
+    class CVirtualFile final : public IFile {
+        friend IFile* OpenFile(const char*, const char*);
+        friend void CloseFile(IFile*);
+
+        bool Open(const char* sFullPath, const char* sModes) override;
+        void Close() override;
+
+        public:
+            size_t Write(size_t iCount, const void* pData) override;
+            size_t Read(size_t iCount, void* pData) override;
+
+            bool IsOpen() override;
     };
 
     enum class EFileSystem {

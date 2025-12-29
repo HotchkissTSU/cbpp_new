@@ -1,9 +1,14 @@
 #ifndef CBPP_LIST_H
 #define CBPP_LIST_H
 
+#include <new>
+
 #include "cbpp/malloc_wrapper.h"
 
 namespace cbpp {
+    /*
+        CB++ growable array
+    */
     template <typename T> class CArray {
         public:
             CArray() = default;
@@ -17,7 +22,7 @@ namespace cbpp {
                 }
             }
             
-            CArray(CArray<T>&& Other) noexcept 
+            CArray(CArray<T>&& Other)  
                 : m_pMemory(Other.m_pMemory), m_iAllocated(Other.m_iAllocated), m_iSize(Other.m_iSize) {
                 Other.m_pMemory = NULL;
                 Other.m_iAllocated = 0;
@@ -34,7 +39,7 @@ namespace cbpp {
             }
             
             CArray(size_t iInitialCapacity) : m_iSize(0), m_iAllocated(iInitialCapacity) {
-                if (iInitialCapacity > 0) {
+                if (iInitialCapacity != 0) {
                     m_pMemory = Malloc<T>(iInitialCapacity);
                 }
             }
@@ -47,26 +52,21 @@ namespace cbpp {
             }
             
             CArray& operator=(const CArray<T>& aOther) {
-                if (this != &aOther) {
-                    Clear();
-                    
-                    if (m_iAllocated < aOther.m_iSize) {
-                        if (m_pMemory != NULL) {
-                            Free(m_pMemory);
-                        }
-                        m_iAllocated = aOther.m_iSize;
-                        m_pMemory = Malloc<T>(m_iAllocated);
-                    }
-                    
-                    m_iSize = aOther.m_iSize;
-                    for (size_t i = 0; i < m_iSize; ++i) {
-                        new (&m_pMemory[i]) T(aOther.m_pMemory[i]);
-                    }
+                Clear();
+                
+                m_pMemory = Realloc<T>(aOther.m_iAllocated);
+
+                m_iAllocated = aOther.m_iAllocated;
+                m_iSize = aOther.m_iSize;
+
+                for (size_t i = 0; i < m_iSize; ++i) {
+                    m_pMemory[i] = aOther.m_pMemory[i];
                 }
+                
                 return *this;
             }
             
-            CArray& operator=(CArray<T>&& Other) noexcept {
+            CArray& operator=(CArray<T>&& Other) {
                 if (this != &Other) {
                     Clear();
                     if (m_pMemory != NULL) {
@@ -83,7 +83,7 @@ namespace cbpp {
                 }
                 return *this;
             }
-          
+            
             T& At(size_t iIndex) {
                 CbAssertf(iIndex >= m_iSize, "CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
                 return m_pMemory[iIndex];
@@ -108,22 +108,8 @@ namespace cbpp {
             }
             
             void Shrink() {
-                if (m_iAllocated > m_iSize) {
-                    if (m_iSize == 0) {
-                        Free(m_pMemory);
-                        m_pMemory = NULL;
-                        m_iAllocated = 0;
-                    } else {
-                        T* pNewMemory = Malloc<T>(m_iSize);
-                        for (size_t i = 0; i < m_iSize; ++i) {
-                            new (&pNewMemory[i]) T(std::move(m_pMemory[i]));
-                            m_pMemory[i].~T();
-                        }
-                        Free(m_pMemory);
-                        m_pMemory = pNewMemory;
-                        m_iAllocated = m_iSize;
-                    }
-                }
+                if(m_pMemory == NULL) { return; }
+                m_pMemory = Realloc<T>(m_pMemory, m_iSize);
             }
             
             void Clear() {
@@ -133,21 +119,30 @@ namespace cbpp {
                 m_iSize = 0;
             }
             
-            template <typename... Args>
-            size_t EmplaceBack(Args&&... args) {
-                if (m_iSize >= m_iAllocated) {
+            size_t PushBack(const T& Value) {
+                if(m_iSize >= m_iAllocated) {
                     Grow();
                 }
-                new (&m_pMemory[m_iSize]) T(std::forward<Args>(args)...);
+
+                new(&m_pMemory[m_iSize]) T(Value);
+
                 return m_iSize++;
             }
             
-            size_t PushBack(const T& Value) {
-                return EmplaceBack(Value);
-            }
-            
             size_t PushBack(T&& Value) {
-                return EmplaceBack(std::move(Value));
+                if(m_iSize >= m_iAllocated) {
+                    Grow();
+                }
+
+                if constexpr( std::is_constructible_v<T, T&&> ) {
+                    new(&m_pMemory[m_iSize]) T(std::move(Value));
+                } else {
+                    memcpy(&m_pMemory[m_iSize], &Value, sizeof(Value));
+                }
+
+                memset(&Value, 0, sizeof(Value)); // Reset the moved object
+
+                return m_iSize++;
             }
 
             size_t PushEmpty() {
@@ -165,26 +160,52 @@ namespace cbpp {
                 }
             }
             
-            template <typename... Args>
-            void InsertAt(size_t iPos, Args&&... args) {
+            void InsertAt(size_t iPos, T&& Value) {
                 CbAssert(iPos > m_iSize, "Out of bounds");
-                
-                if (m_iSize >= m_iAllocated) {
+
+                if(m_iSize >= m_iAllocated) {
                     Grow();
                 }
-                
-                if (iPos < m_iSize) {
-                    new (&m_pMemory[m_iSize]) T(std::move(m_pMemory[m_iSize - 1]));
-                    
-                    for (size_t i = m_iSize - 1; i > iPos; --i) {
-                        m_pMemory[i] = std::move(m_pMemory[i - 1]);
+
+                if(iPos > m_iSize) { return; }
+
+                if(m_iSize > 0) {
+                    // Shift everyone to free said index
+                    for(size_t i = m_iSize - 1; i > iPos; --i) {
+                        memcpy(&m_pMemory[i], &m_pMemory[i-1], sizeof(T));
                     }
-                    
-                    m_pMemory[m_iSize].~T();
                 }
-                
-                new (&m_pMemory[iPos]) T(std::forward<Args>(args)...);
-                ++m_iSize;
+
+                m_iSize++;
+
+                // Move the value
+                memcpy(&m_pMemory[iPos], &Value, sizeof(T));
+
+                memset(&Value, 0, sizeof(Value)); // Reset the original object we have moved
+            }
+            
+            void InsertAt(size_t iPos, const T& Value) {
+                CbAssert(iPos > m_iSize, "Out of bounds");
+
+                if(m_iSize >= m_iAllocated) {
+                    Grow();
+                }
+
+                if(iPos > m_iSize) { return; }
+
+                if(m_iSize > 0) {
+                    for(size_t i = m_iSize - 1; i > iPos; --i) {
+                        memcpy(&m_pMemory[i], &m_pMemory[i-1], sizeof(T));
+                    }
+                }
+
+                m_iSize++;
+
+                if constexpr(std::is_constructible_v<T, const T&>) {
+                    new(&m_pMemory[iPos]) T(Value);
+                } else {
+                    memcpy(&m_pMemory[iPos], &Value, sizeof(Value));
+                }
             }
             
             void RemoveAt(size_t iPos) {
@@ -193,7 +214,7 @@ namespace cbpp {
                 m_pMemory[iPos].~T();
 
                 for (size_t i = iPos; i + 1 < m_iSize; ++i) {
-                    new (&m_pMemory[i]) T(std::move(m_pMemory[i + 1]));
+                    memcpy(&m_pMemory[i], &m_pMemory[i+1], sizeof(T));
                     m_pMemory[i + 1].~T();
                 }
                 
@@ -209,23 +230,15 @@ namespace cbpp {
                 return (size_t)(-1);
             }
             
-            T* Data() noexcept { return m_pMemory; }
-            const T* Data() const noexcept { return m_pMemory; }
+            T* Data() { return m_pMemory; }
+            const T* Data() const { return m_pMemory; }
             
-            size_t Length() const noexcept { return m_iSize; }
-            size_t Capacity() const noexcept { return m_iAllocated; }
+            size_t Length() const { return m_iSize; }
+            size_t Capacity() const { return m_iAllocated; }
             
             void Reserve(size_t iNewCapacity) {
                 if (iNewCapacity > m_iAllocated) {
-                    T* pNewMemory = Malloc<T>(iNewCapacity);
-                    
-                    for (size_t i = 0; i < m_iSize; ++i) {
-                        new (&pNewMemory[i]) T(std::move(m_pMemory[i]));
-                        m_pMemory[i].~T();
-                    }
-                    
-                    Free(m_pMemory);
-                    m_pMemory = pNewMemory;
+                    m_pMemory = Realloc<T>(m_pMemory, iNewCapacity);
                     m_iAllocated = iNewCapacity;
                 }
             }
