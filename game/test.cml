@@ -1,0 +1,8 @@
+dict Root = {
+    int Number = 52;
+    string Text = "hello there";
+
+    dict SubDict = {
+        float NumberFloat = 52.0;
+    };
+};

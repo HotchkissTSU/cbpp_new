@@ -17,7 +17,7 @@
 // If non-zero, the library uses exceptions to report bad input instead of C
 // assertion macros. The default is to use exceptions.
 #ifndef JSON_USE_EXCEPTION
-#define JSON_USE_EXCEPTION 1
+#define JSON_USE_EXCEPTION 0
 #endif
 
 // Temporary, tracked for removal with issue #982.
@@ -105,8 +105,8 @@ extern JSON_API int msvc_pre1900_c99_snprintf(char* outBuf, size_t size,
 #endif // if !defined(JSON_IS_AMALGAMATION)
 
 namespace Json {
-using Int = int;
-using UInt = unsigned int;
+using Int = int32_t;
+using UInt = uint32_t;
 #if defined(JSON_NO_INT64)
 using LargestInt = int;
 using LargestUInt = unsigned int;

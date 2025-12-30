@@ -49,7 +49,9 @@
             "type" : "OBJ",
             "include" : ["src/cbpp/include", "src"],
             "obj":".obj/cbpp",
-            "src":["src/cbpp/*.cpp", "src/cbpp/entity/shared/*.cpp"]
+            "src":[ "src/cbpp/*.cpp", 
+                    "src/cbpp/entity/shared/*.cpp",
+                    "src/cbpp/cml/*.cpp"]
         },
 
         "cbpp_server":{

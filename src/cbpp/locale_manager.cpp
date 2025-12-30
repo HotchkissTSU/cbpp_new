@@ -54,7 +54,14 @@ namespace cbpp {
         sJsonBuffer[iLength] = '\0';
         hFile->ReadAll(sJsonBuffer);
 
-        
+        Json::Reader FileReader;
+        Json::Value jRoot;
+
+        if(!FileReader.parse(sJsonBuffer, sJsonBuffer + iLength, jRoot, false)) {
+            return false;
+        }
+
+        printf("TEST = %s\n", jRoot["test"].asCString());
 
         CloseFile(hFile);
         return true;
