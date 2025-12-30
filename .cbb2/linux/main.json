@@ -59,12 +59,12 @@
             "src":["src/cbpp/entity/server/*.cpp"]
         },
 
-        "yyjson" : {
-            "compiler" : "gcc",
+        "jsoncpp" : {
+            "compiler" : "g++",
             "type" : "OBJ",
-            "obj":".obj/yyjson",
-            "src":["src/yyjson/*.c"],
-            "include":["src/yyjson"],
+            "obj":".obj/jsoncpp",
+            "src":["src/jsoncpp/*.cpp"],
+            "include":["src/jsoncpp"],
             "comp_params":"-fPIC -O2"
         },
 
@@ -91,7 +91,7 @@
             "type" : "DLL",
             "from_obj" : 1,
             "out" : "game/bin",
-            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/yyjson/*.o", ".obj/*.o", ".obj/cbpp/sv/*.o"],
+            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/jsoncpp/*.o", ".obj/*.o", ".obj/cbpp/sv/*.o"],
             "link_static" : ["z"]
         },
 
@@ -99,7 +99,7 @@
             "type" : "DLL",
             "from_obj" : 1,
             "out" : "game/bin",
-            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/yyjson/*.o", ".obj/*.o", ".obj/cbpp/cl/*.o"],
+            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/jsoncpp/*.o", ".obj/*.o", ".obj/cbpp/cl/*.o"],
             "link_static" : ["z"]
         }
 	}

@@ -32,7 +32,23 @@ namespace cbpp {
 
 // CFile
 namespace cbpp {
-    bool CFile::IsOpen() {
+    FILE* CFile::Handle() { return m_hFile; }
+
+    size_t CFile::Length() const {
+        if(!IsOpen()) {
+            return 0;
+        }
+
+        long iOldPos = ftell(m_hFile);
+
+        fseek(m_hFile, 0, SEEK_END);
+        size_t iLength = (size_t)(ftell(m_hFile));
+        fseek(m_hFile, iOldPos, SEEK_SET);
+
+        return iLength;
+    }
+
+    bool CFile::IsOpen() const {
         return m_hFile != NULL;
     }
 
@@ -53,6 +69,11 @@ namespace cbpp {
 
     size_t CFile::Read(size_t iCount, void* pData) {
         return fwrite(pData, 1, iCount, m_hFile);
+    }
+
+    size_t CFile::ReadAll(char* pBuffer) const {        
+        size_t iLength = Length();
+        return fread(pBuffer, 1, iLength, m_hFile);
     }
 }
 

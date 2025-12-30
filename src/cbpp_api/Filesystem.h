@@ -41,10 +41,12 @@ namespace cbpp {
 
             // Read some data from the file. Returns actual amount of bytes read
             virtual size_t Read(size_t iCount, void* pBuffer) = 0;
+            virtual size_t ReadAll(char* pBuff) const = 0;
 
-            virtual bool IsOpen() = 0;
+            virtual size_t Length() const = 0;
+            virtual bool IsOpen() const = 0;
+            virtual FILE* Handle() = 0;
     };
-
 
     IFile* OpenFile(const char* sPath, const char* sModes);
     void CloseFile(IFile* hFile);

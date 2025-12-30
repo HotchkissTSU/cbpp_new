@@ -37,7 +37,7 @@ namespace cbpp {
     */
     size_t& GetMallocCounter();
 
-	template <typename T> T* Malloc(size_t iCount) noexcept {
+	template <typename T> T* Malloc(size_t iCount) {
 		const size_t iMemorySize = sizeof(T) * iCount;
 		T* pMemory = (T*) GetAllocatorData().fpMalloc( iMemorySize );
 
@@ -47,19 +47,18 @@ namespace cbpp {
 		return pMemory;
 	}
 
-	template <typename T> T* Calloc(size_t iCount) noexcept {
+	template <typename T> T* Calloc(size_t iCount) {
 		T* pMemory = Malloc<T>(iCount);
 		memset(pMemory, 0, sizeof(T) * iCount);
 
-        GetMallocCounter()++;
 		return pMemory;
 	}
 
-	template <typename T> T* Malloc() noexcept {
+	template <typename T> T* Malloc() {
 		return Malloc<T> (1);
     }
 
-	template <typename T> T* Realloc(T* pMemory, size_t iNewSize) noexcept {
+	template <typename T> T* Realloc(T* pMemory, size_t iNewSize) {
 		if( pMemory == NULL ) {
 			return Malloc<T>(iNewSize);
 		}

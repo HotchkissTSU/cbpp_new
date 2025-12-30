@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "cbpp/immutable_string.h"
+#include "cbpp/cbstring.h"
 #include "cbpp_api/Table.h"
 
 // Which character to use as a mark that the string is a locale key
@@ -11,34 +11,43 @@
 
 #define CBPP_LOCALE_FALLBACK "(NULL)"
 
-namespace cbpp {
-    // Points inside current locale`s table
-    class CLocaleString {
-        friend class CLocale;
-
-        CImmutableString* m_pData;
-
-        CLocaleString(CImmutableString* pData) : m_pData(pData) {}
-
-        public:
-            CLocaleString() = delete;
-            CLocaleString(const CLocaleString& Other) = delete;
-            CLocaleString& operator=(const CLocaleString& Other) = delete;
-
-            const char* String() const;
-            operator const char* ();
-
-            static const char* GetFallbackString();
-    };
-    
+namespace cbpp {    
     class CLocale {
-        typedef CTable<CImmutableString, CImmutableString> table_t;
+        friend bool MountLocale(const char*);
 
-        table_t m_dLocale;
+        CBinTable<CString, CString> m_dKeys;
 
         public:
+            CLocale() = default;
+            CLocale(const CLocale& Other) = delete;
+            CLocale(CLocale&& Other) = delete;
 
+            CLocale& operator=(const CLocale& Other) = delete;
+            CLocale& operator=(CLocale&& Other) = delete;
+
+            const char* GetFallbackString() const;
+
+            bool HasKey(const CString& sKey) const;
+            const char* GetString(const CString& sKey) const;
     };
+
+    class CLocaleManager {
+        friend void SetLocale(const char*);
+        friend const CLocale* GetCurrentLocale();
+
+        CLocale* m_pCurrentLocale = NULL;
+        CBinTable<CString, CLocale*> m_dLocales;
+
+        public:
+            
+    };
+
+    CLocaleManager* GetLocaleManager();
+
+    bool MountLocale(const char* sFilePath);
+    void SetLocale(const char* sLocaleName);
+
+    const CLocale* GetCurrentLocale();
 }
 
 #endif

@@ -227,13 +227,13 @@ namespace cbpp {
     // Type casts
 
     CString::operator const char*() const {
-        return String();
+        return const_cast<const char*>(m_sData);
     }
 
     CString::operator char*() {
         return m_sData;
     }
-
+    
     CString::operator bool() const {
         return IsValid();
     }

@@ -21,10 +21,15 @@ namespace cbpp {
         void Close() override;
 
         public:
+            size_t Length() const override;
+
             size_t Write(size_t iCount, const void* pData) override;
             size_t Read(size_t iCount, void* pData) override;
+            size_t ReadAll(char* pBuff) const override;
 
-            bool IsOpen() override;
+            bool IsOpen() const override;
+
+            FILE* Handle() override;
     };
 
     // File from the virtual FS
@@ -39,7 +44,7 @@ namespace cbpp {
             size_t Write(size_t iCount, const void* pData) override;
             size_t Read(size_t iCount, void* pData) override;
 
-            bool IsOpen() override;
+            bool IsOpen() const override;
     };
 
     enum class EFileSystem {

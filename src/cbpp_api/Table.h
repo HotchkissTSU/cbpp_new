@@ -10,6 +10,8 @@ namespace cbpp {
 
         Read / Search - O(log2N)
         Write / Erase - O(N)
+
+        key_t must have a defined '==' and '<' operators
     */
     template <typename key_t, typename value_t> class CBinTable {
         struct Pair {
@@ -62,6 +64,7 @@ namespace cbpp {
                 return m_aData;
             }
             
+            // Insert a pair
             void Insert(const key_t& Key, const value_t& Value) {
                 if (m_aData.Size() == 0) {
                     Pair Pair(std::move(Key), std::move(Value));
@@ -82,6 +85,7 @@ namespace cbpp {
                 }
             }
             
+            // Insert a pair
             void Insert(key_t&& Key, value_t&& Value) {
                 if (m_aData.Size() == 0) {
                     Pair Pair(Key, Value);
@@ -106,6 +110,10 @@ namespace cbpp {
                 return BinarySearch(Key) >= 0;
             }
             
+            /*
+                Attempt getting a value by this key.
+                If there is no such a pair, NULL is returned
+            */
             value_t* At(const key_t& Key) {
                 int64_t iPos = BinarySearch(Key);
                 if (iPos >= 0) {
@@ -114,6 +122,10 @@ namespace cbpp {
                 return NULL;
             }
             
+            /*
+                Attempt getting a value by this key.
+                If there is no such a pair, NULL is returned
+            */
             const value_t* At(const key_t& Key) const {
                 int64_t iPos = BinarySearch(Key);
                 if (iPos >= 0) {
@@ -122,6 +134,10 @@ namespace cbpp {
                 return NULL;
             }
             
+            /*
+                Get a value by key, or insert a new pair
+                if there is none
+            */
             value_t& operator[](const key_t& Key) {
                 int64_t iPos = BinarySearch(Key);
                 
