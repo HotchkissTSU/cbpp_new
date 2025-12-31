@@ -14,6 +14,12 @@ namespace cbpp::cml {
             case EToken::BlockClose:
                 return "BLK_END";
 
+            case EToken::ArrayOpen:
+                return "ARR_START";
+
+            case EToken::ArrayClose:
+                return "ARR_END";
+
             case EToken::Identifier:
                 return "IDENTIFIER";
 
@@ -83,6 +89,24 @@ namespace cbpp::cml {
                     m_iCol++;
                 }
 
+                else if(cChar == '[') {
+                    m_aTokens.PushBack({
+                        EToken::ArrayOpen,
+                        CString(),
+                        m_iLine, m_iCol
+                    });
+                    m_iCol++;
+                }
+
+                else if(cChar == ']') {
+                    m_aTokens.PushBack({
+                        EToken::ArrayClose,
+                        CString(),
+                        m_iLine, m_iCol
+                    });
+                    m_iCol++;
+                }
+
                 else if(cChar == '=') {
                     m_aTokens.PushBack({
                         EToken::Assign,
@@ -90,6 +114,12 @@ namespace cbpp::cml {
                         m_iLine, m_iCol
                     });
                     m_iCol++;
+                }
+                break;
+
+            case ETokenizerState::InComment:
+                if(cChar == '\n' || cChar == '#') {
+                    m_iState = ETokenizerState::Start;
                 }
                 break;
 
@@ -142,17 +172,39 @@ namespace cbpp::cml {
 
                     m_aCurrentLexeme.Clear();
                     m_iState = ETokenizerState::Start;
-                } else {
-                    m_aCurrentLexeme.PushBack(cChar);
+                } else { 
+                    if(m_bHasBSlash) {
+                        if(cChar == 'n') {
+                            m_aCurrentLexeme.PushBack('\n');
+                        }else if(cChar == 't') {
+                            m_aCurrentLexeme.PushBack('\t');
+                        }
+                        m_bHasBSlash = false;
+                    } else {
+                        if(cChar == '\\') {
+                            m_bHasBSlash = true;
+                        }else if(cChar != '\n'){
+                            m_aCurrentLexeme.PushBack(cChar);
+                        }
+                    }
                 }
                 m_iCol++;
                 break;
         }
     }
-
+    
     void CTokenizer::Finish() {
         ProcessCharacter('#');
         m_aTokens.Shrink();
+    }
+
+    void CTokenizer::ProcessString(const char* sString) {
+        char* C = (char*)sString;
+        while(*C != '\0') {
+            ProcessCharacter(*C);
+            C++;
+        }
+        Finish();
     }
 
     void CTokenizer::Print() {

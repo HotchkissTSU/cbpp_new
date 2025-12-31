@@ -1,8 +1,35 @@
-dict Root = {
-    int Number = 52;
-    string Text = "hello there";
+include "/cml/include_test.cml"
 
-    dict SubDict = {
-        float NumberFloat = 52.0;
-    };
-};
+Root {
+    # full-line comment
+
+    MyNumber 52.52
+    MyArray [1 2 3 4 #embed comment!# "STRING!"]
+
+    SubBlock {
+        SubString "hello there!"
+    }
+
+    BigString "Hello there!\nThis string is kinda big.\tTab!"
+    
+    FileReference "@/cml/ref_test.txt"
+
+    LocaleReference "#entity.CPointEntity.m_vPos"
+
+    ArrayOfBlocks [
+        {
+            Name "lexa"
+            Age 52
+        }
+
+        {
+            Name "Реклов"
+            Age 21
+        }
+
+        {
+            Name "Сеня"
+            Age 21
+        }
+    ]
+}

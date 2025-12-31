@@ -10,6 +10,7 @@
 #include "cbpp_api/String.h"
 
 #include "cbpp/cml/cml.h"
+#include "cbpp_api/Filesystem.h"
 
 void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
@@ -49,12 +50,18 @@ int main(int argc, char** argv) {
 
     cbpp::cml::CTokenizer Test;
 
-    const char* sCML = "dict test = { int subi = 35 string amogus = \"spy amongst us!\" }";
-    for(char* c = (char*)sCML; *c != '\0'; c++) {
-        Test.ProcessCharacter(*c);
+    cbpp::IFile* File = cbpp::OpenFile("test.cml", "rb");
+    if(!File->IsOpen()) {
+        return 1;
     }
-    Test.Finish();
 
+    size_t iFileLength = File->Length();
+    char* sFileText = cbpp::Malloc<char>(iFileLength+1);
+    sFileText[iFileLength] = '\0';
+
+    File->ReadAll(sFileText);
+
+    Test.ProcessString(sFileText);
     Test.Print();
 
     return EXIT_SUCCESS;
