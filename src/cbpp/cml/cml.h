@@ -15,7 +15,6 @@ namespace cbpp::cml {
     enum class EToken : uint32_t {
         Keyword,
         Identifier,
-        Assign,
         BlockOpen,
         BlockClose,
         ArrayOpen,
@@ -27,7 +26,6 @@ namespace cbpp::cml {
     const char* GetTokenName(EToken iType);
 
     bool IsKeyword(const char* sData);
-    bool IsTypename(const char* sData);
 
     enum class ETokenizerState : uint32_t {
         Start,
@@ -58,13 +56,18 @@ namespace cbpp::cml {
             void ProcessCharacter(char cCurrent);
             void Finish();
 
+            CArray<Token>& GetTokens();
+
             void Print();
     };
 
     enum class EValueType : uint32_t {
         Integer,
         Float,
-        String
+        String,
+        
+        Array,
+        Object
     };
 
     enum class EErrorType : uint32_t {
@@ -77,52 +80,37 @@ namespace cbpp::cml {
         IllArray                // Badly formatted array (square braces mismatch)
     };
 
-    class CTokenParser {
-        class CValue {
-            union {
-                int32_t i32;
-                float f32;
-                CString str;
-            } m_Value;
+    struct ErrorInfo {
+        EErrorType iType;
+        size_t iLine, iCol;
+    };
 
-            EValueType m_iType = EValueType::Integer;
+    class CValue {
+        union {
+            int32_t i32;
+            float f32;
+            char* str;
+        } m_Value;
 
-            public:
-                int32_t& Int();
-                float& Float();
-                CString& String();
-        };
-
-        class CBlock {
-            CBinTable<CString, CValue> m_dValues;
-            CBinTable<CString, CBlock> m_dSubBlocks;
-
-            bool m_bIsArray = false;
-
-            public:
-                CValue& GetValueByName(const CString& sName);
-                CValue& GetValueByIndex(size_t iIndex);
-
-                CBlock& GetSubBlock(const CString& sBlockName);
-        };
-        
-        CBlock m_RootBlock;
-        bool m_bErrored = false;
-
-        void ParseBlock();
-        void ParseArray();
+        EValueType m_iType = EValueType::Integer;
 
         public:
-            bool ParseString(const char* sCode);
-            bool HasErrors();
+            CValue() = default;
 
-            /*
-                block/sub_block.my_value
-                block/sub_block.my_array[2]
-            */
-            CValue& AccessValue(const char* sPath);
+            CValue(int32_t iValue);
+            CValue(float fValue);
+            CValue(const CString& sValue);
 
-            CString GetErrorLog();
+            int32_t& Int();
+            float& Float();
+            CString& String();
+
+            ~CValue();
+    };
+
+    class IObject {
+        public:
+            virtual EValueType Type() = 0;
     };
 }
 

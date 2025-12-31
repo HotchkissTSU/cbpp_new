@@ -4,10 +4,7 @@
 
 namespace cbpp::cml {
     const char* GetTokenName(EToken iType) {
-        switch (iType) {
-            case EToken::Assign:
-                return "ASSIGN";
-            
+        switch (iType) {            
             case EToken::BlockOpen:
                 return "BLK_START";
 
@@ -106,15 +103,6 @@ namespace cbpp::cml {
                     });
                     m_iCol++;
                 }
-
-                else if(cChar == '=') {
-                    m_aTokens.PushBack({
-                        EToken::Assign,
-                        CString(),
-                        m_iLine, m_iCol
-                    });
-                    m_iCol++;
-                }
                 break;
 
             case ETokenizerState::InComment:
@@ -192,11 +180,13 @@ namespace cbpp::cml {
                 break;
         }
     }
-    
+
     void CTokenizer::Finish() {
         ProcessCharacter('#');
         m_aTokens.Shrink();
     }
+
+    CArray<Token>& CTokenizer::GetTokens() { return m_aTokens; }
 
     void CTokenizer::ProcessString(const char* sString) {
         char* C = (char*)sString;

@@ -11,6 +11,7 @@
 
 #include "cbpp/cml/cml.h"
 #include "cbpp_api/Filesystem.h"
+#include "cbpp/ref_string.h"
 
 void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
@@ -48,7 +49,7 @@ int main(int argc, char** argv) {
     printf("dTest['%s'] = '%s'\n", "test1", dTest["test1"].String());
     printf("dTest['%s'] = '%s'\n", "test2", dTest["test2"].String());*/
 
-    cbpp::cml::CTokenizer Test;
+    /*cbpp::cml::CTokenizer Test;
 
     cbpp::IFile* File = cbpp::OpenFile("test.cml", "rb");
     if(!File->IsOpen()) {
@@ -62,7 +63,15 @@ int main(int argc, char** argv) {
     File->ReadAll(sFileText);
 
     Test.ProcessString(sFileText);
-    Test.Print();
+    Test.Print();*/
+
+    char sBuff[128];
+    const char* sSource = "the kitsune 3D model does not exist obviously, and all rumors around it are a psyop";
+
+    cbpp::CRefString sTest(sSource, 4, 11);
+    sTest.Bufferize(sBuff, 11);
+
+    printf("sBuff = '%s'\n", sBuff);
 
     return EXIT_SUCCESS;
 }
