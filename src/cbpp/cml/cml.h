@@ -99,18 +99,68 @@ namespace cbpp::cml {
 
             CValue(int32_t iValue);
             CValue(float fValue);
-            CValue(const CString& sValue);
+            CValue(const char* sValue);
 
-            int32_t& Int();
-            float& Float();
-            CString& String();
+            void SetType(EValueType iType);
+
+            void SetValue(int32_t iValue);
+            void SetValue(float iValue);
+            void SetValue(const char* sValue);
+
+            int32_t GetInt() const;
+            float GetFloat() const;
+            const char* GetString() const;
+
+            EValueType Type() const;
 
             ~CValue();
     };
 
     class IObject {
+        friend IObject* CreateObject(EValueType);
+
+        protected:
+            IObject() = default;
+
         public:
-            virtual EValueType Type() = 0;
+            typedef CBinTable<CString, IObject*> objmap_t;
+            typedef CArray<IObject*> objlist_t;
+
+            virtual EValueType Type() const = 0;
+            virtual CValue* Value() = 0;
+
+            /*
+                Get children table.
+                Returns NULL if used on anything except EValueType::Object
+            */
+            virtual objmap_t* GetChildren() = 0;
+
+            /*
+                Get children list.
+                Returns NULL if used on anything except EValueType::Array
+            */
+            virtual objlist_t* GetArray() = 0;
+
+            /*
+                Push a sub-object.
+                Works only on objects and arrays, and name is ignored when
+                pushing in the array
+            */
+            virtual bool PushChild(const char* sName, IObject* pChild) = 0;
+
+            virtual bool HasChild(const char* sName) const = 0;
+            virtual size_t Length() const = 0;
+
+            virtual IObject* GetByName(const char* sName) const = 0;
+            virtual IObject* GetByIndex(size_t iIndex) const = 0;
+
+            virtual ~IObject() = default;
+    };
+
+    IObject* CreateObject(EValueType iType);
+
+    class CParser {
+        
     };
 }
 

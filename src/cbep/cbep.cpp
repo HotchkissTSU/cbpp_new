@@ -11,7 +11,6 @@
 
 #include "cbpp/cml/cml.h"
 #include "cbpp_api/Filesystem.h"
-#include "cbpp/ref_string.h"
 
 void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
@@ -68,10 +67,12 @@ int main(int argc, char** argv) {
     char sBuff[128];
     const char* sSource = "the kitsune 3D model does not exist obviously, and all rumors around it are a psyop";
 
-    cbpp::CRefString sTest(sSource, 4, 11);
-    sTest.Bufferize(sBuff, 11);
+    cbpp::CSubString sTest(sSource, 4, 11);
+    sTest.Bufferize(sBuff, 128);
 
-    printf("sBuff = '%s'\n", sBuff);
+    cbpp::CString sCopyTest = sTest.Copy();
+
+    printf("sBuff = '%s'\nsCopyTest = '%s'\n", sBuff, sCopyTest.String());
 
     return EXIT_SUCCESS;
 }

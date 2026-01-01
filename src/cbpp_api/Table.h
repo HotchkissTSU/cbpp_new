@@ -57,6 +57,7 @@ namespace cbpp {
         public:
             typedef value_t value_type;
             typedef key_t key_type;
+            typedef CArray<Pair> pairs_t;
 
             CBinTable() = default;
 
@@ -66,7 +67,7 @@ namespace cbpp {
             
             // Insert a pair
             void Insert(const key_t& Key, const value_t& Value) {
-                if (m_aData.Size() == 0) {
+                if (m_aData.Length() == 0) {
                     Pair Pair(std::move(Key), std::move(Value));
                     m_aData.PushBack(std::move(Pair));
                     return;
@@ -170,13 +171,9 @@ namespace cbpp {
             void Shrink() {
                 m_aData.Shrink();
             }
-
-            size_t Size() const {
-                return m_aData.Size();
-            }
             
             size_t Length() const {
-                return m_aData.Size();
+                return m_aData.Length();
             }
 
             void Reserve(size_t iCapacity) {

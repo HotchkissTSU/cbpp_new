@@ -10,15 +10,17 @@ namespace cbpp {
         A reference that points to a substring in the source string
         Useful when working with a single big text to avoid allocations and copying
 
-        Obviously, this class is useable until referensed string is valid
+        Obviously, this class is useable until referenced string is valid
     */
-    class CRefString {
+    class CSubString {
         char *m_pStart = NULL, *m_pEnd = NULL;
 
         public:
-            CRefString() = default;
-            CRefString(const CString& sSource, size_t iStart, size_t iLength);
-            CRefString(const char* sSource, size_t iStart, size_t iLength);
+            CSubString(CString&& sSource, size_t iPos, size_t iLength) = delete;
+
+            CSubString() = default;
+            CSubString(const CString& sSource, size_t iStart, size_t iLength);
+            CSubString(const char* sSource, size_t iStart, size_t iLength);
 
             void Set(const char* sSource, size_t iStart, size_t iLength);
 
@@ -26,6 +28,8 @@ namespace cbpp {
             
             char* Start() const;
             char* End() const;
+
+            CString Copy() const;
 
             // Output the string to an external buffer, adding the null-terminator
             size_t Bufferize(char* pBuffer, size_t iBuffSize) const;

@@ -3,5 +3,6 @@
 
 #include "cbpp/const_string.h"
 #include "cbpp/cbstring.h"
+#include "cbpp/sub_string.h"
 
 #endif
