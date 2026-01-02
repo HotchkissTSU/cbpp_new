@@ -11,7 +11,7 @@ namespace cbpp {
         Read / Search - O(log2N)
         Write / Erase - O(N)
 
-        key_t must have a defined '==' and '<' operators
+        key_t must have defined '==' and '<' operators
     */
     template <typename key_t, typename value_t> class CBinTable {
         struct Pair {
@@ -61,7 +61,7 @@ namespace cbpp {
 
             CBinTable() = default;
 
-            const CArray<Pair>& Data() {
+            const pairs_t& Data() {
                 return m_aData;
             }
             

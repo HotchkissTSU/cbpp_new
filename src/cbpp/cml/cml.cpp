@@ -4,6 +4,7 @@ namespace cbpp::cml {
     #define KW(_str) if( strcmp(sData, _str) == 0 ) { return true; }
     bool IsKeyword(const char* sData) {
         KW("include")
+        KW("define")
 
         return false;
     }
@@ -24,7 +25,7 @@ namespace cbpp::cml {
     }
 
     CValue::~CValue() {
-        if(m_iType == EValueType::String) {
+        if(m_iType == EValueType::String && m_Value.str != NULL) {
             Free(m_Value.str);
         }
     }
@@ -77,7 +78,7 @@ namespace cbpp::cml {
 
     void CValue::SetType(EValueType iType) {
         if(iType != EValueType::String && m_iType == EValueType::String) {
-            Free(m_Value.str); // Switching from string storage, habe to free the memory
+            Free(m_Value.str); // Switching from string storage, have to free the memory
         }
 
         m_iType = iType;

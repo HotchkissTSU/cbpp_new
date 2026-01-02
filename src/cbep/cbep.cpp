@@ -48,8 +48,6 @@ int main(int argc, char** argv) {
     printf("dTest['%s'] = '%s'\n", "test1", dTest["test1"].String());
     printf("dTest['%s'] = '%s'\n", "test2", dTest["test2"].String());*/
 
-    /*cbpp::cml::CTokenizer Test;
-
     cbpp::IFile* File = cbpp::OpenFile("test.cml", "rb");
     if(!File->IsOpen()) {
         return 1;
@@ -61,10 +59,14 @@ int main(int argc, char** argv) {
 
     File->ReadAll(sFileText);
 
-    Test.ProcessString(sFileText);
-    Test.Print();*/
+    cbpp::CString sText(sFileText);
 
-    char sBuff[128];
+    cbpp::cml::CTokenizer Test(sText);
+
+    Test.ProcessString();
+    Test.Print();
+
+    /*char sBuff[128];
     const char* sSource = "the kitsune 3D model does not exist obviously, and all rumors around it are a psyop";
 
     cbpp::CSubString sTest(sSource, 4, 11);
@@ -72,7 +74,7 @@ int main(int argc, char** argv) {
 
     cbpp::CString sCopyTest = sTest.Copy();
 
-    printf("sBuff = '%s'\nsCopyTest = '%s'\n", sBuff, sCopyTest.String());
+    printf("sBuff = '%s'\nsCopyTest = '%s'\n", sBuff, sCopyTest.String());*/
 
     return EXIT_SUCCESS;
 }

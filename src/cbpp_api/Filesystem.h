@@ -3,10 +3,12 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <time.h>
 
 namespace cbpp {
     enum class EAssetPath : uint32_t {
         Invalid,
+
         Generic,
         Sprite,
         Locale,
@@ -50,6 +52,21 @@ namespace cbpp {
 
     IFile* OpenFile(const char* sPath, const char* sModes);
     void CloseFile(IFile* hFile);
+
+    enum class EFileClass : uint32_t {
+        File,
+        Directory,
+        CharDevice
+    };
+
+    struct FileInfo {
+        bool bExists;
+        size_t iSize;
+        EFileClass iClass;
+        time_t iLastAccess, iLastModified;
+    };
+
+    FileInfo GetFileInfo(const char* sPath);
 }
 
 #endif

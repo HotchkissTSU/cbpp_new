@@ -10,6 +10,7 @@
 #include "cbpp_api/Array.h"
 #include "cbpp_api/Table.h"
 #include "cbpp_api/String.h"
+#include "cbpp_api/Stack.h"
 
 namespace cbpp::cml {
     enum class EToken : uint32_t {
@@ -38,22 +39,29 @@ namespace cbpp::cml {
 
     struct Token {
         EToken iType;
-        cbpp::CString sLexeme;
-        size_t iLine, iColumn;
+        cbpp::CSubString sLexeme;
+        size_t iLine, iColumn, m_iPos;
     };
 
     class CTokenizer {
+        const cbpp::CString& m_sSource;
+
         cbpp::CArray<Token> m_aTokens;
-        cbpp::CArray<char> m_aCurrentLexeme;
+        
+        size_t m_iLexemStart = 0, m_iLexemLength = 0;
+        size_t m_iCounter = 0;
 
         ETokenizerState m_iState = ETokenizerState::Start;
         size_t m_iLine = 1, m_iCol = 1;
         bool m_bHasBSlash = false;
 
-        public:
-            void ProcessString(const char* sString);
+        void ProcessCharacter(char cCurrent);
 
-            void ProcessCharacter(char cCurrent);
+        public:
+            CTokenizer(const CString& sSource);
+
+            void ProcessString();
+
             void Finish();
 
             CArray<Token>& GetTokens();
@@ -160,7 +168,20 @@ namespace cbpp::cml {
     IObject* CreateObject(EValueType iType);
 
     class CParser {
-        
+        CStack<IObject*> m_aStack;
+        CString m_sSource;
+        CArray<Token> m_aTokens;
+
+        IObject* m_pRoot = CreateObject(EValueType::Object);
+
+        void ProcessToken(Token& Data);
+
+        public:
+            bool ParseString(const char* sCode, bool bAllowInclude = true);
+            bool HasErrors() const;
+
+            void Reset();
+            void Print() const;
     };
 }
 

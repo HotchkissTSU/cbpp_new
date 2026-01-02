@@ -1,0 +1,6 @@
+entity {
+    env_test {
+        m_vPos "Position"
+        m_vPos_desc "X Y"
+    }
+}

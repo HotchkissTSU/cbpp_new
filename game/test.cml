@@ -1,10 +1,14 @@
 include "/cml/include_test.cml"
 
+define MACRO_TEST "test macro"
+
 Root {
     # full-line comment
 
     MyNumber 52.52
     MyArray [1 2 3 4 #embed comment!# "STRING!"]
+
+    MacroSubst MACRO_TEST
 
     SubBlock {
         SubString "hello there!"
