@@ -59,12 +59,23 @@ int main(int argc, char** argv) {
 
     File->ReadAll(sFileText);
 
-    cbpp::CString sText(sFileText);
+    /*cbpp::CString sText(sFileText);
 
     cbpp::cml::CTokenizer Test(sText);
 
     Test.ProcessString();
-    Test.Print();
+    Test.Print();*/
+
+    cbpp::cml::CParser Parser;
+    Parser.ParseString(sFileText);
+
+    PrintObject(Parser.Root());
+
+    /*cbpp::CBinTable<cbpp::CString, char*> Test;
+    Test["Z"] = "nigger (B)";
+    Test["A"] = "second nigger (A)";
+
+    printf("Test['Z'] = %s\n", Test["Z"]);*/
 
     /*char sBuff[128];
     const char* sSource = "the kitsune 3D model does not exist obviously, and all rumors around it are a psyop";

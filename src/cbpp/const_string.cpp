@@ -33,16 +33,6 @@ namespace cbpp {
         return strlen(m_sData);
     }
 
-    char* StringDup(const char* sSource, size_t* pLength) {
-        const size_t iLength = strlen(sSource);
-        char* pNew = Malloc<char>(iLength+1);
-        memcpy(pNew, sSource, iLength+1);
-
-        if(pLength != NULL) { *pLength = iLength; }
-
-        return pNew;
-    }
-
     CConstString::operator bool() const {
         return m_sData != NULL;
     }

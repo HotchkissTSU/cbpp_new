@@ -63,7 +63,7 @@ namespace cbpp::cml {
 
     bool CObject::PushChild(const char* sName, IObject* pChild) {
         if(pChild == NULL) { return false; }
-        m_dChildren.Insert(sName, pChild);
+        m_dChildren[sName] = pChild;
         return true;
     }
 
@@ -158,5 +158,42 @@ namespace cbpp::cml {
             default:
                 return static_cast<IObject*>( New<CValueObject>(iType) );
         }
+    }
+
+    void PutIndent(size_t iAmount) {
+        for(size_t i = 0; i < iAmount; i++) {
+            printf("\t");
+        }
+    }
+
+    void PrintObject(IObject* pObj, size_t iDepth, const char* sName) {
+        switch(pObj->Type()) {
+            case EValueType::Integer:
+                PutIndent(iDepth);
+                printf("INT %s = %i\n", sName, pObj->Value()->GetInt());
+                break;
+
+            case EValueType::Float:
+                PutIndent(iDepth);
+                printf("FLT %s = %f\n", sName, pObj->Value()->GetFloat());
+                break;
+
+            case EValueType::String:
+                PutIndent(iDepth);
+                printf("STR %s = %s\n", sName, pObj->Value()->GetString());
+                break;
+
+            case EValueType::Object:
+                IObject::objmap_t* dSubs = pObj->GetChildren();
+                const IObject::objmap_t::pairs_t& aSubs = dSubs->Data();
+
+                PutIndent(iDepth);
+                printf("OBJ %s:\n", sName);
+                for(size_t i = 0; i < aSubs.Length(); i++) {
+                    PrintObject(aSubs[i].Value, iDepth+1, aSubs[i].Key.String());
+                }
+
+                break;
+        }    
     }
 }

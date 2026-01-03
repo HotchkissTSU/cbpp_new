@@ -2,6 +2,7 @@
 #define CBPP_CSTRING_H
 
 #include <stddef.h>
+#include <uchar.h>
 
 namespace cbpp {
     class CString {

@@ -26,11 +26,6 @@ namespace cbpp {
 
             operator bool() const;
     };
-
-    /*
-        Get a new exactly copied string. Unlike strdup(), this call uses engine allocator
-    */
-    char* StringDup(const char* sSource, size_t* pLength = NULL);
 }
 
 #endif

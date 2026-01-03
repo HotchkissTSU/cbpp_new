@@ -1,5 +1,7 @@
 #include "cbpp/cml/cml.h"
 
+#include "cbpp/string_utils.h"
+
 namespace cbpp::cml {
     #define KW(_str) if( strcmp(sData, _str) == 0 ) { return true; }
     bool IsKeyword(const char* sData) {

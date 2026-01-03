@@ -169,14 +169,14 @@ namespace cbpp {
 
                 if(iPos > m_iSize) { return; }
 
+                m_iSize++;
+
                 if(m_iSize > 0) {
                     // Shift everyone to free said index
                     for(size_t i = m_iSize - 1; i > iPos; --i) {
                         memcpy(&m_pMemory[i], &m_pMemory[i-1], sizeof(T));
                     }
                 }
-
-                m_iSize++;
 
                 // Move the value
                 memcpy(&m_pMemory[iPos], &Value, sizeof(T));

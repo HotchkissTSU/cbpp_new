@@ -6,6 +6,7 @@
 */
 
 #include <stdint.h>
+#include <uchar.h>
 
 #include "cbpp_api/Array.h"
 #include "cbpp_api/Table.h"
@@ -40,7 +41,7 @@ namespace cbpp::cml {
     struct Token {
         EToken iType;
         cbpp::CSubString sLexeme;
-        size_t iLine, iColumn, m_iPos;
+        size_t iLine, iColumn;
     };
 
     class CTokenizer {
@@ -55,6 +56,8 @@ namespace cbpp::cml {
         size_t m_iLine = 1, m_iCol = 1;
         bool m_bHasBSlash = false;
 
+        char32_t m_iCurrentChar;
+
         void ProcessCharacter(char cCurrent);
 
         public:
@@ -68,7 +71,7 @@ namespace cbpp::cml {
 
             void Print();
     };
-
+    
     enum class EValueType : uint32_t {
         Integer,
         Float,
@@ -166,6 +169,7 @@ namespace cbpp::cml {
     };
 
     IObject* CreateObject(EValueType iType);
+    void PrintObject(IObject* pObj, size_t iDepth = 0, const char* sName = "ROOT");
 
     class CParser {
         CStack<IObject*> m_aStack;
@@ -173,6 +177,9 @@ namespace cbpp::cml {
         CArray<Token> m_aTokens;
 
         IObject* m_pRoot = CreateObject(EValueType::Object);
+
+        bool m_bExpectObject = false;
+        CSubString m_sCurrentIdentifier;
 
         void ProcessToken(Token& Data);
 
@@ -182,6 +189,10 @@ namespace cbpp::cml {
 
             void Reset();
             void Print() const;
+
+            IObject* Root();
+
+            ~CParser();
     };
 }
 

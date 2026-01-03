@@ -2,6 +2,8 @@
 
 #include <ctype.h>
 
+#include "cbpp/string_utils.h"
+
 namespace cbpp::cml {
     const char* GetTokenName(EToken iType) {
         switch (iType) {            
@@ -78,7 +80,6 @@ namespace cbpp::cml {
                 
                 else if(cChar == '{') {
                     m_iLexemStart = m_iCounter;
-                    m_iLexemLength = 1;
 
                     m_aTokens.PushBack({
                         EToken::BlockOpen,
@@ -90,7 +91,6 @@ namespace cbpp::cml {
 
                 else if(cChar == '}') {
                     m_iLexemStart = m_iCounter;
-                    m_iLexemLength = 1;
 
                     m_aTokens.PushBack({
                         EToken::BlockClose,
@@ -102,7 +102,6 @@ namespace cbpp::cml {
 
                 else if(cChar == '[') {
                     m_iLexemStart = m_iCounter;
-                    m_iLexemLength = 1;
 
                     m_aTokens.PushBack({
                         EToken::ArrayOpen,
@@ -114,7 +113,6 @@ namespace cbpp::cml {
 
                 else if(cChar == ']') {
                     m_iLexemStart = m_iCounter;
-                    m_iLexemLength = 1;
 
                     m_aTokens.PushBack({
                         EToken::ArrayClose,
@@ -169,7 +167,7 @@ namespace cbpp::cml {
                     m_iState = ETokenizerState::Start;
                 }
                 break;
-
+                
             case ETokenizerState::InString:
                 if(cChar == '"') {
                     m_aTokens.PushBack({
