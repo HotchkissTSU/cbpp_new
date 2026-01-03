@@ -39,23 +39,20 @@ namespace cbpp::cml {
     CTokenizer::CTokenizer(const CString& sSource) : m_sSource(sSource) {}
 
     void CTokenizer::ProcessCharacter(char cChar) {
+        if(cChar == '\n') {
+            m_iCol = 1;
+            m_iLine++;
+        }else{
+            m_iCol++;
+        }
+
         switch(m_iState) {
             case ETokenizerState::Start:
-                if (isspace(cChar)) {
-                    if(cChar == '\n') { 
-                        m_iLine++; 
-                        m_iCol = 1;
-                    } else { 
-                        m_iCol++;
-                    }
-                }
-                
-                else if(isdigit(cChar) || cChar == '.') {
+                if(isdigit(cChar) || cChar == '.') {
                     m_iLexemStart = m_iCounter;
                     m_iLexemLength = 1;
 
                     m_iState = ETokenizerState::InNumber;
-                    m_iCol++;
                 }
 
                 else if(isalpha(cChar) || cChar == '_') {
@@ -63,19 +60,16 @@ namespace cbpp::cml {
                     m_iLexemLength = 1;
 
                     m_iState = ETokenizerState::InIdentifier;
-                    m_iCol++;
                 }
 
                 else if(cChar == '"') {
                     m_iLexemStart = m_iCounter + 1;
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::InString;
-                    m_iCol++;
                 }
 
                 else if(cChar == '#') {
                     m_iState = ETokenizerState::InComment;
-                    m_iCol++;
                 }
                 
                 else if(cChar == '{') {
@@ -86,7 +80,6 @@ namespace cbpp::cml {
                         CSubString(m_sSource, m_iLexemStart, 1),
                         m_iLine, m_iCol
                     });
-                    m_iCol++;
                 }
 
                 else if(cChar == '}') {
@@ -97,7 +90,6 @@ namespace cbpp::cml {
                         CSubString(m_sSource, m_iLexemStart, 1),
                         m_iLine, m_iCol
                     });
-                    m_iCol++;
                 }
 
                 else if(cChar == '[') {
@@ -108,7 +100,6 @@ namespace cbpp::cml {
                         CSubString(m_sSource, m_iLexemStart, 1),
                         m_iLine, m_iCol
                     });
-                    m_iCol++;
                 }
 
                 else if(cChar == ']') {
@@ -119,7 +110,6 @@ namespace cbpp::cml {
                         CSubString(m_sSource, m_iLexemStart, 1),
                         m_iLine, m_iCol
                     });
-                    m_iCol++;
                 }
                 break;
 
@@ -132,7 +122,6 @@ namespace cbpp::cml {
             case ETokenizerState::InNumber:
                 if (isdigit(cChar) || cChar == '.') {
                     m_iLexemLength++;
-                    m_iCol++;
                 } else {
 
                     m_aTokens.PushBack({
@@ -149,7 +138,6 @@ namespace cbpp::cml {
             case ETokenizerState::InIdentifier:
                 if(isalnum(cChar) || cChar == '_') {
                     m_iLexemLength++;
-                    m_iCol++;
                 } else {
                     char sBuff[128];
                     CSubString sLexeme(m_sSource, m_iLexemStart, m_iLexemLength);
@@ -181,7 +169,6 @@ namespace cbpp::cml {
                 } else { 
                     m_iLexemLength++;
                 }
-                m_iCol++;
                 break;
         }
 

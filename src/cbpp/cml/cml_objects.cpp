@@ -145,7 +145,7 @@ namespace cbpp::cml {
         }
     }
 
-    // ++ Allocation functions ++
+    // ++ Utility functions ++
 
     IObject* CreateObject(EValueType iType) {
         switch(iType) {
@@ -169,31 +169,67 @@ namespace cbpp::cml {
     void PrintObject(IObject* pObj, size_t iDepth, const char* sName) {
         switch(pObj->Type()) {
             case EValueType::Integer:
-                PutIndent(iDepth);
-                printf("INT %s = %i\n", sName, pObj->Value()->GetInt());
+                if(sName != NULL) {
+                    PutIndent(iDepth);
+                    printf("INT %s = %i\n", sName, pObj->Value()->GetInt());
+                } else {
+                    printf("INT = %i\n", pObj->Value()->GetInt());
+                }
                 break;
 
             case EValueType::Float:
-                PutIndent(iDepth);
-                printf("FLT %s = %f\n", sName, pObj->Value()->GetFloat());
+                if(sName != NULL) {
+                    PutIndent(iDepth);
+                    printf("FLT %s = %f\n", sName, pObj->Value()->GetFloat());
+                } else {
+                    printf("FLT = %f\n", pObj->Value()->GetFloat());
+                }
                 break;
 
             case EValueType::String:
-                PutIndent(iDepth);
-                printf("STR %s = %s\n", sName, pObj->Value()->GetString());
+                if(sName != NULL) {
+                    PutIndent(iDepth);
+                    printf("STR %s = %s\n", sName, pObj->Value()->GetString());
+                } else {
+                    printf("STR = %s\n", pObj->Value()->GetString());
+                }
                 break;
 
-            case EValueType::Object:
+            case EValueType::Object: {
                 IObject::objmap_t* dSubs = pObj->GetChildren();
                 const IObject::objmap_t::pairs_t& aSubs = dSubs->Data();
 
-                PutIndent(iDepth);
-                printf("OBJ %s:\n", sName);
+                if(sName != NULL) {
+                    PutIndent(iDepth);
+                    printf("OBJ %s:\n", sName);
+                } else {
+                    printf("OBJ:\n");
+                }
+
                 for(size_t i = 0; i < aSubs.Length(); i++) {
                     PrintObject(aSubs[i].Value, iDepth+1, aSubs[i].Key.String());
                 }
 
                 break;
+            }
+
+            case EValueType::Array: {
+                IObject::objlist_t* aArrSubs = pObj->GetArray();
+
+                if(sName != NULL) {
+                    PutIndent(iDepth);
+                    printf("ARR %s:\n", sName);
+                } else {
+                    printf("ARR:\n");
+                }
+                
+                for(size_t i = 0; i < aArrSubs->Length(); i++) {
+                    PutIndent(iDepth+1);
+                    printf("[%i] ", i);
+                    PrintObject(aArrSubs->At(i), iDepth+1, NULL);
+                }
+                break;
+            }
         }    
     }
 }

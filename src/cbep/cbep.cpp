@@ -67,10 +67,14 @@ int main(int argc, char** argv) {
     Test.Print();*/
 
     cbpp::cml::CParser Parser;
-    Parser.ParseString(sFileText);
-
-    PrintObject(Parser.Root());
-
+    if(Parser.ParseString(sFileText)) {
+        PrintObject(Parser.Root());
+    } else {
+        char sBuff[256];
+        Parser.GetErrorLog(sBuff, sizeof(sBuff));
+        printf("%s\n", sBuff);
+    }
+    
     /*cbpp::CBinTable<cbpp::CString, char*> Test;
     Test["Z"] = "nigger (B)";
     Test["A"] = "second nigger (A)";

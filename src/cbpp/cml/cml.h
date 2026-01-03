@@ -87,6 +87,8 @@ namespace cbpp::cml {
         StrayIdentifier,        // Random identifier that does not connect to anything
         StrayNumber,            // Random out-of-context number
         StrayString,            // Random out-of-context string
+        StrayBlock,
+        StrayArray,
         IllBlock,               // Badly formatted block (curvy braces mismatch)
         IllArray                // Badly formatted array (square braces mismatch)
     };
@@ -171,21 +173,30 @@ namespace cbpp::cml {
     IObject* CreateObject(EValueType iType);
     void PrintObject(IObject* pObj, size_t iDepth = 0, const char* sName = "ROOT");
 
+    bool CheckBraceMatch(EToken iOpener, EToken iCloser);
+    const char* GetErrorName(EErrorType iType);
+
     class CParser {
         CStack<IObject*> m_aStack;
+        CStack<EToken> m_aBracesStack;
+
         CString m_sSource;
-        CArray<Token> m_aTokens;
+
+        Token m_ErroredToken;
+        EErrorType m_iLastError = EErrorType::Ok;
 
         IObject* m_pRoot = CreateObject(EValueType::Object);
 
         bool m_bExpectObject = false;
         CSubString m_sCurrentIdentifier;
 
-        void ProcessToken(Token& Data);
+        EErrorType ProcessToken(Token& Data);
 
         public:
             bool ParseString(const char* sCode, bool bAllowInclude = true);
+
             bool HasErrors() const;
+            size_t GetErrorLog(char* sBuffer, size_t iMaxSize) const;
 
             void Reset();
             void Print() const;
