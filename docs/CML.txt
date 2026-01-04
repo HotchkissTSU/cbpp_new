@@ -1,0 +1,69 @@
+                               ++ CML ++
+                         CB++ Markdown Language
+
+A human-readable markdown language with an extremely simple syntax.
+
+We have 5 supported types:
+    - Numbers, which can be either integers or floats
+    - Strings with UTF-8 support
+    - Arrays
+    - Objects
+
+Mostly all language syntax looks like [name] [value]. You dont have to embed 
+all your entries inside a root object - the parser will do it for you.
+
+Here are some examples:
+
+1) Defining a simple entry
+
+    > MyInteger 52
+    > MyFloat 3.1495
+    > MyString "Hello world!"
+
+2) Defining an object
+
+    > MyObject {
+    >     [any sub-entries here]
+    > }
+
+3) Defining an array 
+
+    > MyArray [
+    >     1
+    >     2
+    >     "string!"
+    >     {
+    >         Value "i`m inside nameless object inside an array!"
+    >     }
+    > ]
+
+    When describing array contents you only write values w/o their names.
+    These values can later be addressed by their indices.
+
+4) Comments
+
+    Any sequence of characters starting with '#' and ending with either '#' or '\n'
+    is considered a comment. Yes, you can embed '#...#'-like comments everywhere you want.
+
+5) String functionalities
+
+    > FileReference @"/path/to/file"
+
+    Any string prefixed by '@' is considered as a 'file reference'.
+    The parser will try opening said file, reading it`s contents as text and then pasting
+    it as this variable`s value. The path is relative to the current assets root path.
+
+    Also note that UTF-8 is supported only inside strings, and using unicode anywhere 
+    else may lead to undefined behaviour.
+
+6) Keywords
+
+    > define MyConstant [any value here]
+
+    'define' will create a parse-time constant, which you can use as a macro later:
+        MyConstantInstance MyConstant
+
+    > include "/path/to/cml"
+
+    'include' will try opening said file and paste it inside the current one, replacing
+    itself with the content.

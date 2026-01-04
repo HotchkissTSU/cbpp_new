@@ -3,6 +3,8 @@
 
 /*
     CBPP Markdown Language
+
+    For more info see docs/CML.txt
 */
 
 #include <stdint.h>
@@ -12,6 +14,9 @@
 #include "cbpp_api/Table.h"
 #include "cbpp_api/String.h"
 #include "cbpp_api/Stack.h"
+
+// Maximal stack depth for the CML parser
+#define CBPP_CML_MAX_DEPTH 128
 
 namespace cbpp::cml {
     enum class EToken : uint32_t {
@@ -42,6 +47,7 @@ namespace cbpp::cml {
         EToken iType;
         cbpp::CSubString sLexeme;
         size_t iLine, iColumn;
+        bool bIsRef = false;
     };
 
     class CTokenizer {
@@ -54,7 +60,7 @@ namespace cbpp::cml {
 
         ETokenizerState m_iState = ETokenizerState::Start;
         size_t m_iLine = 1, m_iCol = 1;
-        bool m_bHasBSlash = false;
+        bool m_bHasBSlash = false, m_bFileRefFlag = false;
 
         char32_t m_iCurrentChar;
 
@@ -90,7 +96,8 @@ namespace cbpp::cml {
         StrayBlock,
         StrayArray,
         IllBlock,               // Badly formatted block (curvy braces mismatch)
-        IllArray                // Badly formatted array (square braces mismatch)
+        IllArray,               // Badly formatted array (square braces mismatch)
+        BadFileRef
     };
 
     struct ErrorInfo {
@@ -99,6 +106,8 @@ namespace cbpp::cml {
     };
 
     class CValue {
+        friend class CParser;
+
         union {
             int32_t i32;
             float f32;
@@ -172,6 +181,12 @@ namespace cbpp::cml {
 
     IObject* CreateObject(EValueType iType);
     void PrintObject(IObject* pObj, size_t iDepth = 0, const char* sName = "ROOT");
+    void WriteObject(IObject* pObject, FILE* pStream = stdout);
+
+    enum class EBraceType : uint32_t {
+        Block,          // {}
+        Array           // []
+    };
 
     bool CheckBraceMatch(EToken iOpener, EToken iCloser);
     const char* GetErrorName(EErrorType iType);

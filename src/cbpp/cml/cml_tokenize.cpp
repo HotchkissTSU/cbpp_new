@@ -111,6 +111,10 @@ namespace cbpp::cml {
                         m_iLine, m_iCol
                     });
                 }
+
+                else if(cChar == '@') {
+                    m_bFileRefFlag = true;
+                }
                 break;
 
             case ETokenizerState::InComment:
@@ -161,8 +165,11 @@ namespace cbpp::cml {
                     m_aTokens.PushBack({
                         EToken::String,
                         CSubString(m_sSource, m_iLexemStart, m_iLexemLength),
-                        m_iLine, m_iCol
+                        m_iLine, m_iCol,
+                        m_bFileRefFlag
                     });
+
+                    m_bFileRefFlag = false;
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;

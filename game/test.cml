@@ -1,29 +1,6 @@
-Z 52
+int_value @512
+ref_test @"test.json"
 
-A {
-    sub_1 "hello"
-    sub_2 "world!"
+object_value {
+    str "hello world!"
 }
-
-array [
-    1
-    2
-    3
-    4
-    5
-    "string!"
-
-    {
-        sub_sub_1 "im deeply in"
-
-        UltraSubArray [
-            52
-            282
-            228
-        ]
-    }
-
-    {
-        str "hello there"
-    }
-]

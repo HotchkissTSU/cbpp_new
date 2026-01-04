@@ -1,4 +1,4 @@
-			CB++ NAMING GUIDELINES
+			            ++ CB++ NAMING GUIDELINES ++
 
 Enumeration naming:
 	enum EMyEnumeration {
@@ -7,15 +7,26 @@ Enumeration naming:
 		...
 	};
 
+    OR 
+
+    enum class EMyEnumeration {
+        Value1,
+        Value2,
+        ...
+    };
+
 Interface classes` names are prefixed with a capital "I".
+Regular classes are prefixed with a capital "C". Structures does not have any prefix.
 
 Big prefixes:
 	s_*	-	A static variable
 	g_*	-	A global variable
 			(has a priority over s_*)
 
+    m_* -   A class member. Omitted inside simple data-oriented structs.
+
 	t_*	-	A non-typename template argument
-			(like "template<int t_iArg> class ...")
+			(like "template <int t_iArg> class ...")
 
 	i_*	-	GLSL interface block
 	u_*	-	GLSL uniform variable
@@ -27,10 +38,8 @@ Prefixes:
 	v	-	A geometrical vector
 	p	-	Any pointer
 	fp	-	A function pointer
-	a	-	A static array
+	a	-	An "array"
 	s	-	A string / char* array
-	c	-	CDF API objects
-	j	-	JSON API objects
 	b	-	A boolean value
 	d	-	Any key-value like container
 
@@ -38,3 +47,4 @@ Entity classes naming:
     base_*  -   Baseclass entities for others to inherit from
     prop_*  -   Interactive thingies in the map
     dev_*   -   Developer map entities like scripts or controllers
+    ai_*    -   AI agents

@@ -188,8 +188,25 @@ namespace cbpp::cml {
 
             case EValueType::String:
                 if(sName != NULL) {
+                    char sBuffer[128];
+
                     PutIndent(iDepth);
-                    printf("STR %s = %s\n", sName, pObj->Value()->GetString());
+                    size_t iLn = snprintf(sBuffer, sizeof(sBuffer), "STR %s = ", sName);
+
+                    printf(sBuffer);
+
+                    char* sData = (char*)(pObj->Value()->GetString());
+                    while(*sData != '\0') {
+                        char cCurrent = *sData;
+                        putc(cCurrent, stdout);
+                        if(cCurrent == '\n') {
+                            PutIndent(iDepth);
+                            for(int i = 0; i < iLn; i++) { putc(' ', stdout); }
+                        }
+
+                        sData++;
+                    }
+                    putc('\n', stdout);
                 } else {
                     printf("STR = %s\n", pObj->Value()->GetString());
                 }

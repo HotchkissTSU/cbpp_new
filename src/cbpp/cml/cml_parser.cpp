@@ -1,5 +1,7 @@
 #include "cbpp/cml/cml.h"
 
+#include "cbpp_api/Filesystem.h"
+
 namespace cbpp::cml {
     bool CheckBraceMatch(EToken iOpener, EToken iCloser) {
         switch(iOpener) {
@@ -8,7 +10,7 @@ namespace cbpp::cml {
         }
         return false;
     }
-
+    
     const char* GetErrorName(EErrorType iType) {
         switch(iType) {
             case EErrorType::Ok:                return "Ok";
@@ -20,12 +22,17 @@ namespace cbpp::cml {
             case EErrorType::StrayIdentifier:   return "Stray identifier";
             case EErrorType::StrayNumber:       return "Stray number";
             case EErrorType::StrayString:       return "Stray string";
+            case EErrorType::BadFileRef:        return "Bad file reference path";
 
             default:                            return "(null)";
         }
     }
 
     bool CParser::ParseString(const char* sCode, bool bAllowInclude) {
+        m_aBracesStack.Clear();
+        m_aStack.Clear();
+        m_bExpectObject = false;
+
         m_aStack.Push(m_pRoot);
 
         m_sSource = sCode;
@@ -38,7 +45,12 @@ namespace cbpp::cml {
             EErrorType iRet = ProcessToken(aTokens[i]);
 
             if(iRet != EErrorType::Ok) {
-                m_ErroredToken = aTokens[i];
+                if(aTokens.Length() > 1 && iRet != EErrorType::Redefinition) {
+                    m_ErroredToken = aTokens[i-1];
+                }else{
+                    m_ErroredToken = aTokens[i];
+                }
+
                 m_iLastError = iRet;
                 Reset();
                 return false;
@@ -51,25 +63,30 @@ namespace cbpp::cml {
     void CParser::Reset() {
         Delete(m_pRoot);
         m_pRoot = CreateObject(EValueType::Object);
-
-        m_aBracesStack.Clear();
-        m_aStack.Clear();
-        m_bExpectObject = false;
     }
 
     EErrorType CParser::ProcessToken(Token& Data) {
         char sBuffer[128];
 
         switch (Data.iType) {
-            case EToken::Identifier:
+            case EToken::Identifier: {
                 if(m_bExpectObject) { // Stray identifier
                     return EErrorType::StrayIdentifier;
+                }
+
+                IObject* pCurrent = m_aStack.Head();
+
+                Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
+
+                if(pCurrent->HasChild(sBuffer)) {
+                    return EErrorType::Redefinition;
                 }
 
                 m_bExpectObject = true;
                 m_sCurrentIdentifier = Data.sLexeme;
                 break;
-
+            }
+            
             case EToken::Number: {
                 IObject* pCurrent = m_aStack.Head();
 
@@ -108,7 +125,21 @@ namespace cbpp::cml {
                 IObject* pStringObj = CreateObject(EValueType::String);
                 Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
 
-                pStringObj->Value()->SetValue(sBuffer);
+                if(Data.bIsRef) {   // file reference
+                    IFile* hFile = OpenFile(sBuffer, "rb");
+                    if(hFile != NULL) {
+                        size_t iLen = hFile->Length();
+
+                        pStringObj->Value()->m_Value.str = Malloc<char>(iLen+1);
+                        pStringObj->Value()->m_Value.str[iLen] = '\0';
+                        hFile->ReadAll(pStringObj->Value()->m_Value.str);
+                    } else {
+                        pStringObj->Value()->SetValue("(null)");
+                        return EErrorType::BadFileRef;
+                    }
+                } else {
+                    pStringObj->Value()->SetValue(sBuffer);
+                }
 
                 m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer));
                 pCurrent->PushChild(sBuffer, pStringObj);
