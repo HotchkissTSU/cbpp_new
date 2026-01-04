@@ -54,7 +54,7 @@ namespace cbpp {
             CArray& operator=(const CArray<T>& aOther) {
                 Clear();
                 
-                m_pMemory = Realloc<T>(aOther.m_iAllocated);
+                m_pMemory = Realloc<T>(m_pMemory, aOther.m_iAllocated);
 
                 m_iAllocated = aOther.m_iAllocated;
                 m_iSize = aOther.m_iSize;

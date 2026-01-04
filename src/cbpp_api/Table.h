@@ -26,6 +26,12 @@ namespace cbpp {
             
             bool operator==(const Pair& other) const { return Key == other.Key; }
             bool operator<(const Pair& other) const { return Key < other.Key; }
+
+            Pair& operator=(const Pair& other) {
+                Key = other.Key;
+                Value = other.Value;
+                return *this;
+            }
         };
         
         CArray<Pair> m_aData;

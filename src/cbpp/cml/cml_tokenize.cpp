@@ -113,7 +113,11 @@ namespace cbpp::cml {
                 }
 
                 else if(cChar == '@') {
-                    m_bFileRefFlag = true;
+                    m_iRefType = ERefType::FileText;
+                }
+
+                else if(cChar == '&') {
+                    m_iRefType = ERefType::FileBin;
                 }
                 break;
 
@@ -131,8 +135,11 @@ namespace cbpp::cml {
                     m_aTokens.PushBack({
                         EToken::Number,
                         CSubString(m_sSource, m_iLexemStart, m_iLexemLength),
-                        m_iLine, m_iCol
+                        m_iLine, m_iCol,
+                        ERefType::Null
                     });
+
+                    m_iRefType = ERefType::Null;
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;
@@ -148,12 +155,15 @@ namespace cbpp::cml {
                     sLexeme.Bufferize(sBuff, sizeof(sBuff));
 
                     EToken iType = IsKeyword(sBuff) ? EToken::Keyword : EToken::Identifier;
-
+                    
                     m_aTokens.PushBack({
                         iType,
                         sLexeme,
-                        m_iLine, m_iCol
+                        m_iLine, m_iCol,
+                        m_iRefType
                     });
+
+                    m_iRefType = ERefType::Null;
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;
@@ -166,10 +176,10 @@ namespace cbpp::cml {
                         EToken::String,
                         CSubString(m_sSource, m_iLexemStart, m_iLexemLength),
                         m_iLine, m_iCol,
-                        m_bFileRefFlag
+                        m_iRefType
                     });
 
-                    m_bFileRefFlag = false;
+                    m_iRefType = ERefType::Null;
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;
@@ -190,7 +200,7 @@ namespace cbpp::cml {
     CArray<Token>& CTokenizer::GetTokens() { return m_aTokens; }
 
     void CTokenizer::ProcessString() {
-        char* C = (char*)(const char*)m_sSource;
+        char* C = (char*)(const char*)m_sSource; // >~<
         while(*C != '\0') {
             ProcessCharacter(*C);
             C++;
@@ -199,7 +209,7 @@ namespace cbpp::cml {
     }
 
     void CTokenizer::Print() {
-        static char sBuffer[128];
+        static char sBuffer[CBPP_CML_MAX_LEXEM_LENGTH+1];
         for(size_t i = 0; i < m_aTokens.Length(); i++) {
             Token& Current = m_aTokens[i];
 

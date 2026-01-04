@@ -47,23 +47,26 @@ Here are some examples:
 
 5) String functionalities
 
-    > FileReference @"/path/to/file"
+    5.1) Text file reference
+        > FileReference @"/path/to/file"
 
-    Any string prefixed by '@' is considered as a 'file reference'.
-    The parser will try opening said file, reading it`s contents as text and then pasting
-    it as this variable`s value. The path is relative to the current assets root path.
+        Any string prefixed by '@' is considered as a 'file reference'.
+        The parser will try opening said file, reading it`s contents as text and then pasting
+        it as this variable`s value. The path is relative to the current assets root path.
+
+    5.2) Binary file reference
+        > BinaryReference &"/path/to/file"
+
+        Works as a text reference, but interpretes file`s content as raw binary data.
 
     Also note that UTF-8 is supported only inside strings, and using unicode anywhere 
     else may lead to undefined behaviour.
 
 6) Keywords
 
-    > define MyConstant [any value here]
+    6.1) include
 
-    'define' will create a parse-time constant, which you can use as a macro later:
-        MyConstantInstance MyConstant
+        'include' will try opening said file and paste it inside the current one, replacing
+        itself with the content.
 
-    > include "/path/to/cml"
-
-    'include' will try opening said file and paste it inside the current one, replacing
-    itself with the content.
+        > include "/path/to/cml"

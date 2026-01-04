@@ -18,6 +18,13 @@
 // Maximal stack depth for the CML parser
 #define CBPP_CML_MAX_DEPTH 128
 
+/*
+    Maximal length for a single lexem
+    Affects variable names and all values which are directly written in the code.
+    File reference`s paste length is not affected.
+*/
+#define CBPP_CML_MAX_LEXEM_LENGTH 128
+
 namespace cbpp::cml {
     enum class EToken : uint32_t {
         Keyword,
@@ -43,11 +50,17 @@ namespace cbpp::cml {
         InComment
     };
 
+    enum class ERefType : uint32_t {
+        Null,                   // Not a reference
+        FileText,               // Reference to file`s data as text
+        FileBin                 // Reference to file`s data as binary
+    };
+
     struct Token {
         EToken iType;
         cbpp::CSubString sLexeme;
         size_t iLine, iColumn;
-        bool bIsRef = false;
+        ERefType iRef = ERefType::Null;
     };
 
     class CTokenizer {
@@ -60,7 +73,9 @@ namespace cbpp::cml {
 
         ETokenizerState m_iState = ETokenizerState::Start;
         size_t m_iLine = 1, m_iCol = 1;
-        bool m_bHasBSlash = false, m_bFileRefFlag = false;
+        bool m_bHasBSlash = false;
+
+        ERefType m_iRefType = ERefType::Null;
 
         char32_t m_iCurrentChar;
 
@@ -82,6 +97,7 @@ namespace cbpp::cml {
         Integer,
         Float,
         String,
+        Binary,
         
         Array,
         Object
@@ -97,16 +113,13 @@ namespace cbpp::cml {
         StrayArray,
         IllBlock,               // Badly formatted block (curvy braces mismatch)
         IllArray,               // Badly formatted array (square braces mismatch)
-        BadFileRef
-    };
-
-    struct ErrorInfo {
-        EErrorType iType;
-        size_t iLine, iCol;
+        BadFileRef,             // Can`t open said file path
+        BadConstRef             // No such constant
     };
 
     class CValue {
         friend class CParser;
+        friend class CValueObject;
 
         union {
             int32_t i32;
@@ -115,6 +128,7 @@ namespace cbpp::cml {
         } m_Value;
 
         EValueType m_iType = EValueType::Integer;
+        size_t m_iLength = 0;
 
         public:
             CValue() = default;
@@ -122,16 +136,21 @@ namespace cbpp::cml {
             CValue(int32_t iValue);
             CValue(float fValue);
             CValue(const char* sValue);
+            CValue(const char* pValue, size_t iLength);
 
             void SetType(EValueType iType);
 
             void SetValue(int32_t iValue);
             void SetValue(float iValue);
             void SetValue(const char* sValue);
+            void SetValue(const char* pValue, size_t iLength);
 
             int32_t GetInt() const;
             float GetFloat() const;
             const char* GetString() const;
+            const char* GetBinary() const;
+
+            size_t GetLength() const;
 
             EValueType Type() const;
 
@@ -140,6 +159,9 @@ namespace cbpp::cml {
 
     class IObject {
         friend IObject* CreateObject(EValueType);
+
+        friend class CObject;
+        friend class CArrayObject;
 
         protected:
             IObject() = default;
@@ -176,6 +198,8 @@ namespace cbpp::cml {
             virtual IObject* GetByName(const char* sName) const = 0;
             virtual IObject* GetByIndex(size_t iIndex) const = 0;
 
+            virtual IObject* GetCopy() = 0;
+
             virtual ~IObject() = default;
     };
 
@@ -206,6 +230,7 @@ namespace cbpp::cml {
         CSubString m_sCurrentIdentifier;
 
         EErrorType ProcessToken(Token& Data);
+        IObject* CreateRefObject(Token& Data);
 
         public:
             bool ParseString(const char* sCode, bool bAllowInclude = true);

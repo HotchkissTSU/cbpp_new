@@ -26,6 +26,8 @@ namespace cbpp::cml {
             IObject* GetByName(const char* sName) const override;
             IObject* GetByIndex(size_t iIndex) const override;
 
+            IObject* GetCopy() override;
+
             virtual ~CValueObject() override = default;
     };
 
@@ -49,6 +51,8 @@ namespace cbpp::cml {
             IObject* GetByName(const char* sName) const override;
             IObject* GetByIndex(size_t iIndex) const override;
 
+            IObject* GetCopy() override;
+
             virtual ~CObject() override;
     };
 
@@ -71,6 +75,8 @@ namespace cbpp::cml {
 
             IObject* GetByName(const char* sName) const override;
             IObject* GetByIndex(size_t iIndex) const override;
+
+            IObject* GetCopy() override;
 
             virtual ~CArrayObject() override;
     };

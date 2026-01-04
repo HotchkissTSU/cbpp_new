@@ -10,7 +10,7 @@ namespace cbpp::cml {
         }
         return false;
     }
-    
+
     const char* GetErrorName(EErrorType iType) {
         switch(iType) {
             case EErrorType::Ok:                return "Ok";
@@ -22,7 +22,8 @@ namespace cbpp::cml {
             case EErrorType::StrayIdentifier:   return "Stray identifier";
             case EErrorType::StrayNumber:       return "Stray number";
             case EErrorType::StrayString:       return "Stray string";
-            case EErrorType::BadFileRef:        return "Bad file reference path";
+            case EErrorType::BadFileRef:        return "Undefined file reference";
+            case EErrorType::BadConstRef:       return "Undefined constant reference";
 
             default:                            return "(null)";
         }
@@ -65,8 +66,54 @@ namespace cbpp::cml {
         m_pRoot = CreateObject(EValueType::Object);
     }
 
+    IObject* CParser::CreateRefObject(Token& Data) {
+        char sBuffer[CBPP_CML_MAX_LEXEM_LENGTH+1];
+        Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
+
+        switch(Data.iRef) {
+            case ERefType::FileText: {
+                IObject* pStringObj = CreateObject(EValueType::String);
+
+                IFile* hFile = OpenFile(sBuffer, "rb");
+                if(hFile != NULL) {
+                    size_t iLen = hFile->Length();
+
+                    pStringObj->Value()->m_Value.str = Malloc<char>(iLen+1);
+                    pStringObj->Value()->m_Value.str[iLen] = '\0';
+                    hFile->ReadAll(pStringObj->Value()->m_Value.str);
+                } else {
+                    Delete(pStringObj);
+                    return NULL;
+                }
+
+                return pStringObj;
+            }
+            
+            case ERefType::FileBin: {
+                IObject* pBinaryObj = CreateObject(EValueType::Binary);
+
+                IFile* hFile = OpenFile(sBuffer, "rb");
+
+                if(hFile != NULL) {
+                    size_t iLen = hFile->Length();
+
+                    pBinaryObj->Value()->m_Value.str = Malloc<char>(iLen);
+                    hFile->ReadAll(pBinaryObj->Value()->m_Value.str);
+                    pBinaryObj->Value()->m_iLength = iLen;
+                } else {
+                    Delete(pBinaryObj);
+                    return NULL;
+                }
+
+                return pBinaryObj;
+            }
+
+            default: return NULL;
+        }
+    }
+
     EErrorType CParser::ProcessToken(Token& Data) {
-        char sBuffer[128];
+        char sBuffer[CBPP_CML_MAX_LEXEM_LENGTH+1];
 
         switch (Data.iType) {
             case EToken::Identifier: {
@@ -121,27 +168,21 @@ namespace cbpp::cml {
                 if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
                     return EErrorType::StrayString;
                 }
+                
+                IObject* pStringObj;
+                Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer)); // string data
 
-                IObject* pStringObj = CreateObject(EValueType::String);
-                Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
-
-                if(Data.bIsRef) {   // file reference
-                    IFile* hFile = OpenFile(sBuffer, "rb");
-                    if(hFile != NULL) {
-                        size_t iLen = hFile->Length();
-
-                        pStringObj->Value()->m_Value.str = Malloc<char>(iLen+1);
-                        pStringObj->Value()->m_Value.str[iLen] = '\0';
-                        hFile->ReadAll(pStringObj->Value()->m_Value.str);
-                    } else {
-                        pStringObj->Value()->SetValue("(null)");
+                if(Data.iRef == ERefType::FileBin || Data.iRef == ERefType::FileText) {
+                    pStringObj = CreateRefObject(Data);
+                    if(pStringObj == NULL) {
                         return EErrorType::BadFileRef;
                     }
                 } else {
+                    pStringObj = CreateObject(EValueType::String);
                     pStringObj->Value()->SetValue(sBuffer);
                 }
 
-                m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer));
+                m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer)); // string name
                 pCurrent->PushChild(sBuffer, pStringObj);
 
                 m_bExpectObject = false;
@@ -226,7 +267,7 @@ namespace cbpp::cml {
     }
 
     size_t CParser::GetErrorLog(char* sBuffer, size_t iMaxSize) const {
-        char sBuff[128];
+        char sBuff[CBPP_CML_MAX_LEXEM_LENGTH+1];
 
         m_ErroredToken.sLexeme.Bufferize(sBuff, sizeof(sBuff));
 

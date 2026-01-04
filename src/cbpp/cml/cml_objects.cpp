@@ -1,10 +1,30 @@
 #include "cbpp/cml/cml_objects.h"
 
+#include "cbpp/string_utils.h"
+
 namespace cbpp::cml {
     // ++ CValueObject ++
 
     CValueObject::CValueObject(EValueType iType) {
         m_Value.SetType(iType);
+    }
+
+    IObject* CValueObject::GetCopy() {
+        IObject* pCopy = CreateObject(m_Value.Type());
+
+        if(m_Value.Type() == EValueType::String) {
+            pCopy->Value()->m_Value.str = StringDup(m_Value.m_Value.str);
+
+        } else if(m_Value.Type() == EValueType::Binary) {
+            pCopy->Value()->m_Value.str = Malloc<char>(m_Value.GetLength());
+            pCopy->Value()->m_iLength = m_Value.GetLength();
+            memcpy(pCopy->Value()->m_Value.str, m_Value.GetBinary(), m_Value.GetLength());
+
+        } else {
+            memcpy(pCopy->Value(), &m_Value, sizeof(m_Value));
+        }
+
+        return pCopy;
     }
 
     EValueType CValueObject::Type() const {
@@ -47,6 +67,15 @@ namespace cbpp::cml {
 
     EValueType CObject::Type() const {
         return EValueType::Object;
+    }
+
+    IObject* CObject::GetCopy() {
+        IObject* pCopy = CreateObject(EValueType::Object);
+        CObject* pObj = (CObject*)(pCopy);
+
+        pObj->m_dChildren = m_dChildren;
+
+        return pCopy;
     }
 
     CValue* CObject::Value() {
@@ -99,6 +128,15 @@ namespace cbpp::cml {
 
     EValueType CArrayObject::Type() const {
         return EValueType::Array;
+    }
+
+    IObject* CArrayObject::GetCopy() {
+        IObject* pCopy = CreateObject(EValueType::Array);
+        CArrayObject* pArr = (CArrayObject*)(pCopy);
+
+        pArr->m_aChildren = m_aChildren;
+
+        return pCopy;
     }
 
     CValue* CArrayObject::Value() {
@@ -188,7 +226,7 @@ namespace cbpp::cml {
 
             case EValueType::String:
                 if(sName != NULL) {
-                    char sBuffer[128];
+                    char sBuffer[CBPP_CML_MAX_LEXEM_LENGTH+1];
 
                     PutIndent(iDepth);
                     size_t iLn = snprintf(sBuffer, sizeof(sBuffer), "STR %s = ", sName);
@@ -245,6 +283,17 @@ namespace cbpp::cml {
                     printf("[%i] ", i);
                     PrintObject(aArrSubs->At(i), iDepth+1, NULL);
                 }
+                break;
+            }
+            
+            case EValueType::Binary: {                
+                if(sName != NULL) {
+                    PutIndent(iDepth);
+                    printf("BIN %s (%i)\n", sName, pObj->Value()->GetLength());
+                } else {
+                    printf("BIN (%i)\n", pObj->Value()->GetLength());
+                }
+
                 break;
             }
         }    

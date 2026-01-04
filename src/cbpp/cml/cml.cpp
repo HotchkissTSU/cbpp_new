@@ -26,10 +26,23 @@ namespace cbpp::cml {
         m_Value.str = StringDup(sValue);
     }
 
+    CValue::CValue(const char* pValue, size_t iLength) {
+        m_iType = EValueType::Binary;
+        m_iLength = iLength;
+
+        m_Value.str = Malloc<char>(iLength);
+        memcpy(m_Value.str, pValue, iLength);
+    }
+
     CValue::~CValue() {
-        if(m_iType == EValueType::String && m_Value.str != NULL) {
+        if((m_iType == EValueType::Binary || m_iType == EValueType::String) && m_Value.str != NULL) {
             Free(m_Value.str);
+            m_Value.str = NULL;
         }
+    }
+
+    size_t CValue::GetLength() const {
+        return m_iLength;
     }
 
     void CValue::SetValue(int32_t iValue) {
@@ -53,10 +66,18 @@ namespace cbpp::cml {
         }
     }
 
+    void CValue::SetValue(const char* pValue, size_t iLength) {
+        if(m_iType == EValueType::Binary) {
+            m_Value.str = Realloc<char>(m_Value.str, iLength);
+            memcpy(m_Value.str, pValue, iLength);
+            m_iLength = iLength;
+        }
+    }
+
     int32_t CValue::GetInt() const {
         if(m_iType == EValueType::Integer) {
             return m_Value.i32;
-        }else{
+        } else {
             return 0;
         }
     }
@@ -64,7 +85,7 @@ namespace cbpp::cml {
     float CValue::GetFloat() const {
         if(m_iType == EValueType::Float) {
             return m_Value.f32;
-        }else{
+        } else {
             return 0.0f;
         }
     }
@@ -73,14 +94,25 @@ namespace cbpp::cml {
         if(m_iType == EValueType::String) {
             if(m_Value.str == NULL) { return "(null)"; }
             return const_cast<const char*>(m_Value.str);
-        }else{
+        } else {
             return "(null)";
         }
     }
 
+    const char* CValue::GetBinary() const {
+        if(m_iType == EValueType::Binary) {
+            return const_cast<const char*>(m_Value.str);
+        } else {
+            return NULL;
+        }
+    }
+    
     void CValue::SetType(EValueType iType) {
-        if(iType != EValueType::String && m_iType == EValueType::String) {
-            Free(m_Value.str); // Switching from string storage, have to free the memory
+        bool bSwitchString = iType != EValueType::String && m_iType == EValueType::String;
+        bool bSwitchBinary = iType != EValueType::Binary && m_iType == EValueType::Binary;
+        
+        if(bSwitchBinary || bSwitchString) {
+            Free(m_Value.str); // Switching from string or binary storage, have to free the memory
         }
 
         m_iType = iType;

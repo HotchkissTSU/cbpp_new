@@ -1,6 +1,2 @@
-int_value @512
-ref_test @"test.json"
-
-object_value {
-    str "hello world!"
-}
+bin_ref &"test.json"
+txt_ref @"test.json"
