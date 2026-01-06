@@ -52,7 +52,7 @@
             "obj":".obj/cbpp",
             "src":[ "src/engine/*.cpp", 
                     "src/engine/entity/shared/*.cpp",
-                    "src/engine/cml/*.cpp"]
+                    "src/engine/cml/*.cpp" ]
         },
         
         "cbpp_server":{

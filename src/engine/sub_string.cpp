@@ -50,4 +50,38 @@ namespace cbpp {
 
         return sOut;
     }
+
+    bool CSubString::operator==(const CSubString& Other) const {
+        char *pA = m_pStart, *pB = Other.m_pStart;
+        while(1) {
+            if(*pA != *pB) {
+                return false;
+            }
+
+            pA++; pB++;
+
+            if(pA >= m_pEnd || pB >= Other.m_pEnd) {
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    bool CSubString::operator<(const CSubString& Other) const {
+        char *pA = m_pStart, *pB = Other.m_pStart;
+        while(1) {
+            if(*pA >= *pB) {
+                return false;
+            }
+
+            pA++; pB++;
+
+            if(pA >= m_pEnd || pB >= Other.m_pEnd) {
+                break;
+            }
+        }
+
+        return true;
+    }
 }

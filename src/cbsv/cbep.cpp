@@ -9,6 +9,7 @@
 #include "cbpp/String.h"
 
 #include "cbpp/CML.h"
+#include "cbpp/Benchmark.h"
 
 void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
@@ -16,6 +17,12 @@ void InitGLFW() {
 
 int main(int argc, char** argv) {
     InitGLFW();
+
+    /*cbpp::CBinTable<cbpp::CSubString, int> dTest;
+
+    cbpp::CString s1("word1 word2 word3");
+
+    dTest.Insert(cbpp::CSubString(s1, 0, 5), 1);*/
 
     cbpp::IFile* File = cbpp::OpenFile("assets/locale/test.cml", "rb");
     if(!File->IsOpen()) {
@@ -28,6 +35,7 @@ int main(int argc, char** argv) {
 
     File->ReadAll(sFileText);
 
+    CbBenchmark()
     cbpp::cml::CParser Parser;
     if(Parser.ParseString(sFileText)) {
         PrintObject(Parser.Root());

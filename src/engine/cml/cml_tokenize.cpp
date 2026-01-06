@@ -112,12 +112,21 @@ namespace cbpp::cml {
                     });
                 }
 
+                // Qualifiers
                 else if(cChar == '@') {
-                    m_iRefType = ERefType::FileText;
+                    m_iRefType = EQualifier::FileTextRef;
                 }
 
                 else if(cChar == '&') {
-                    m_iRefType = ERefType::FileBin;
+                    m_iRefType = EQualifier::FileBinRef;
+                }
+
+                else if(cChar == ':') {
+                    m_iRefType = EQualifier::ConstDecl;
+                }
+
+                else if(cChar == '$') {
+                    m_iRefType = EQualifier::ConstRef;
                 }
                 break;
 
@@ -131,15 +140,14 @@ namespace cbpp::cml {
                 if (isdigit(cChar) || cChar == '.') {
                     m_iLexemLength++;
                 } else {
-
                     m_aTokens.PushBack({
                         EToken::Number,
                         CSubString(m_sSource, m_iLexemStart, m_iLexemLength),
                         m_iLine, m_iCol,
-                        ERefType::Null
+                        EQualifier::None
                     });
 
-                    m_iRefType = ERefType::Null;
+                    m_iRefType = EQualifier::None;
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;
@@ -163,7 +171,7 @@ namespace cbpp::cml {
                         m_iRefType
                     });
 
-                    m_iRefType = ERefType::Null;
+                    m_iRefType = EQualifier::None;
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;
@@ -179,7 +187,7 @@ namespace cbpp::cml {
                         m_iRefType
                     });
 
-                    m_iRefType = ERefType::Null;
+                    m_iRefType = EQualifier::None;
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;

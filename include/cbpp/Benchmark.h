@@ -8,7 +8,7 @@
 namespace cbpp {
     class CBenchmarker {
         const char* m_sFuncName;
-        timeval m_iBegin;
+        clock_t m_iBegin;
 
         public:
             CBenchmarker(const char* sFuncName);

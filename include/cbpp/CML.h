@@ -45,10 +45,12 @@ namespace cbpp::cml {
         InComment
     };
 
-    enum class ERefType : uint32_t {
-        Null,                   // Not a reference
-        FileText,               // Reference to file`s data as text
-        FileBin                 // Reference to file`s data as binary
+    enum class EQualifier : uint32_t {
+        None,
+        FileTextRef,
+        FileBinRef,
+        ConstRef,
+        ConstDecl
     };
 
     enum class EValueType : uint32_t {
@@ -73,6 +75,9 @@ namespace cbpp::cml {
         IllBlock,               // Badly formatted block (curvy braces mismatch)
         IllArray,               // Badly formatted array (square braces mismatch)
         BadFileRef,             // Can`t open said file path
+        IncludeNonString,
+        BadConstRef,
+        BadConstType,
 
         IWannaInclude
     };
@@ -85,7 +90,7 @@ namespace cbpp::cml {
         EToken iType;
         cbpp::CSubString sLexeme;
         size_t iLine, iColumn;
-        ERefType iRef = ERefType::Null;
+        EQualifier iRef = EQualifier::None;
     };
 
     class CTokenizer {
@@ -100,7 +105,7 @@ namespace cbpp::cml {
         size_t m_iLine = 1, m_iCol = 1;
         bool m_bHasBSlash = false;
 
-        ERefType m_iRefType = ERefType::Null;
+        EQualifier m_iRefType = EQualifier::None;
 
         char32_t m_iCurrentChar;
 
@@ -217,16 +222,25 @@ namespace cbpp::cml {
 
         CString m_sSource;
 
+        CBinTable<CSubString, IObject*> m_dConstants;
+
         Token m_ErroredToken;
         EErrorType m_iLastError = EErrorType::Ok;
 
         IObject* m_pRoot = CreateObject(EValueType::Object);
 
-        bool m_bExpectObject = false, m_bIncluding = false;
+        bool m_bExpectObject = false, m_bDeclaring = false;
+
         CSubString m_sCurrentIdentifier;
 
-        EErrorType ProcessToken(Token& Data);
         IObject* CreateRefObject(Token& Data);
+
+        EErrorType ProcessIdentifier(Token& Data);
+        EErrorType ProcessNumber(Token& Data);
+        EErrorType ProcessString(Token& Data);
+        EErrorType ProcessKeyword(Token& Data);
+
+        EErrorType ProcessToken(Token& Data);
 
         public:
             bool ParseString(const char* sCode, bool bAllowInclude = true);

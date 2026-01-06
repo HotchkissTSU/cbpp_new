@@ -1,20 +1,18 @@
-!default_entry ""
+:default_entry "(null)"
 
 Name "CB++ locale test"
 
 Data {
-    toplevel_entry "hello world!"
-
     Entity {
         CBaseEntity {
-            Manual                      @"assets/locale/test/man/CBaseEntity.txt"
+            #Manual                      @"assets/locale/test/man/CBaseEntity.txt"
 
             m_sName                     "Name"
             m_sName_desc                "This entities name for others to refer by"
         }
 
         CPointEntity {
-            Manual                      @"assets/locale/test/man/CPointEntity.txt"
+            #Manual                      @"assets/locale/test/man/CPointEntity.txt"
 
             m_vPos                      "Position"
             m_vPos_desc                 "Position in the world"

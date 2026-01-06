@@ -24,6 +24,9 @@ namespace cbpp::cml {
             case EErrorType::StrayString:       return "Stray string";
             case EErrorType::BadFileRef:        return "Undefined file reference";
             case EErrorType::StrayKeyword:      return "Stray keyword";
+            case EErrorType::BadConstRef:       return "Undefined constant reference";
+            case EErrorType::BadConstType:      return "Bad constant type";
+            case EErrorType::IncludeNonString:  return "'include' followed by a non-string value";
 
             default:                            return "(null)";
         }
@@ -71,7 +74,7 @@ namespace cbpp::cml {
         Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
 
         switch(Data.iRef) {
-            case ERefType::FileText: {
+            case EQualifier::FileTextRef: {
                 IObject* pStringObj = CreateObject(EValueType::String);
 
                 IFile* hFile = OpenFile(sBuffer, "rb");
@@ -89,7 +92,7 @@ namespace cbpp::cml {
                 return pStringObj;
             }
             
-            case ERefType::FileBin: {
+            case EQualifier::FileBinRef: {
                 IObject* pBinaryObj = CreateObject(EValueType::Binary);
 
                 IFile* hFile = OpenFile(sBuffer, "rb");
@@ -111,7 +114,7 @@ namespace cbpp::cml {
             default: return NULL;
         }
     }
-    
+
     EErrorType CParser::ProcessToken(Token& Data) {
         char sBuffer[CBPP_CML_MAX_LEXEM_LENGTH+1];
 
@@ -124,23 +127,45 @@ namespace cbpp::cml {
                 Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
 
                 if(strcmp(sBuffer, "include") == 0) {
-                    m_bIncluding = true;
+                    //m_bIncluding = true;
                 }
 
                 break;
             }
 
-            case EToken::Identifier: {
+            case EToken::Identifier: {                
+                if(Data.iRef == EQualifier::ConstRef) { // name $<current>
+                    IObject** pTest = m_dConstants.At(Data.sLexeme);
+                    if(pTest == NULL) {
+                        return EErrorType::BadConstRef;
+                    }
+                    
+                    IObject* pCurrent = m_aStack.Head();
+
+                    m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer));
+                    pCurrent->PushChild(sBuffer, (*pTest)->GetCopy());
+                    m_bExpectObject = false;
+
+                    return EErrorType::Ok;
+                }
+
                 if(m_bExpectObject) { // Stray identifier
                     return EErrorType::StrayIdentifier;
                 }
 
-                IObject* pCurrent = m_aStack.Head();
+                if(Data.iRef == EQualifier::ConstDecl) { // !<current> ...
+                    if(m_bDeclaring) { // !name !name
+                        return EErrorType::StrayIdentifier;
+                    }
+                    
+                    m_bDeclaring = true;
 
-                Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
-
-                if(pCurrent->HasChild(sBuffer)) {
-                    return EErrorType::Redefinition;
+                } else {
+                    IObject* pCurrent = m_aStack.Head();
+                    Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
+                    if(pCurrent->HasChild(sBuffer)) {
+                        return EErrorType::Redefinition;
+                    }
                 }
 
                 m_bExpectObject = true;
@@ -149,12 +174,6 @@ namespace cbpp::cml {
             }
             
             case EToken::Number: {
-                IObject* pCurrent = m_aStack.Head();
-
-                if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
-                    return EErrorType::StrayNumber;
-                }
-
                 IObject* pNumberObj;
 
                 Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
@@ -168,8 +187,18 @@ namespace cbpp::cml {
                     pNumberObj->Value()->SetValue((float)atof(sBuffer));
                 }
 
-                m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer));
-                pCurrent->PushChild(sBuffer, pNumberObj);
+                if(m_bDeclaring) {
+                    m_dConstants.Insert(m_sCurrentIdentifier, pNumberObj);
+                    m_bDeclaring = false;
+                } else {
+                    IObject* pCurrent = m_aStack.Head();
+                    if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
+                        return EErrorType::StrayNumber;
+                    }
+
+                    m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer));
+                    pCurrent->PushChild(sBuffer, pNumberObj);
+                }
 
                 m_bExpectObject = false;
 
@@ -177,16 +206,10 @@ namespace cbpp::cml {
             }
             
             case EToken::String: {
-                IObject* pCurrent = m_aStack.Head();
-
-                if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
-                    return EErrorType::StrayString;
-                }
-                
                 IObject* pStringObj;
                 Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer)); // string data
 
-                if(Data.iRef == ERefType::FileBin || Data.iRef == ERefType::FileText) {
+                if(Data.iRef == EQualifier::FileBinRef || Data.iRef == EQualifier::FileTextRef) {
                     pStringObj = CreateRefObject(Data);
                     if(pStringObj == NULL) {
                         return EErrorType::BadFileRef;
@@ -195,9 +218,20 @@ namespace cbpp::cml {
                     pStringObj = CreateObject(EValueType::String);
                     pStringObj->Value()->SetValue(sBuffer);
                 }
-                
-                m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer)); // string name
-                pCurrent->PushChild(sBuffer, pStringObj);
+
+                if(m_bDeclaring) {
+                    m_dConstants.Insert(m_sCurrentIdentifier, pStringObj);
+                    m_bDeclaring = false;
+                } else {
+                    IObject* pCurrent = m_aStack.Head();
+
+                    if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
+                        return EErrorType::StrayString;
+                    }
+                    
+                    m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer)); // string name
+                    pCurrent->PushChild(sBuffer, pStringObj);
+                }
 
                 m_bExpectObject = false;
 
@@ -205,6 +239,10 @@ namespace cbpp::cml {
             }
             
             case EToken::BlockOpen: {
+                if(m_bDeclaring) {
+                    return EErrorType::BadConstType;
+                }
+
                 IObject* pCurrent = m_aStack.Head();
 
                 if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
@@ -243,6 +281,10 @@ namespace cbpp::cml {
             }
             
             case EToken::ArrayOpen: {
+                if(m_bDeclaring) {
+                    return EErrorType::BadConstType;
+                }
+
                 IObject* pCurrent = m_aStack.Head();
 
                 if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
@@ -298,6 +340,11 @@ namespace cbpp::cml {
     CParser::~CParser() {
         if(m_pRoot != NULL) {
             Delete(m_pRoot);
+        }
+
+        const decltype(m_dConstants)::pairs_t& Pairs = m_dConstants.Data();
+        for(size_t i = 0; i < Pairs.Length(); i++) {
+            Delete(Pairs[i].Value);
         }
     }
 }

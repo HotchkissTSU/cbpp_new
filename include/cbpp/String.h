@@ -96,10 +96,14 @@ namespace cbpp {
             CSubString(CString&& sSource, size_t iPos, size_t iLength) = delete;
 
             CSubString() = default;
+
             CSubString(const CString& sSource, size_t iStart, size_t iLength);
             CSubString(const char* sSource, size_t iStart, size_t iLength);
 
             void Set(const char* sSource, size_t iStart, size_t iLength);
+
+            bool operator==(const CSubString& Other) const;
+            bool operator<(const CSubString& Other) const;
 
             size_t Length() const;
             
