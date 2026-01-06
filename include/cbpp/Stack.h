@@ -1,0 +1,51 @@
+#ifndef CBPP_STACK_H
+#define CBPP_STACK_H
+
+#include "cbpp/Array.h"
+
+namespace cbpp {
+    template <typename value_t> class CStack {
+        CArray<value_t> m_aData;
+
+        public:
+            CStack() = default;
+
+            value_t& Head() {
+                return m_aData.Last();
+            }
+
+            const value_t& Head() const {
+                return m_aData.Last();
+            }
+
+            void Pop() {
+                m_aData.PopBack();
+            }
+
+            void Push(const value_t& Value) {
+                m_aData.PushBack(Value);
+            }
+
+            void Push(value_t&& Value) {
+                m_aData.PushBack(Value);
+            }
+
+            size_t Length() const {
+                return m_aData.Length();
+            }
+
+            void Strink() {
+                m_aData.Shrink();
+            }
+
+            void Reserve(size_t iSize) {
+                m_aData.Reserve(iSize);
+            } 
+
+            void Clear() {
+                m_aData.Clear();
+            }
+    };
+}
+
+#endif

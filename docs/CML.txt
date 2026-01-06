@@ -3,9 +3,10 @@
 
 A human-readable markdown language with an extremely simple syntax.
 
-We have 5 supported types:
+We have 6 supported types:
     - Numbers, which can be either integers or floats
     - Strings with UTF-8 support
+    - Raw binary data
     - Arrays
     - Objects
 

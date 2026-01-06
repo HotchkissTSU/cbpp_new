@@ -1,0 +1,12 @@
+pretty_name "Русский"
+
+data {
+    entity {
+        base_point {
+            m_vPos          "Позиция"
+            m_vAng          "Поворот"
+            m_vPos_desc     "Позиция объекта в мире"
+            m_vAng_desc     "Поворот объекта"
+        }
+    }
+}

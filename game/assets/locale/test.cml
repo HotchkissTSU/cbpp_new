@@ -1,0 +1,29 @@
+!default_entry ""
+
+Name "CB++ locale test"
+
+Data {
+    toplevel_entry "hello world!"
+
+    Entity {
+        CBaseEntity {
+            Manual                      @"assets/locale/test/man/CBaseEntity.txt"
+
+            m_sName                     "Name"
+            m_sName_desc                "This entities name for others to refer by"
+        }
+
+        CPointEntity {
+            Manual                      @"assets/locale/test/man/CPointEntity.txt"
+
+            m_vPos                      "Position"
+            m_vPos_desc                 "Position in the world"
+
+            m_fAng                      "Rotation"
+            m_fAng_desc                 $default_entry
+
+            m_sParentName               "Parent"
+            m_sParentName_desc          "This entities parent name"
+        }
+    }
+}
