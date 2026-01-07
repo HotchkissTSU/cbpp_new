@@ -3,7 +3,10 @@
 
 #include <time.h>
 
-#define CbBenchmark() cbpp::CBenchmarker __cb_benchmark(__FUNCTION__);
+/*
+    Automatically benchmark from macro position to the current scope end
+*/
+#define CbBenchmark() cbpp::CBenchmarker __cb_benchmark(__FUNCTION__)
 
 namespace cbpp {
     class CBenchmarker {

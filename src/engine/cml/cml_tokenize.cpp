@@ -144,7 +144,7 @@ namespace cbpp::cml {
                         EToken::Number,
                         CSubString(m_sSource, m_iLexemStart, m_iLexemLength),
                         m_iLine, m_iCol,
-                        EQualifier::None
+                        m_iRefType
                     });
 
                     m_iRefType = EQualifier::None;

@@ -27,6 +27,8 @@ namespace cbpp::cml {
             case EErrorType::BadConstRef:       return "Undefined constant reference";
             case EErrorType::BadConstType:      return "Bad constant type";
             case EErrorType::IncludeNonString:  return "'include' followed by a non-string value";
+            case EErrorType::BadQualifier:      return "Bad qualifier";
+            case EErrorType::StackOverflow:     return "Stack overflow";
 
             default:                            return "(null)";
         }
@@ -115,8 +117,21 @@ namespace cbpp::cml {
         }
     }
 
+    char* CParser::LexemBuffer() const {
+        static char s_sBuffer[CBPP_CML_LEXEM_BUFFER_SIZE];
+        return s_sBuffer;
+    }
+    
     EErrorType CParser::ProcessToken(Token& Data) {
-        char sBuffer[CBPP_CML_MAX_LEXEM_LENGTH+1];
+        char* sBuffer = LexemBuffer();
+
+        if(Data.iType != EToken::Identifier && Data.iRef == EQualifier::ConstDecl) {
+            return EErrorType::BadQualifier;
+        }
+
+        if(Data.iType == EToken::Number && Data.iRef != EQualifier::None) {
+            return EErrorType::BadQualifier;
+        }
 
         switch (Data.iType) {
             case EToken::Keyword: {
@@ -132,108 +147,29 @@ namespace cbpp::cml {
 
                 break;
             }
-
+            
             case EToken::Identifier: {                
-                if(Data.iRef == EQualifier::ConstRef) { // name $<current>
-                    IObject** pTest = m_dConstants.At(Data.sLexeme);
-                    if(pTest == NULL) {
-                        return EErrorType::BadConstRef;
-                    }
-                    
-                    IObject* pCurrent = m_aStack.Head();
-
-                    m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer));
-                    pCurrent->PushChild(sBuffer, (*pTest)->GetCopy());
-                    m_bExpectObject = false;
-
-                    return EErrorType::Ok;
+                EErrorType iRet = ProcessIdentifier(Data);
+                if(iRet != EErrorType::Ok) {
+                    return iRet;
                 }
-
-                if(m_bExpectObject) { // Stray identifier
-                    return EErrorType::StrayIdentifier;
-                }
-
-                if(Data.iRef == EQualifier::ConstDecl) { // !<current> ...
-                    if(m_bDeclaring) { // !name !name
-                        return EErrorType::StrayIdentifier;
-                    }
-                    
-                    m_bDeclaring = true;
-
-                } else {
-                    IObject* pCurrent = m_aStack.Head();
-                    Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
-                    if(pCurrent->HasChild(sBuffer)) {
-                        return EErrorType::Redefinition;
-                    }
-                }
-
-                m_bExpectObject = true;
-                m_sCurrentIdentifier = Data.sLexeme;
                 break;
             }
             
             case EToken::Number: {
-                IObject* pNumberObj;
-
-                Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
-                char* pDot = strchr(sBuffer, '.');
-
-                if(pDot == NULL) {
-                    pNumberObj = CreateObject(EValueType::Integer);
-                    pNumberObj->Value()->SetValue(atoi(sBuffer));
-                } else {
-                    pNumberObj = CreateObject(EValueType::Float);
-                    pNumberObj->Value()->SetValue((float)atof(sBuffer));
+                EErrorType iRet = ProcessNumber(Data);
+                if(iRet != EErrorType::Ok) {
+                    return iRet;
                 }
-
-                if(m_bDeclaring) {
-                    m_dConstants.Insert(m_sCurrentIdentifier, pNumberObj);
-                    m_bDeclaring = false;
-                } else {
-                    IObject* pCurrent = m_aStack.Head();
-                    if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
-                        return EErrorType::StrayNumber;
-                    }
-
-                    m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer));
-                    pCurrent->PushChild(sBuffer, pNumberObj);
-                }
-
-                m_bExpectObject = false;
 
                 break;
             }
             
             case EToken::String: {
-                IObject* pStringObj;
-                Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer)); // string data
-
-                if(Data.iRef == EQualifier::FileBinRef || Data.iRef == EQualifier::FileTextRef) {
-                    pStringObj = CreateRefObject(Data);
-                    if(pStringObj == NULL) {
-                        return EErrorType::BadFileRef;
-                    }
-                } else {
-                    pStringObj = CreateObject(EValueType::String);
-                    pStringObj->Value()->SetValue(sBuffer);
+                EErrorType iRet = ProcessString(Data);
+                if(iRet != EErrorType::Ok) {
+                    return iRet;
                 }
-
-                if(m_bDeclaring) {
-                    m_dConstants.Insert(m_sCurrentIdentifier, pStringObj);
-                    m_bDeclaring = false;
-                } else {
-                    IObject* pCurrent = m_aStack.Head();
-
-                    if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
-                        return EErrorType::StrayString;
-                    }
-                    
-                    m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer)); // string name
-                    pCurrent->PushChild(sBuffer, pStringObj);
-                }
-
-                m_bExpectObject = false;
 
                 break;
             }
@@ -323,9 +259,9 @@ namespace cbpp::cml {
     }
 
     size_t CParser::GetErrorLog(char* sBuffer, size_t iMaxSize) const {
-        char sBuff[CBPP_CML_MAX_LEXEM_LENGTH+1];
+        char* sBuff = LexemBuffer();
 
-        m_ErroredToken.sLexeme.Bufferize(sBuff, sizeof(sBuff));
+        m_ErroredToken.sLexeme.Bufferize(sBuff, CBPP_CML_LEXEM_BUFFER_SIZE);
 
         return snprintf(sBuffer, iMaxSize, "Error: %s, Line %i, Column %i (near '%s')", 
                         GetErrorName(m_iLastError), 

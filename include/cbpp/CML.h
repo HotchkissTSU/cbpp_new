@@ -24,6 +24,8 @@
 */
 #define CBPP_CML_MAX_LEXEM_LENGTH 128
 
+#define CBPP_CML_LEXEM_BUFFER_SIZE (CBPP_CML_MAX_LEXEM_LENGTH+1)
+
 namespace cbpp::cml {
     enum class EToken : uint32_t {
         Keyword,
@@ -78,6 +80,9 @@ namespace cbpp::cml {
         IncludeNonString,
         BadConstRef,
         BadConstType,
+        BadQualifier,
+
+        StackOverflow,
 
         IWannaInclude
     };
@@ -232,6 +237,8 @@ namespace cbpp::cml {
         bool m_bExpectObject = false, m_bDeclaring = false;
 
         CSubString m_sCurrentIdentifier;
+
+        char* LexemBuffer() const;
 
         IObject* CreateRefObject(Token& Data);
 

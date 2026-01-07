@@ -35,7 +35,8 @@ int main(int argc, char** argv) {
 
     File->ReadAll(sFileText);
 
-    CbBenchmark()
+    CbBenchmark();
+    
     cbpp::cml::CParser Parser;
     if(Parser.ParseString(sFileText)) {
         PrintObject(Parser.Root());

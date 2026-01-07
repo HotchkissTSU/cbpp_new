@@ -2,6 +2,7 @@
 #define CBPP_STRING_API_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 namespace cbpp {
     typedef const char* cstring_t;
@@ -115,6 +116,8 @@ namespace cbpp {
             // Output the string to an external buffer, adding the null-terminator
             size_t Bufferize(char* pBuffer, size_t iBuffSize) const;
     };
+
+    int32_t SubStringCmp(const CSubString& sA, const CSubString& sB);
 }
 
 #endif

@@ -1,4 +1,6 @@
 :default_entry "(null)"
+:const_2 52
+:const_52 2
 
 Name "CB++ locale test"
 
@@ -24,4 +26,7 @@ Data {
             m_sParentName_desc          "This entities parent name"
         }
     }
+
+    const_2_instance $const_2
+    const_52_instance $const_52
 }

@@ -52,36 +52,33 @@ namespace cbpp {
     }
 
     bool CSubString::operator==(const CSubString& Other) const {
-        char *pA = m_pStart, *pB = Other.m_pStart;
-        while(1) {
-            if(*pA != *pB) {
-                return false;
-            }
-
-            pA++; pB++;
-
-            if(pA >= m_pEnd || pB >= Other.m_pEnd) {
-                break;
-            }
-        }
-
-        return true;
+        return SubStringCmp(*this, Other) == 0;
     }
 
     bool CSubString::operator<(const CSubString& Other) const {
-        char *pA = m_pStart, *pB = Other.m_pStart;
-        while(1) {
-            if(*pA >= *pB) {
-                return false;
+        return SubStringCmp(*this, Other) < 0;
+    }
+
+    int32_t SubStringCmp(const CSubString& sA, const CSubString& sB) {
+        size_t iLenA = sA.Length(), iLenB = sB.Length();
+
+        if(iLenA < iLenB) {
+            return -1;
+        } else if(iLenB > iLenA) {
+            return 1;
+        }
+
+        char *pA = sA.Start(), *pB = sB.Start();
+        for(size_t i = 0; i < iLenA; i++) {
+            if((*pA) < (*pB)) {
+                return -1;
+            }else if((*pA) > (*pB)) {
+                return 1;
             }
 
             pA++; pB++;
-
-            if(pA >= m_pEnd || pB >= Other.m_pEnd) {
-                break;
-            }
         }
 
-        return true;
+        return 0;
     }
 }
