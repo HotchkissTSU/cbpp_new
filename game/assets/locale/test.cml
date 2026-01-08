@@ -1,32 +1,9 @@
-:default_entry "(null)"
-:const_2 52
-:const_52 2
+cta_raster {
+    width 1024
+    height 512
+    data 0
+}
 
-Name "CB++ locale test"
-
-Data {
-    Entity {
-        CBaseEntity {
-            #Manual                      @"assets/locale/test/man/CBaseEntity.txt"
-
-            m_sName                     "Name"
-            m_sName_desc                "This entities name for others to refer by"
-        }
-
-        CPointEntity {
-            #Manual                      @"assets/locale/test/man/CPointEntity.txt"
-
-            m_vPos                      "Position"
-            m_vPos_desc                 "Position in the world"
-
-            m_fAng                      "Rotation"
-            m_fAng_desc                 $default_entry
-
-            m_sParentName               "Parent"
-            m_sParentName_desc          "This entities parent name"
-        }
-    }
-
-    const_2_instance $const_2
-    const_52_instance $const_52
+cta_mapping {
+    test_sprite [ 0 0 16 16 ]
 }

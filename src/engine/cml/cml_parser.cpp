@@ -35,7 +35,9 @@ namespace cbpp::cml {
     }
 
     bool CParser::ParseString(const char* sCode, bool bAllowInclude) {
-        m_aBracesStack.Clear();
+        m_aArrBraceStack.Clear();
+        m_aObjBraceStack.Clear();
+
         m_aStack.Clear();
         m_bExpectObject = false;
 
@@ -121,10 +123,10 @@ namespace cbpp::cml {
         static char s_sBuffer[CBPP_CML_LEXEM_BUFFER_SIZE];
         return s_sBuffer;
     }
-    
-    EErrorType CParser::ProcessToken(Token& Data) {
-        char* sBuffer = LexemBuffer();
 
+    typedef EErrorType (CParser::*procfunc_t)(Token&);
+
+    EErrorType CParser::ProcessToken(Token& Data) {
         if(Data.iType != EToken::Identifier && Data.iRef == EQualifier::ConstDecl) {
             return EErrorType::BadQualifier;
         }
@@ -133,129 +135,24 @@ namespace cbpp::cml {
             return EErrorType::BadQualifier;
         }
 
-        switch (Data.iType) {
-            case EToken::Keyword: {
-                if(m_bExpectObject) {
-                    return EErrorType::StrayKeyword;
-                }
-
-                Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
-
-                if(strcmp(sBuffer, "include") == 0) {
-                    //m_bIncluding = true;
-                }
-
-                break;
-            }
-            
-            case EToken::Identifier: {                
-                EErrorType iRet = ProcessIdentifier(Data);
-                if(iRet != EErrorType::Ok) {
-                    return iRet;
-                }
-                break;
-            }
-            
-            case EToken::Number: {
-                EErrorType iRet = ProcessNumber(Data);
-                if(iRet != EErrorType::Ok) {
-                    return iRet;
-                }
-
-                break;
-            }
-            
-            case EToken::String: {
-                EErrorType iRet = ProcessString(Data);
-                if(iRet != EErrorType::Ok) {
-                    return iRet;
-                }
-
-                break;
-            }
-            
-            case EToken::BlockOpen: {
-                if(m_bDeclaring) {
-                    return EErrorType::BadConstType;
-                }
-
-                IObject* pCurrent = m_aStack.Head();
-
-                if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
-                    return EErrorType::StrayBlock;
-                }
-
-                IObject* pObj = CreateObject(EValueType::Object);
-                m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer));
-                pCurrent->PushChild(sBuffer, pObj);
-                m_aStack.Push(pObj);
-
-                m_bExpectObject = false;
-
-                m_aBracesStack.Push(EToken::BlockOpen);
-
-                break;
-            }
-            
-            case EToken::BlockClose: {
-                if(m_aStack.Length() > 1) {
-                    m_aStack.Pop();
-                } else { // Attempt to pop root block
-                    return EErrorType::IllBlock;
-                }
-
-                EToken iTopBrace = m_aBracesStack.Head();
-                if(!CheckBraceMatch(iTopBrace, Data.iType)) {   // brace stack mismatch
-                    return EErrorType::IllBlock;
-                } else if(m_aBracesStack.Length() > 0) {      
-                    m_aBracesStack.Pop();                       // all ok
-                } else {
-                    return EErrorType::IllBlock;                // no opener, stack empty
-                }
-
-                break;
-            }
-            
-            case EToken::ArrayOpen: {
-                if(m_bDeclaring) {
-                    return EErrorType::BadConstType;
-                }
-
-                IObject* pCurrent = m_aStack.Head();
-
-                if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
-                    return EErrorType::StrayArray; // sounds like a sick band title
-                }
-
-                IObject* pArr = CreateObject(EValueType::Array);
-                m_sCurrentIdentifier.Bufferize(sBuffer, sizeof(sBuffer));
-                pCurrent->PushChild(sBuffer, pArr);
-                m_aStack.Push(pArr);
-
-                m_aBracesStack.Push(EToken::ArrayOpen);
-
-                break;
-            }
-            
-            case EToken::ArrayClose: {
-                if(m_aStack.Length() > 1) {
-                    m_aStack.Pop();
-                }else{
-                    return EErrorType::IllArray;
-                }
-
-                EToken iTopBrace = m_aBracesStack.Head();
-                if(!CheckBraceMatch(iTopBrace, Data.iType)) {   // brace stack mismatch
-                    return EErrorType::IllArray;
-                } else if(m_aBracesStack.Length() > 0) {      
-                    m_aBracesStack.Pop();                       // all ok
-                } else {
-                    return EErrorType::IllArray;                // no opener, stack empty
-                }
-            }
+        if(Data.iType == EToken::String && Data.iRef == EQualifier::ConstRef) {
+            return EErrorType::BadQualifier;
         }
+        
+        constexpr procfunc_t aTokenProcessors[] = {
+            &CParser::ProcessKeyword,
+            &CParser::ProcessIdentifier,
+            &CParser::ProcessBlock,
+            &CParser::ProcessBlock,
+            &CParser::ProcessArray,
+            &CParser::ProcessArray,
+            &CParser::ProcessNumber,
+            &CParser::ProcessString
+        };
+        
+        procfunc_t fpFunc = aTokenProcessors[(int32_t)(Data.iType)];
 
-        return EErrorType::Ok;
+        return (*this.*fpFunc)(Data);
     }
 
     size_t CParser::GetErrorLog(char* sBuffer, size_t iMaxSize) const {

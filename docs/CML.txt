@@ -71,3 +71,12 @@ Here are some examples:
         itself with the content.
 
         > include "/path/to/cml"
+
+7) Structures
+
+    'Structures' end up like regular binary-type data fields which are assembled from code input.
+
+    > MyStruct ("STR" 1024 256)
+
+    All struct`s members will be converted to their binary representation and packed one after another.
+    These members can later be accessed by their index.

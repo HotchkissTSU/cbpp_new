@@ -155,7 +155,7 @@ namespace cbpp::cml {
                 break;
 
             case ETokenizerState::InIdentifier:
-                if(isalnum(cChar) || cChar == '_') {
+                if(isalnum(cChar) || cChar == '_' || cChar == '.') {
                     m_iLexemLength++;
                 } else {
                     char sBuff[128];

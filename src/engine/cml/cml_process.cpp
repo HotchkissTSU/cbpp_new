@@ -112,4 +112,96 @@ namespace cbpp::cml {
 
         return EErrorType::Ok;
     }
+
+    EErrorType CParser::ProcessBlock(Token& Data) {
+        char* sBuffer = LexemBuffer();
+
+        switch(Data.iType) {
+            case EToken::BlockOpen: {
+                if(m_bDeclaring) {
+                    return EErrorType::BadConstType;
+                }
+
+                IObject* pCurrent = m_aStack.Head();
+
+                if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
+                    return EErrorType::StrayBlock;
+                }
+
+                IObject* pObj = CreateObject(EValueType::Object);
+                m_sCurrentIdentifier.Bufferize(sBuffer, CBPP_CML_LEXEM_BUFFER_SIZE);
+                pCurrent->PushChild(sBuffer, pObj);
+                m_aStack.Push(pObj);
+
+                m_bExpectObject = false;
+
+                break;
+            }
+
+            case EToken::BlockClose: {
+                if(m_aStack.Length() > 1) {
+                    m_aStack.Pop();
+                } else { // Attempt to pop root block
+                    return EErrorType::IllBlock;
+                }
+
+                break;
+            }
+        }
+
+        return EErrorType::Ok;
+    }
+
+    EErrorType CParser::ProcessArray(Token& Data) {
+        char* sBuffer = LexemBuffer();
+
+        switch(Data.iType) {
+            case EToken::ArrayOpen: {
+                if(m_bDeclaring) {
+                    return EErrorType::BadConstType;
+                }
+
+                IObject* pCurrent = m_aStack.Head();
+
+                if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
+                    return EErrorType::StrayArray; // sounds like a sick band title
+                }
+
+                IObject* pArr = CreateObject(EValueType::Array);
+                m_sCurrentIdentifier.Bufferize(sBuffer, CBPP_CML_LEXEM_BUFFER_SIZE);
+                pCurrent->PushChild(sBuffer, pArr);
+                m_aStack.Push(pArr);
+
+                break;
+            }
+
+            case EToken::ArrayClose: {
+                if(m_aStack.Length() > 1) {
+                    m_aStack.Pop();
+                }else{
+                    return EErrorType::IllArray;
+                }
+
+                break;
+            }
+        }
+
+        return EErrorType::Ok;
+    }
+
+    EErrorType CParser::ProcessKeyword(Token& Data) {
+        char* sBuffer = LexemBuffer();
+
+        if(m_bExpectObject) {
+            return EErrorType::StrayKeyword;
+        }
+
+        Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
+
+        if(strcmp(sBuffer, "include") == 0) {
+            //m_bIncluding = true;
+        }
+
+        return EErrorType::Ok;
+    }
 }

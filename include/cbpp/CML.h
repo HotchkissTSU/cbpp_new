@@ -35,7 +35,9 @@ namespace cbpp::cml {
         ArrayOpen,
         ArrayClose,
         Number,
-        String
+        String,
+
+        AMOUNT
     };
 
     enum class ETokenizerState : uint32_t {
@@ -223,7 +225,8 @@ namespace cbpp::cml {
 
     class CParser {
         CStack<IObject*> m_aStack;
-        CStack<EToken> m_aBracesStack;
+        
+        CStack<EToken> m_aObjBraceStack, m_aArrBraceStack;
 
         CString m_sSource;
 
@@ -246,6 +249,8 @@ namespace cbpp::cml {
         EErrorType ProcessNumber(Token& Data);
         EErrorType ProcessString(Token& Data);
         EErrorType ProcessKeyword(Token& Data);
+        EErrorType ProcessBlock(Token& Data);
+        EErrorType ProcessArray(Token& Data);
 
         EErrorType ProcessToken(Token& Data);
 
