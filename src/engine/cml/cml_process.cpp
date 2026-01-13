@@ -9,7 +9,7 @@ namespace cbpp::cml {
             if(pTest == NULL) {
                 return EErrorType::BadConstRef;
             }
-            
+
             IObject* pCurrent = m_aStack.Head();
 
             m_sCurrentIdentifier.Bufferize(sBuffer, CBPP_CML_LEXEM_BUFFER_SIZE);
@@ -32,6 +32,7 @@ namespace cbpp::cml {
 
         } else {
             IObject* pCurrent = m_aStack.Head();
+
             Data.sLexeme.Bufferize(sBuffer, CBPP_CML_LEXEM_BUFFER_SIZE);
             if(pCurrent->HasChild(sBuffer)) {
                 return EErrorType::Redefinition;
@@ -59,12 +60,13 @@ namespace cbpp::cml {
             pNumberObj = CreateObject(EValueType::Float);
             pNumberObj->Value()->SetValue((float)atof(sBuffer));
         }
-
+        
         if(m_bDeclaring) {
             m_dConstants.Insert(m_sCurrentIdentifier, pNumberObj);
             m_bDeclaring = false;
         } else {
             IObject* pCurrent = m_aStack.Head();
+
             if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
                 return EErrorType::StrayNumber;
             }
@@ -139,7 +141,7 @@ namespace cbpp::cml {
             }
 
             case EToken::BlockClose: {
-                if(m_aStack.Length() > 1) {
+                if(m_aStack.Length() >= 1) {
                     m_aStack.Pop();
                 } else { // Attempt to pop root block
                     return EErrorType::IllBlock;
@@ -176,7 +178,7 @@ namespace cbpp::cml {
             }
 
             case EToken::ArrayClose: {
-                if(m_aStack.Length() > 1) {
+                if(m_aStack.Length() >= 1) {
                     m_aStack.Pop();
                 }else{
                     return EErrorType::IllArray;
@@ -203,5 +205,9 @@ namespace cbpp::cml {
         }
 
         return EErrorType::Ok;
+    }
+
+    EErrorType CParser::ProcessStruct(Token& Data) {
+        return EErrorType::IllBlock;
     }
 }

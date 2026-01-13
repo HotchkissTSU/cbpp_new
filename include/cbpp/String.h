@@ -73,7 +73,7 @@ namespace cbpp {
             CString& operator+=(const CString& Other);
             CString& operator+=(char iOther);
             
-            operator const char*() const;
+            operator cstring_t() const;
             operator char*();
             operator bool() const;
             

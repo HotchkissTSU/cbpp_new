@@ -3,15 +3,19 @@
 
 A human-readable markdown language with an extremely simple syntax.
 
-We have 6 supported types:
-    - Numbers, which can be either integers or floats
+We have 7 supported types:
+    - Numbers, which can be either integers or floats, both 32-bit
     - Strings with UTF-8 support
     - Raw binary data
     - Arrays
     - Objects
+    - Structures
 
-Mostly all language syntax looks like [name] [value]. You dont have to embed 
+Mostly all language syntax looks like [name] [value]. You don`t have to embed 
 all your entries inside a root object - the parser will do it for you.
+
+Name can consist of any letters, numbers, '_' and '.'
+It can not start with a number, however.
 
 Here are some examples:
 
@@ -72,11 +76,24 @@ Here are some examples:
 
         > include "/path/to/cml"
 
-7) Structures
+7) Constants
 
-    'Structures' end up like regular binary-type data fields which are assembled from code input.
+    To define a constant, just prefix entry`s name with the ':'. Note that constants are global no matter
+    where they are defined.
 
-    > MyStruct ("STR" 1024 256)
+    > :MyConstant "i`m a constant!"
 
-    All struct`s members will be converted to their binary representation and packed one after another.
-    These members can later be accessed by their index.
+    To create it`s instance, do this:
+
+    > MyConstantInstance $MyConstant
+
+    Instance objects are completely independent because they are copied.
+
+8) Structures 
+
+    A structure is a binary data block which can be made of primitive values only.
+    All entries listened inside a struct will be tightly packed as their binary representations.
+
+    > MyImageInfo ( 1024 512 4 )
+
+    You can later find out the offset of each entry by it`s index.

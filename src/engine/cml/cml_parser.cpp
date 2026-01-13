@@ -72,10 +72,10 @@ namespace cbpp::cml {
         Delete(m_pRoot);
         m_pRoot = CreateObject(EValueType::Object);
     }
-
+    
     IObject* CParser::CreateRefObject(Token& Data) {
-        char sBuffer[CBPP_CML_MAX_LEXEM_LENGTH+1];
-        Data.sLexeme.Bufferize(sBuffer, sizeof(sBuffer));
+        char* sBuffer = LexemBuffer();
+        Data.sLexeme.Bufferize(sBuffer, CBPP_CML_LEXEM_BUFFER_SIZE);
 
         switch(Data.iRef) {
             case EQualifier::FileTextRef: {
@@ -124,8 +124,6 @@ namespace cbpp::cml {
         return s_sBuffer;
     }
 
-    typedef EErrorType (CParser::*procfunc_t)(Token&);
-
     EErrorType CParser::ProcessToken(Token& Data) {
         if(Data.iType != EToken::Identifier && Data.iRef == EQualifier::ConstDecl) {
             return EErrorType::BadQualifier;
@@ -138,23 +136,12 @@ namespace cbpp::cml {
         if(Data.iType == EToken::String && Data.iRef == EQualifier::ConstRef) {
             return EErrorType::BadQualifier;
         }
-        
-        constexpr procfunc_t aTokenProcessors[] = {
-            &CParser::ProcessKeyword,
-            &CParser::ProcessIdentifier,
-            &CParser::ProcessBlock,
-            &CParser::ProcessBlock,
-            &CParser::ProcessArray,
-            &CParser::ProcessArray,
-            &CParser::ProcessNumber,
-            &CParser::ProcessString
-        };
-        
-        procfunc_t fpFunc = aTokenProcessors[(int32_t)(Data.iType)];
+    
+        procfunc_t fpFunc = m_aTokenProcessors[(int32_t)(Data.iType)];
 
         return (*this.*fpFunc)(Data);
     }
-
+    
     size_t CParser::GetErrorLog(char* sBuffer, size_t iMaxSize) const {
         char* sBuff = LexemBuffer();
 

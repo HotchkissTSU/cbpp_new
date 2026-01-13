@@ -36,6 +36,8 @@ namespace cbpp::cml {
         ArrayClose,
         Number,
         String,
+        StructOpen,
+        StructClose,
 
         AMOUNT
     };
@@ -56,7 +58,7 @@ namespace cbpp::cml {
         ConstRef,
         ConstDecl
     };
-
+    
     enum class EValueType : uint32_t {
         Integer,
         Float,
@@ -64,7 +66,8 @@ namespace cbpp::cml {
         Binary,
         
         Array,
-        Object
+        Object,
+        Struct
     };
 
     enum class EErrorType : uint32_t {
@@ -116,6 +119,7 @@ namespace cbpp::cml {
 
         char32_t m_iCurrentChar;
 
+        void ProcessLastChar(char cCurrent);
         void ProcessCharacter(char cCurrent);
 
         public:
@@ -224,6 +228,8 @@ namespace cbpp::cml {
     const char* GetErrorName(EErrorType iType);
 
     class CParser {
+        typedef EErrorType (CParser::*procfunc_t)(Token&);
+
         CStack<IObject*> m_aStack;
         
         CStack<EToken> m_aObjBraceStack, m_aArrBraceStack;
@@ -251,8 +257,22 @@ namespace cbpp::cml {
         EErrorType ProcessKeyword(Token& Data);
         EErrorType ProcessBlock(Token& Data);
         EErrorType ProcessArray(Token& Data);
+        EErrorType ProcessStruct(Token& Data);
 
         EErrorType ProcessToken(Token& Data);
+
+        constexpr static procfunc_t m_aTokenProcessors[] = {
+            &CParser::ProcessKeyword,
+            &CParser::ProcessIdentifier,
+            &CParser::ProcessBlock,
+            &CParser::ProcessBlock,
+            &CParser::ProcessArray,
+            &CParser::ProcessArray,
+            &CParser::ProcessNumber,
+            &CParser::ProcessString,
+            &CParser::ProcessStruct,
+            &CParser::ProcessStruct
+        };
 
         public:
             bool ParseString(const char* sCode, bool bAllowInclude = true);

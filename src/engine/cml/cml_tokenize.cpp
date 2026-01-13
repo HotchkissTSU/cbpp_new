@@ -38,6 +38,38 @@ namespace cbpp::cml {
 
     CTokenizer::CTokenizer(const CString& sSource) : m_sSource(sSource) {}
 
+    void CTokenizer::ProcessLastChar(char cChar) {        
+        if(cChar == ']') {
+            m_iLexemStart = m_iCounter;
+
+            m_aTokens.PushBack({
+                EToken::ArrayClose,
+                CSubString(m_sSource, m_iLexemStart, 1),
+                m_iLine, m_iCol
+            });
+        }
+
+        else if(cChar == '}') {
+            m_iLexemStart = m_iCounter;
+
+            m_aTokens.PushBack({
+                EToken::BlockClose,
+                CSubString(m_sSource, m_iLexemStart, 1),
+                m_iLine, m_iCol
+            });
+        }
+
+        else if(cChar == ')') {
+            m_iLexemStart = m_iCounter;
+
+            m_aTokens.PushBack({
+                EToken::StructClose,
+                CSubString(m_sSource, m_iLexemStart, 1),
+                m_iLine, m_iCol
+            });
+        }
+    }
+
     void CTokenizer::ProcessCharacter(char cChar) {
         if(cChar == '\n') {
             m_iCol = 1;
@@ -71,22 +103,12 @@ namespace cbpp::cml {
                 else if(cChar == '#') {
                     m_iState = ETokenizerState::InComment;
                 }
-                
-                else if(cChar == '{') {
+
+                else if(cChar == '(') {
                     m_iLexemStart = m_iCounter;
 
                     m_aTokens.PushBack({
-                        EToken::BlockOpen,
-                        CSubString(m_sSource, m_iLexemStart, 1),
-                        m_iLine, m_iCol
-                    });
-                }
-
-                else if(cChar == '}') {
-                    m_iLexemStart = m_iCounter;
-
-                    m_aTokens.PushBack({
-                        EToken::BlockClose,
+                        EToken::StructOpen,
                         CSubString(m_sSource, m_iLexemStart, 1),
                         m_iLine, m_iCol
                     });
@@ -107,6 +129,26 @@ namespace cbpp::cml {
 
                     m_aTokens.PushBack({
                         EToken::ArrayClose,
+                        CSubString(m_sSource, m_iLexemStart, 1),
+                        m_iLine, m_iCol
+                    });
+                }
+
+                else if(cChar == '{') {
+                    m_iLexemStart = m_iCounter;
+
+                    m_aTokens.PushBack({
+                        EToken::BlockOpen,
+                        CSubString(m_sSource, m_iLexemStart, 1),
+                        m_iLine, m_iCol
+                    });
+                }
+
+                else if(cChar == '}') {
+                    m_iLexemStart = m_iCounter;
+
+                    m_aTokens.PushBack({
+                        EToken::BlockClose,
                         CSubString(m_sSource, m_iLexemStart, 1),
                         m_iLine, m_iCol
                     });
@@ -151,6 +193,7 @@ namespace cbpp::cml {
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;
+                    ProcessLastChar(cChar);
                 }
                 break;
 
@@ -175,6 +218,7 @@ namespace cbpp::cml {
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;
+                    ProcessLastChar(cChar);
                 }
                 break;
                 
@@ -191,6 +235,7 @@ namespace cbpp::cml {
 
                     m_iLexemLength = 0;
                     m_iState = ETokenizerState::Start;
+                    //ProcessLastChar(cChar);
                 } else { 
                     m_iLexemLength++;
                 }
