@@ -275,6 +275,8 @@ namespace cbpp::cml {
         };
 
         public:
+            CParser();
+
             bool ParseString(const char* sCode, bool bAllowInclude = true);
 
             bool HasErrors() const;

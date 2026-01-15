@@ -201,7 +201,7 @@ namespace cbpp::cml {
                 if(isalnum(cChar) || cChar == '_' || cChar == '.') {
                     m_iLexemLength++;
                 } else {
-                    char sBuff[128];
+                    char sBuff[CBPP_CML_LEXEM_BUFFER_SIZE];
                     CSubString sLexeme(m_sSource, m_iLexemStart, m_iLexemLength);
                     sLexeme.Bufferize(sBuff, sizeof(sBuff));
 

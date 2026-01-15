@@ -27,6 +27,14 @@
 			"src":["src/cbb/*.cpp"],
             "obj":".obj/sdk"
         },
+
+        "stb":{
+            "type":"OBJ",
+            "include" : ["src", "include"],
+            "obj" : ".obj/cbpp",
+            "comp_params":"-O2 -fPIC",
+            "src" : ["src/stb/*.cpp"]
+        },
         
 		"cbsv":{
 			"type" : "EXE",

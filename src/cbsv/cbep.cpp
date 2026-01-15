@@ -10,6 +10,7 @@
 
 #include "cbpp/CML.h"
 #include "cbpp/Benchmark.h"
+#include "cbpp/Image.h"
 
 void InitGLFW() {
     CbAssert(glfwInit() == 0, "Failed to initialize GLFW");
@@ -37,14 +38,22 @@ int main(int argc, char** argv) {
 
     CbBenchmark();
     
-    cbpp::cml::CParser Parser;
+    /*cbpp::cml::CParser Parser;
     if(Parser.ParseString(sFileText)) {
         PrintObject(Parser.Root());
     } else {
         char sBuff[256];
         Parser.GetErrorLog(sBuff, sizeof(sBuff));
         printf("%s\n", sBuff);
-    }
+    }*/
+
+    cbpp::CImage imageTest(128, 128);
+    imageTest.Fill(cbpp::Color(255,255,0,255));
+
+    imageTest.SaveAs("test.bmp", cbpp::EImageType::BMP);
+    imageTest.SaveAs("test.png", cbpp::EImageType::PNG, 9);
+    imageTest.SaveAs("test.jpeg", cbpp::EImageType::JPEG, 100);
+    imageTest.SaveAs("test.tga", cbpp::EImageType::TGA);
 
     return EXIT_SUCCESS;
 }

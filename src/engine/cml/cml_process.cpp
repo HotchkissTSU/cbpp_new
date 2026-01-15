@@ -10,6 +10,10 @@ namespace cbpp::cml {
                 return EErrorType::BadConstRef;
             }
 
+            if(m_aStack.Length() >= CBPP_CML_MAX_DEPTH) {
+                return EErrorType::StackOverflow;
+            }
+
             IObject* pCurrent = m_aStack.Head();
 
             m_sCurrentIdentifier.Bufferize(sBuffer, CBPP_CML_LEXEM_BUFFER_SIZE);
@@ -24,7 +28,7 @@ namespace cbpp::cml {
         }
 
         if(Data.iRef == EQualifier::ConstDecl) { // !<current> ...
-            if(m_bDeclaring) { // !name !name
+            if(m_bDeclaring) { // :name :name
                 return EErrorType::StrayIdentifier;
             }
             
@@ -124,6 +128,10 @@ namespace cbpp::cml {
                     return EErrorType::BadConstType;
                 }
 
+                if(m_aStack.Length() >= CBPP_CML_MAX_DEPTH) {
+                    return EErrorType::StackOverflow;
+                }
+
                 IObject* pCurrent = m_aStack.Head();
 
                 if(pCurrent->Type() == EValueType::Object && !m_bExpectObject) {
@@ -153,7 +161,7 @@ namespace cbpp::cml {
 
         return EErrorType::Ok;
     }
-
+    
     EErrorType CParser::ProcessArray(Token& Data) {
         char* sBuffer = LexemBuffer();
 
@@ -161,6 +169,10 @@ namespace cbpp::cml {
             case EToken::ArrayOpen: {
                 if(m_bDeclaring) {
                     return EErrorType::BadConstType;
+                }
+
+                if(m_aStack.Length() >= CBPP_CML_MAX_DEPTH) {
+                    return EErrorType::StackOverflow;
                 }
 
                 IObject* pCurrent = m_aStack.Head();

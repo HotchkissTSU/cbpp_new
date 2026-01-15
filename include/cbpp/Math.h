@@ -28,6 +28,11 @@ namespace cbpp {
 
     Vec2f VectorFromAngle(float fAng);
     float AngleFromVector(Vec2f vVec);
+
+    size_t PlanarToLinear(size_t iSideLength, size_t iX, size_t iY);
+    void LinearToPlanar(size_t iSideLength, size_t iLinear, size_t& iX, size_t& iY);
+
+    uint32_t CeilToPowerOf2(uint32_t iV);
 }
 
 #endif

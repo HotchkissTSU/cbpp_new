@@ -59,9 +59,10 @@ namespace cbpp {
     void CFile::Close() {
         if(m_hFile != NULL) {
             fclose(m_hFile);
+            m_hFile = NULL;
         }
     }
-
+    
     size_t CFile::Write(size_t iCount, const void* pData) {
         return fwrite(pData, 1, iCount, m_hFile);
     }

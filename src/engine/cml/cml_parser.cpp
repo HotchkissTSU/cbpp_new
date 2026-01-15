@@ -34,6 +34,10 @@ namespace cbpp::cml {
         }
     }
 
+    CParser::CParser() {
+        m_aStack.Reserve(CBPP_CML_MAX_DEPTH);
+    }
+    
     bool CParser::ParseString(const char* sCode, bool bAllowInclude) {
         m_aArrBraceStack.Clear();
         m_aObjBraceStack.Clear();

@@ -1,24 +1,21 @@
-:generic    0
-:array      1
-
-cta_raster {
+raster {
     width 1024
     height 512
-    data 0
+    data &"assets/test.jpg"
 }
 
-cta_mapping [
+mapping [
     {
         name "my_sprite"
-        type $generic
         rect [0 0 16 16]
     }
 
     {
         name "my_array_sprite"
-        type $array
+        is_array 1
+        length 4
         
-        initial_pos     [16 0]
+        start           [16 0]
         size            [16 16]
         shift           [1  0]
     }

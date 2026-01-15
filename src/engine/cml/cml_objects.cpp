@@ -200,7 +200,7 @@ namespace cbpp::cml {
 
     void PutIndent(size_t iAmount) {
         for(size_t i = 0; i < iAmount; i++) {
-            printf("  ");
+            printf("    ");
         }
     }
 
@@ -289,9 +289,9 @@ namespace cbpp::cml {
             case EValueType::Binary: {                
                 if(sName != NULL) {
                     PutIndent(iDepth);
-                    printf("BIN %s (%i)\n", sName, pObj->Value()->GetLength());
+                    printf("BIN %s (%i bytes)\n", sName, pObj->Value()->GetLength());
                 } else {
-                    printf("BIN (%i)\n", pObj->Value()->GetLength());
+                    printf("BIN (%i bytes)\n", pObj->Value()->GetLength());
                 }
 
                 break;
