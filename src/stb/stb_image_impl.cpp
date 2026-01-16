@@ -9,15 +9,14 @@
 #define STBI_ASSERT(x)              CbAssert(!(x), "stb_image error")
 
 #define STBI_MAX_DIMENSIONS CBPP_MAX_IMAGE_SIZE
-
 #define STBI_NO_STDIO
+#define STBI_NO_HDR
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
 //      ++ stb_image_write ++
-
-//#define STBI_WRITE_NO_STDIO uncomment this later to force stb into the engine files interface
+#define STBI_WRITE_NO_STDIO
 
 #define STBIW_MALLOC(sz)            cbpp::Malloc<char>(sz)
 #define STBIW_REALLOC(p,newsz)      cbpp::Realloc<char>((char*)(p),newsz)

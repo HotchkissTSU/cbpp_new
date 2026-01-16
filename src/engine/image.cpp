@@ -42,22 +42,32 @@ namespace cbpp {
 // CImage
 
 namespace cbpp {
-    CImage::CImage(size_t iW, size_t iH, EImageChannels iChannels) : m_iWidth(iW), m_iHeight(iH), m_iChannels(iChannels) {
-        const size_t iLength = iW * iH * (size_t)iChannels;
+    CImage::CImage(const char* pData, texint_t iDataLn, EImageChannels iForceChannels) {
+        m_pData = (char*)stbi_load_from_memory((const unsigned char*)pData, iDataLn, 
+                                                (int*)&m_iWidth, (int*)&m_iHeight, 
+                                                (int*)&m_iChannels, (int)iForceChannels);
+
+        if(iForceChannels != EImageChannels::NONE) {
+            m_iChannels = iForceChannels;
+        }
+    }
+
+    CImage::CImage(texint_t iW, texint_t iH, EImageChannels iChannels) : m_iWidth(iW), m_iHeight(iH), m_iChannels(iChannels) {
+        const texint_t iLength = iW * iH * (texint_t)iChannels;
 
         m_pData = Malloc<char>(iLength);
         this->Fill(Color(0,0,0,255));
     }
 
-    CImage::CImage(const char* pData, size_t iW, size_t iH, EImageChannels iChannels) : m_iWidth(iW), m_iHeight(iH), m_iChannels(iChannels) {
-        const size_t iLength = iW * iH * (size_t)iChannels;
+    CImage::CImage(const char* pData, texint_t iW, texint_t iH, EImageChannels iChannels) : m_iWidth(iW), m_iHeight(iH), m_iChannels(iChannels) {
+        const texint_t iLength = iW * iH * (texint_t)iChannels;
 
         m_pData = Malloc<char>(iLength);
         memcpy(m_pData, pData, iLength);
     }
 
     CImage::CImage(const CImage& Other) : m_iWidth(Other.Width()), m_iHeight(Other.Height()), m_iChannels(Other.Channels()) {
-        const size_t iLength = m_iWidth * m_iHeight * (size_t)m_iChannels;
+        const texint_t iLength = m_iWidth * m_iHeight * (texint_t)m_iChannels;
 
         m_pData = Malloc<char>(iLength);
         memcpy(m_pData, Other.Data(), iLength);
@@ -69,7 +79,7 @@ namespace cbpp {
     }
 
     CImage& CImage::operator=(const CImage& Other) {
-        const size_t iLength = Other.Length();
+        const texint_t iLength = Other.Length();
 
         m_pData = Realloc<char>(m_pData, iLength);
         memcpy(m_pData, Other.Data(), iLength);
@@ -94,38 +104,42 @@ namespace cbpp {
         return true;
     }
 
+    bool CImage::IsPOT() const {
+        return cbpp::IsPOT(m_iWidth) && cbpp::IsPOT(m_iHeight);
+    }
+
     CImage::~CImage() {
         if(m_pData != NULL) {
             Free(m_pData);
         }
     }
 
-    size_t CImage::Length() const {
-        return m_iWidth * m_iHeight * (size_t)m_iChannels;
+    texint_t CImage::Length() const {
+        return m_iWidth * m_iHeight * (texint_t)m_iChannels;
     }
 
     EImageChannels CImage::Channels() const { return m_iChannels; }
-    size_t CImage::Width() const { return m_iWidth; }
-    size_t CImage::Height() const { return m_iHeight; }
+    texint_t CImage::Width() const { return m_iWidth; }
+    texint_t CImage::Height() const { return m_iHeight; }
 
     void CImage::Fill(Color iColor) {
-        const size_t iLength = this->Length();
-        for(size_t i = 0; i < iLength; i += (size_t)m_iChannels) {
-            memcpy(&m_pData[i], &iColor, (size_t)m_iChannels);
+        const texint_t iLength = this->Length();
+        for(texint_t i = 0; i < iLength; i += (texint_t)m_iChannels) {
+            memcpy(&m_pData[i], &iColor, (texint_t)m_iChannels);
         }
     }
 
-    Color CImage::GetPixel(size_t iX, size_t iY) const {
-        size_t iLinear = PlanarToLinear(m_iWidth, iX, iY) * (size_t)m_iChannels;
+    Color CImage::GetPixel(texint_t iX, texint_t iY) const {
+        texint_t iLinear = PlanarToLinear(m_iWidth, iX, iY) * (texint_t)m_iChannels;
 
         Color Out;
-        memcpy(&Out, &m_pData[iLinear], (size_t)m_iChannels);
+        memcpy(&Out, &m_pData[iLinear], (texint_t)m_iChannels);
 
         return Out;
     }
 
-    char* CImage::GetPixelP(size_t iX, size_t iY) {
-        size_t iLinear = PlanarToLinear(m_iWidth, iX, iY) * (size_t)m_iChannels;
+    char* CImage::GetPixelP(texint_t iX, texint_t iY) {
+        texint_t iLinear = PlanarToLinear(m_iWidth, iX, iY) * (texint_t)m_iChannels;
         return &m_pData[iLinear];
     }
 
@@ -136,7 +150,7 @@ namespace cbpp {
         IFile* hFile = (IFile*)pContext;
         hFile->Write(iSize, pData);
     }
-
+    
     bool CImage::SaveAs(const char* sPath, EImageType iType, int iArg) {
         IFile* hFile = OpenFile(sPath, "wb");
         if(hFile == NULL) {
@@ -146,7 +160,6 @@ namespace cbpp {
         switch(iType) {
             case EImageType::BMP:
                 stbi_write_bmp_to_func(ImgWriteCallback, hFile, m_iWidth, m_iHeight, (int)m_iChannels, m_pData);
-                //stbi_write_bmp(sPath, m_iWidth, m_iHeight, (int)m_iChannels, m_pData);
                 break;
 
             case EImageType::JPEG:
@@ -159,7 +172,7 @@ namespace cbpp {
                 break;
 
             case EImageType::TGA:
-                stbi_write_tga_with_rle = 1;
+                stbi_write_tga_with_rle = iArg;
                 stbi_write_tga_to_func(ImgWriteCallback, hFile, m_iWidth, m_iHeight, (int)m_iChannels, m_pData);
                 break;
 
@@ -170,5 +183,37 @@ namespace cbpp {
 
         CloseFile(hFile);
         return true;
+    }
+
+    // BROKEN
+    void CImage::Blit(const CImage& Other, texint_t iX, texint_t iY) {
+        const char* pSource = Other.Data();
+
+        if(iX > m_iWidth || iY > m_iHeight) {
+            return;
+        }
+
+        texint_t iCopyWidth = Other.Width();      // in pixels
+        if(iX + Other.Width() > m_iWidth) {
+            iCopyWidth = iX + Other.Width() - m_iWidth;
+        }
+
+        texint_t iCopyHeight = Other.Height();    // in pixels
+        if(iY + Other.Height() > m_iHeight) {
+            iCopyHeight = iY + Other.Height() - m_iHeight;
+        }
+
+        for(texint_t iRowNumber = iY; iRowNumber < iY + iCopyHeight; iRowNumber++) {
+            char* pDestRow = m_pData + iRowNumber*iCopyWidth*(texint_t)m_iChannels;
+            const char* pSourceRow = Other.Data() + iRowNumber*Other.Width();
+
+            if(m_iChannels == Other.Channels()) {
+                memcpy(pDestRow + iX, pSourceRow, iCopyWidth*(texint_t)m_iChannels);
+            } else {
+                for(texint_t i = iX; i < iX + iCopyWidth; i) {
+                    memcpy(pDestRow + i*(texint_t)m_iChannels, pSourceRow + i*(texint_t)Other.Channels(), (texint_t)m_iChannels);
+                }
+            }
+        }
     }
 }

@@ -26,6 +26,10 @@ namespace cbpp {
         return Value;
     }
 
+    template <typename INT_T> bool IsPOT(INT_T iValue) {
+        return (iValue > 0) && ((iValue & (iValue - 1)) == 0);
+    }
+
     Vec2f VectorFromAngle(float fAng);
     float AngleFromVector(Vec2f vVec);
 

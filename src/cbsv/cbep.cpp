@@ -25,8 +25,8 @@ int main(int argc, char** argv) {
 
     dTest.Insert(cbpp::CSubString(s1, 0, 5), 1);*/
 
-    cbpp::IFile* File = cbpp::OpenFile("assets/locale/test.cml", "rb");
-    if(!File->IsOpen()) {
+    cbpp::IFile* File = cbpp::OpenFile("assets/test.jpg", "rb");
+    if(File == NULL) {
         return 1;
     }
 
@@ -35,8 +35,6 @@ int main(int argc, char** argv) {
     sFileText[iFileLength] = '\0';
 
     File->ReadAll(sFileText);
-
-    CbBenchmark();
     
     /*cbpp::cml::CParser Parser;
     if(Parser.ParseString(sFileText)) {
@@ -47,13 +45,9 @@ int main(int argc, char** argv) {
         printf("%s\n", sBuff);
     }*/
 
-    cbpp::CImage imageTest(128, 128);
-    imageTest.Fill(cbpp::Color(255,255,0,255));
+    cbpp::CImage imageTest(sFileText, iFileLength, cbpp::EImageChannels::LA);
 
-    imageTest.SaveAs("test.bmp", cbpp::EImageType::BMP);
-    imageTest.SaveAs("test.png", cbpp::EImageType::PNG, 9);
-    imageTest.SaveAs("test.jpeg", cbpp::EImageType::JPEG, 100);
-    imageTest.SaveAs("test.tga", cbpp::EImageType::TGA);
+    imageTest.SaveAs("test.png", cbpp::EImageType::PNG);
 
     return EXIT_SUCCESS;
 }
