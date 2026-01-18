@@ -1,22 +1,7 @@
-raster {
-    width 1024
-    height 512
-    data &"assets/test.jpg"
+models : dir {
+    default error.mdl
+
+    props : dir {
+        test.mdl
+    }
 }
-
-mapping [
-    {
-        name "my_sprite"
-        rect [0 0 16 16]
-    }
-
-    {
-        name "my_array_sprite"
-        is_array 1
-        length 4
-        
-        start           [16 0]
-        size            [16 16]
-        shift           [1  0]
-    }
-]

@@ -1,6 +1,7 @@
 #include "engine/string_utils.h"
 
 #include <string.h>
+#include <time.h>
 
 #include "cbpp/Memory.h"
 
@@ -30,5 +31,14 @@ namespace cbpp {
 
     bool IsInsideUnicodeSeq(char cChar) {
         return (cChar & 0xC0) == 0x80; 
+    }
+
+    size_t StringFormatTime(char* sBuffer, size_t iLength, const char* sFormat) {
+        time_t iTime = time(NULL);
+        return strftime( sBuffer, iLength, sFormat, localtime(&iTime) );
+    }
+
+    size_t StringFormatTime(char* sBuffer, size_t iLength, const char* sFormat, time_t iTimer) {
+        return strftime( sBuffer, iLength, sFormat, localtime(&iTimer) );
     }
 }

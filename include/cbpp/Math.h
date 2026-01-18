@@ -26,6 +26,7 @@ namespace cbpp {
         return Value;
     }
 
+    // Is power of 2
     template <typename INT_T> bool IsPOT(INT_T iValue) {
         return (iValue > 0) && ((iValue & (iValue - 1)) == 0);
     }

@@ -19,12 +19,6 @@ void InitGLFW() {
 int main(int argc, char** argv) {
     InitGLFW();
 
-    /*cbpp::CBinTable<cbpp::CSubString, int> dTest;
-
-    cbpp::CString s1("word1 word2 word3");
-
-    dTest.Insert(cbpp::CSubString(s1, 0, 5), 1);*/
-
     cbpp::IFile* File = cbpp::OpenFile("assets/test.jpg", "rb");
     if(File == NULL) {
         return 1;
@@ -45,9 +39,9 @@ int main(int argc, char** argv) {
         printf("%s\n", sBuff);
     }*/
 
-    cbpp::CImage imageTest(sFileText, iFileLength, cbpp::EImageChannels::LA);
-
-    imageTest.SaveAs("test.png", cbpp::EImageType::PNG);
+    cbpp::CImage imageTest(sFileText, iFileLength, cbpp::EImageChannels::L);
+    imageTest.ModToPOT();
+    imageTest.SaveAs("test.jpg", cbpp::EImageType::JPEG, 1);
 
     return EXIT_SUCCESS;
 }

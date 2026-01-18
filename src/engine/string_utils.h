@@ -5,11 +5,6 @@
 
 namespace cbpp {
     /*
-        Get a new exactly copied string. Unlike strdup(), this call uses engine allocator
-    */
-    char* StringDup(const char* sSource, size_t* pLength = NULL);
-
-    /*
         Get length of the upcoming UTF-8 sequence.
         Returns 1 for ASCII codepoints
     */

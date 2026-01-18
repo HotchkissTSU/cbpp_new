@@ -1,19 +1,31 @@
 #ifndef CBPP_API_IMAGE_H
 #define CBPP_API_IMAGE_H
 
-#include <initializer_list>
+/*
+    CBPP will accept any input image resolution, but if it`s not POT (Power-Of-Two),
+    a scaling and padding may be needed. Try to use only POT images to save on
+    runtime computation, as image operations are kinda expensive.
+
+    An image is considered POT only if both of it`s sides are POT (e.g 128x512, 1024x256 etc).
+*/
+
 #include <stdint.h>
 #include <stddef.h>
 
-#define CBPP_MAX_IMAGE_SIZE 4096
+#include "cbpp/Vector.h"
+
+#define CBPP_MAX_IMAGE_SIZE 8192 // 8192 is supported by the most graphics cards at this point
 
 namespace cbpp {
     typedef uint32_t texint_t;
 
     struct Color {
         union {
-            uint32_t    Whole = 0;
-            char        RGBA[4];
+            uint32_t        Packed = 0;
+            union {
+                char        RGBA[4];
+                char R; char G; char B; char A;
+            };
         };
         
         Color() = default;
@@ -24,12 +36,21 @@ namespace cbpp {
         Color(char R, char G, char B, char A);
     };
 
+    enum class EImageFilter : uint32_t {
+        Default     = 0,        // Automatic filter choice
+        Box         = 1,        // A trapezoid w/1-pixel wide ramps, same result as box for integer scale ratios
+        Triangle    = 2,        // On upsampling, produces same results as bilinear texture filtering
+        CubicSpline = 3,        // The cubic b-spline (aka Mitchell-Netrevalli with B=1,C=0), gaussian-esque
+        Catmull     = 4,        // An interpolating cubic spline
+        Mitchell    = 5         // Mitchell-Netrevalli filter with B=1/3, C=1/3
+    };
+
     enum class EImageChannels : uint32_t {
-        NONE    = 0,
-        L       = 1,    // Greyscale
-        LA      = 2,    // Greyscale with alpha
-        RGB     = 3,    // Red Green Blue
-        RGBA    = 4     // RGB with alpha
+        NONE        = 0,
+        L           = 1,        // Greyscale
+        LA          = 2,        // Greyscale with alpha
+        RGB         = 3,        // Red Green Blue
+        RGBA        = 4         // RGB with alpha
     };
 
     enum class EImageType : uint32_t {
@@ -38,10 +59,6 @@ namespace cbpp {
         PNG,
         TGA,
         BMP,
-        PSD,
-        GIF,
-        HDR,
-        PIC,
         PNM
     };
 
@@ -56,6 +73,8 @@ namespace cbpp {
 
         public:
             CImage() = default;
+
+            // Guess the source image type and load it as raw pixel data with the selected channel count
             CImage(const char* sData, texint_t iDataLength, EImageChannels iForceChannels = EImageChannels::NONE);
 
             CImage(texint_t iW, texint_t iH, EImageChannels iChannels = EImageChannels::RGBA);
@@ -70,26 +89,44 @@ namespace cbpp {
             bool IsValid() const;
             bool IsPOT() const;
 
-            EImageChannels Channels() const;
-            texint_t Width() const;
-            texint_t Height() const;
-            texint_t Length() const;
+            EImageChannels  Channels() const;
+            texint_t        Width() const;
+            texint_t        Height() const;
+
+            // The amount of bytes this image takes
+            texint_t        Length() const;
 
             Color GetPixel(texint_t iX, texint_t iY) const;
-            char* GetPixelP(texint_t iX, texint_t iY);
+
+            /*
+                Note that if an image has only 2 channels it`s only safe to access
+                first two bytes in the Color->RGBA etc.
+
+                Modifying other bytes may lead to the next pixels` corruption or to the juicy loud segfault.
+
+                Consider this pointer invalidated after any image manipulations.
+            */
+            Color* GetPixelP(texint_t iX, texint_t iY);
 
             const char* Data() const;
             char* Data();
 
             void Fill(Color iColor);
 
-            // Scale image to POT while preserving it`s aspect ratio
-            void PadToPOT();
+            /* 
+                Pad image to POT.
+                The actual image spans between (0,0) (top-left corner) and the returned vector (bottom-right one).
+            */
+            Vec2i PadToPOT();
 
-            void Resize(texint_t iNewX, texint_t iNewY);
+            /* 
+                Scale and pad image to POT while preserving it`s aspect ratio.
+                The actual image spans between (0,0) (top-left corner) and the returned vector (bottom-right one).
+            */
+            Vec2i ModToPOT(EImageFilter iFilter = EImageFilter::Default);
 
-            // Render another image onto this image at these coordinates
-            void Blit(const CImage& Other, texint_t iX, texint_t iY);
+            void Resize(texint_t iNewX, texint_t iNewY, EImageFilter iFilter = EImageFilter::Default);
+            void Scale(float fX, float fY, EImageFilter iFilter = EImageFilter::Default);
 
             /*
                 Supports BMP, PNG, TGA and JPEG

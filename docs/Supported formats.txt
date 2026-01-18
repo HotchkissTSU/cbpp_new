@@ -4,7 +4,4 @@ Images:
     - TGA (not sure what subset, if a subset)                                                       read / write
     - BMP non-1bpp, non-RLE                                                                         read / write
 
-    - PSD (composited view only, no extra channels, 8/16 bit-per-channel)                           read only
-    - GIF (*comp always reports as 4-channel)                                                       read only
-    - PIC (Softimage PIC)                                                                           read only
     - PNM (PPM and PGM binary only)                                                                 read only

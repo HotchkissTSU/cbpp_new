@@ -6,6 +6,7 @@
 
 #include "stb/stb_image.h"
 #include "stb/stb_image_write.h"
+#include "stb/stb_image_resize.h"
 
 // Color
 
@@ -43,9 +44,12 @@ namespace cbpp {
 
 namespace cbpp {
     CImage::CImage(const char* pData, texint_t iDataLn, EImageChannels iForceChannels) {
-        m_pData = (char*)stbi_load_from_memory((const unsigned char*)pData, iDataLn, 
-                                                (int*)&m_iWidth, (int*)&m_iHeight, 
-                                                (int*)&m_iChannels, (int)iForceChannels);
+        int iResult = stbi_info_from_memory((unsigned char*)pData, iDataLn, (int*)&m_iWidth, (int*)&m_iHeight, (int*)&m_iChannels);
+
+        CbAssert(iResult == 0, "Corrupt image data");
+        CbAssertf(m_iWidth > CBPP_MAX_IMAGE_SIZE || m_iHeight > CBPP_MAX_IMAGE_SIZE, "Image resolution is too big: (%ldx%ld)", m_iWidth, m_iHeight);
+
+        m_pData = (char*)stbi_load_from_memory((const unsigned char*)pData, iDataLn, (int*)&m_iWidth, (int*)&m_iHeight, (int*)&m_iChannels, (int)iForceChannels);
 
         if(iForceChannels != EImageChannels::NONE) {
             m_iChannels = iForceChannels;
@@ -56,7 +60,6 @@ namespace cbpp {
         const texint_t iLength = iW * iH * (texint_t)iChannels;
 
         m_pData = Malloc<char>(iLength);
-        this->Fill(Color(0,0,0,255));
     }
 
     CImage::CImage(const char* pData, texint_t iW, texint_t iH, EImageChannels iChannels) : m_iWidth(iW), m_iHeight(iH), m_iChannels(iChannels) {
@@ -118,12 +121,18 @@ namespace cbpp {
         return m_iWidth * m_iHeight * (texint_t)m_iChannels;
     }
 
-    EImageChannels CImage::Channels() const { return m_iChannels; }
-    texint_t CImage::Width() const { return m_iWidth; }
-    texint_t CImage::Height() const { return m_iHeight; }
+    EImageChannels  CImage::Channels() const { return m_iChannels; }
+    texint_t        CImage::Width() const { return m_iWidth; }
+    texint_t        CImage::Height() const { return m_iHeight; }
 
     void CImage::Fill(Color iColor) {
         const texint_t iLength = this->Length();
+
+        if(m_iChannels == EImageChannels::L) {
+            memset(m_pData, iColor.RGBA[0], iLength);
+            return;
+        }
+
         for(texint_t i = 0; i < iLength; i += (texint_t)m_iChannels) {
             memcpy(&m_pData[i], &iColor, (texint_t)m_iChannels);
         }
@@ -138,9 +147,9 @@ namespace cbpp {
         return Out;
     }
 
-    char* CImage::GetPixelP(texint_t iX, texint_t iY) {
+    Color* CImage::GetPixelP(texint_t iX, texint_t iY) {
         texint_t iLinear = PlanarToLinear(m_iWidth, iX, iY) * (texint_t)m_iChannels;
-        return &m_pData[iLinear];
+        return (Color*)(&m_pData[iLinear]);
     }
 
     const char* CImage::Data() const { return const_cast<const char*>(m_pData); }
@@ -185,35 +194,104 @@ namespace cbpp {
         return true;
     }
 
-    // BROKEN
-    void CImage::Blit(const CImage& Other, texint_t iX, texint_t iY) {
-        const char* pSource = Other.Data();
+    void CImage::Resize(texint_t iW, texint_t iH, EImageFilter iFilter) {
+        const size_t iOutLength = iW * iH * (int)m_iChannels;
+        char* pOutput = Malloc<char>(iOutLength);
 
-        if(iX > m_iWidth || iY > m_iHeight) {
-            return;
+        int iAlpha = STBIR_ALPHA_CHANNEL_NONE;
+        if(m_iChannels == EImageChannels::RGBA) {
+            iAlpha = 3;
         }
 
-        texint_t iCopyWidth = Other.Width();      // in pixels
-        if(iX + Other.Width() > m_iWidth) {
-            iCopyWidth = iX + Other.Width() - m_iWidth;
+        int iResult = stbir_resize_uint8_generic((unsigned char*)m_pData, (int)m_iWidth, (int)m_iHeight,
+                                                 0, (unsigned char*)pOutput, iW, iH, 0, (int)m_iChannels,
+                                                 iAlpha, 0, STBIR_EDGE_CLAMP, (stbir_filter)iFilter, STBIR_COLORSPACE_LINEAR, NULL);
+
+        m_pData = Realloc<char>(m_pData, iOutLength);
+        memcpy(m_pData, pOutput, iOutLength);
+        Free(pOutput);
+
+        m_iHeight = iH;
+        m_iWidth = iW;
+    }
+
+    void CImage::Scale(float fX, float fY, EImageFilter iFilter) {
+        texint_t iNewWidth = (texint_t)(fX * (float)m_iWidth);
+        texint_t iNewHeight = (texint_t)(fY * (float)m_iHeight);
+
+        this->Resize(iNewWidth, iNewHeight, iFilter);
+    }
+
+    Vec2i CImage::PadToPOT() {
+        if(cbpp::IsPOT(m_iWidth) && cbpp::IsPOT(m_iHeight)) {
+            return Vec2i(m_iWidth, m_iHeight); // already is POT
+        }
+        
+        texint_t iNewWidth = CeilToPowerOf2(m_iWidth), iNewHeight = CeilToPowerOf2(m_iHeight);
+
+        char* pNewImage = Malloc<char>(iNewWidth * iNewHeight * (texint_t)m_iChannels);
+        
+        for(size_t i = 0; i < m_iHeight; i++) { // copy old image to the new buffer
+            char* pDestRow = pNewImage + i*iNewWidth*(texint_t)m_iChannels;
+            char* pSourceRow = m_pData + i*m_iWidth*(texint_t)m_iChannels;
+
+            memcpy(pDestRow, pSourceRow, m_iWidth * (texint_t)m_iChannels);
         }
 
-        texint_t iCopyHeight = Other.Height();    // in pixels
-        if(iY + Other.Height() > m_iHeight) {
-            iCopyHeight = iY + Other.Height() - m_iHeight;
+        Vec2i Out(m_iWidth, m_iHeight);
+
+        Free(m_pData);
+        m_pData = pNewImage;
+        m_iHeight = iNewHeight;
+        m_iWidth = iNewWidth;
+
+        return Out;
+    }
+
+    Vec2i CImage::ModToPOT(EImageFilter iFilter) {
+        if(cbpp::IsPOT(m_iWidth) && cbpp::IsPOT(m_iHeight)) {
+            return Vec2i(m_iWidth, m_iHeight); // already is POT
         }
 
-        for(texint_t iRowNumber = iY; iRowNumber < iY + iCopyHeight; iRowNumber++) {
-            char* pDestRow = m_pData + iRowNumber*iCopyWidth*(texint_t)m_iChannels;
-            const char* pSourceRow = Other.Data() + iRowNumber*Other.Width();
+        texint_t iNewWidthPOT = CeilToPowerOf2(m_iWidth), iNewHeightPOT = CeilToPowerOf2(m_iHeight);
 
-            if(m_iChannels == Other.Channels()) {
-                memcpy(pDestRow + iX, pSourceRow, iCopyWidth*(texint_t)m_iChannels);
-            } else {
-                for(texint_t i = iX; i < iX + iCopyWidth; i) {
-                    memcpy(pDestRow + i*(texint_t)m_iChannels, pSourceRow + i*(texint_t)Other.Channels(), (texint_t)m_iChannels);
-                }
-            }
+        int iAlpha = STBIR_ALPHA_CHANNEL_NONE;
+        if(m_iChannels == EImageChannels::RGBA) {
+            iAlpha = 3;
         }
+
+        texint_t iNewWidth, iNewHeight;
+
+        if(m_iWidth > m_iHeight) {
+            iNewWidth = iNewWidthPOT;
+            iNewHeight = (texint_t)((float)m_iHeight * (float)iNewWidthPOT / (float)m_iWidth);
+        } else {
+            iNewHeight = iNewHeightPOT;
+            iNewWidth = (texint_t)((float)m_iWidth * (float)iNewHeightPOT / (float)m_iHeight);
+        }
+
+        char* pNewImage = Malloc<char>(iNewWidthPOT * iNewHeightPOT * (texint_t)m_iChannels);
+        char* pScaledImage = Malloc<char>(iNewWidth * iNewHeight * (texint_t)m_iChannels);
+        
+        // this dumb function can`t write smaller image to the bigger buffer, so this retarded double-copying is required !! FIXME !!
+        int iResult = stbir_resize_uint8_generic((unsigned char*)m_pData, m_iWidth, m_iHeight,
+                                                 0, (unsigned char*)pScaledImage, iNewWidth, iNewHeight, 0, (int)m_iChannels,
+                                                 iAlpha, 0, STBIR_EDGE_CLAMP, (stbir_filter)iFilter, STBIR_COLORSPACE_LINEAR, NULL);
+
+        for(size_t i = 0; i < iNewHeight; i++) { // copy old image to the new buffer
+            char* pDestRow = pNewImage + i*iNewWidthPOT*(texint_t)m_iChannels;
+            char* pSourceRow = pScaledImage + i*iNewWidth*(texint_t)m_iChannels;
+
+            memcpy(pDestRow, pSourceRow, iNewWidth * (texint_t)m_iChannels);
+        }
+        
+        Free(m_pData);
+        Free(pScaledImage);
+
+        m_pData = pNewImage;
+        m_iWidth = iNewWidthPOT;
+        m_iHeight = iNewHeightPOT;
+
+        return Vec2i(iNewWidth, iNewHeight);
     }
 }

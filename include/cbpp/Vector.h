@@ -9,6 +9,9 @@
 
 /*
     Note that almost all internal math is using floats
+
+    The vector is heavily templated to make it work with almost anything
+    one could encounter
 */
 
 namespace cbpp {

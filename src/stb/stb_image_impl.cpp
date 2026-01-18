@@ -8,9 +8,13 @@
 #define STBI_FREE(p)                cbpp::Free(p);
 #define STBI_ASSERT(x)              CbAssert(!(x), "stb_image error")
 
-#define STBI_MAX_DIMENSIONS CBPP_MAX_IMAGE_SIZE
+#define STBI_MAX_DIMENSIONS         CBPP_MAX_IMAGE_SIZE
 #define STBI_NO_STDIO
-#define STBI_NO_HDR
+
+#define STBI_NO_HDR                 //
+#define STBI_NO_GIF                 //  These formats are disabled to save on compilation time and on resulting binary size.
+#define STBI_NO_PIC                 //  
+#define STBI_NO_PSD                 //
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"

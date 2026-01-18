@@ -59,6 +59,10 @@ namespace cbpp {
         return SubStringCmp(*this, Other) < 0;
     }
 
+    bool CSubString::operator>(const CSubString& Other) const {
+        return SubStringCmp(*this, Other) > 0;
+    }
+
     int32_t SubStringCmp(const CSubString& sA, const CSubString& sB) {
         size_t iLenA = sA.Length(), iLenB = sB.Length();
 
@@ -72,7 +76,7 @@ namespace cbpp {
         for(size_t i = 0; i < iLenA; i++) {
             if((*pA) < (*pB)) {
                 return -1;
-            }else if((*pA) > (*pB)) {
+            } else if((*pA) > (*pB)) {
                 return 1;
             }
 
