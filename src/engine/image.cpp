@@ -152,6 +152,14 @@ namespace cbpp {
         return (Color*)(&m_pData[iLinear]);
     }
 
+    const char* CImage::Row(texint_t iNumber) const {
+        return const_cast<const char*>(m_pData + iNumber * m_iWidth * (texint_t)m_iChannels);
+    }
+
+    char* CImage::Row(texint_t iNumber) {
+        return m_pData + iNumber * m_iWidth * (texint_t)m_iChannels;
+    }
+    
     const char* CImage::Data() const { return const_cast<const char*>(m_pData); }
     char* CImage::Data() { return m_pData; }
 
@@ -247,7 +255,7 @@ namespace cbpp {
 
         return Out;
     }
-
+    
     Vec2i CImage::ModToPOT(EImageFilter iFilter) {
         if(cbpp::IsPOT(m_iWidth) && cbpp::IsPOT(m_iHeight)) {
             return Vec2i(m_iWidth, m_iHeight); // already is POT
@@ -255,6 +263,13 @@ namespace cbpp {
 
         texint_t iNewWidthPOT = CeilToPowerOf2(m_iWidth), iNewHeightPOT = CeilToPowerOf2(m_iHeight);
 
+        if(iNewHeightPOT > CBPP_MAX_IMAGE_SIZE || iNewWidthPOT > CBPP_MAX_IMAGE_SIZE) {
+            WriteLogf(ELogLevel::Error, "Upscaled image (%ux%u) is going to exceed the resolution limit (%ux%u). Operation aborted.", 
+                        iNewWidthPOT, iNewHeightPOT, CBPP_MAX_IMAGE_SIZE, CBPP_MAX_IMAGE_SIZE);
+
+            return Vec2i(m_iWidth, m_iHeight);
+        }
+        
         int iAlpha = STBIR_ALPHA_CHANNEL_NONE;
         if(m_iChannels == EImageChannels::RGBA) {
             iAlpha = 3;
@@ -269,16 +284,19 @@ namespace cbpp {
             iNewHeight = iNewHeightPOT;
             iNewWidth = (texint_t)((float)m_iWidth * (float)iNewHeightPOT / (float)m_iHeight);
         }
+        
+        const size_t iNewImgLength = iNewWidthPOT * iNewHeightPOT * (texint_t)m_iChannels;
+        const size_t iScaledImage = iNewWidth * iNewHeight * (texint_t)m_iChannels;
 
-        char* pNewImage = Malloc<char>(iNewWidthPOT * iNewHeightPOT * (texint_t)m_iChannels);
-        char* pScaledImage = Malloc<char>(iNewWidth * iNewHeight * (texint_t)m_iChannels);
+        char* pNewImage = Malloc<char>(iNewImgLength + iScaledImage);
+        char* pScaledImage = pNewImage + iNewImgLength;
         
         // this dumb function can`t write smaller image to the bigger buffer, so this retarded double-copying is required !! FIXME !!
         int iResult = stbir_resize_uint8_generic((unsigned char*)m_pData, m_iWidth, m_iHeight,
                                                  0, (unsigned char*)pScaledImage, iNewWidth, iNewHeight, 0, (int)m_iChannels,
                                                  iAlpha, 0, STBIR_EDGE_CLAMP, (stbir_filter)iFilter, STBIR_COLORSPACE_LINEAR, NULL);
 
-        for(size_t i = 0; i < iNewHeight; i++) { // copy old image to the new buffer
+        for(size_t i = 0; i < iNewHeight; i++) { // copy scaled image to the new buffer
             char* pDestRow = pNewImage + i*iNewWidthPOT*(texint_t)m_iChannels;
             char* pSourceRow = pScaledImage + i*iNewWidth*(texint_t)m_iChannels;
 
@@ -286,7 +304,8 @@ namespace cbpp {
         }
         
         Free(m_pData);
-        Free(pScaledImage);
+        
+        pNewImage = Realloc<char>(pNewImage, iNewImgLength);
 
         m_pData = pNewImage;
         m_iWidth = iNewWidthPOT;

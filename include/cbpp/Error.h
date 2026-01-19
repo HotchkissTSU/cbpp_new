@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#define CBPP_DEBUG
+//#define CBPP_DEBUG
 
 #ifdef CBPP_DEBUG
     // if expr == true -> terminating
@@ -17,33 +17,39 @@
         char __buff[256]; snprintf(__buff, sizeof(__buff), msg, __VA_ARGS__);\
         printf("File: '%s', Line: %lu\nAssertion [ %s ] has failed: %s\n", strrchr(__FILE__, '/')+1, __LINE__, #expr, __buff); exit(EXIT_FAILURE); }
 #else
-        #define CbAssert(expr, msg)
-        #define CbAssertf(expr, msg, ...)
+    // if expr == true -> log error
+    #define CbAssert(expr, msg) if((bool)(expr) == true) {\
+        cbpp::GetGlobalLog()->Logf(cbpp::ELogLevel::Error, "File: '%s', Line: %lu; Assertion [ %s ] has failed: %s", \
+        strrchr(__FILE__, '/')+1, __LINE__, #expr, msg); }
+
+    // if expr == true -> log error
+    #define CbAssertf(expr, msg, ...) if((bool)(expr) == true) {\
+        char __buff[256]; snprintf(__buff, sizeof(__buff), msg, __VA_ARGS__); \
+        cbpp::GetGlobalLog()->Logf(cbpp::ELogLevel::Error, "File: '%s', Line: %lu; Assertion [ %s ] has failed: %s", \
+        strrchr(__FILE__, '/')+1, __LINE__, #expr, __buff); }
 #endif
 
 // Currently, i only have a linux computer, so some W*ndows-dependent code is yet impossible to write and test
 #define CBPP_NO_WINDOWS_ASSERT static_assert(false, "Non-implemented W*ndows-dependent code here");
 
 namespace cbpp {
-    enum class EErrorCode : uint32_t {
-        IO                              // Input/Output error
+    enum class ELogLevel : uint32_t {
+        Info,
+        Warning,
+        Error
     };
-
-    const char* GetErrorDesc(EErrorCode iCode);
 
     /*
         Lethal throws
     */
-    void Throw(const char* sErrorText);
     void Throwf(const char* sFormat, ...);
     void Throwv(const char* sFormat, va_list vaList);
 
     /*
-        Non-lethal throws
+        Direct logging to the global log
     */
-    void PushError(EErrorCode iCode, const char* sMsg);
-    void PushErrorf(EErrorCode iCode, const char* sFormat, ...);
-    void PushErrorv(EErrorCode iCode, const char* sFormat, va_list vaList);
+    void WriteLogf(ELogLevel iLevel, const char* sFormat, ...);
+    void WriteLogv(ELogLevel iLevel, const char* sFormat, va_list vaList);
 
     class CLogger {
         FILE* m_hFile = NULL;
@@ -57,11 +63,14 @@ namespace cbpp {
             CLogger& operator=(const CLogger&) = delete;
             CLogger& operator=(CLogger&&) = delete;
 
-            void Logf(const char* sFormat, ...);
+            void Logf(ELogLevel iLevel, const char* sFormat, ...);
+            void Logv(ELogLevel iLevel, const char* sFormat, va_list vaList);
 
             CLogger(const char* sLogName);
-            ~CLogger();
+            ~CLogger() = default;
     };
+
+    CLogger* GetGlobalLog();
 }
 
 #endif

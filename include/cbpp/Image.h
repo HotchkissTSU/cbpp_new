@@ -61,7 +61,7 @@ namespace cbpp {
         BMP,
         PNM
     };
-
+    
     /*
         Represents a raw image data.
         All operations are CPU-side
@@ -99,7 +99,7 @@ namespace cbpp {
             Color GetPixel(texint_t iX, texint_t iY) const;
 
             /*
-                Note that if an image has only 2 channels it`s only safe to access
+                Note that if for example an image has only 2 channels it`s safe to access
                 first two bytes in the Color->RGBA etc.
 
                 Modifying other bytes may lead to the next pixels` corruption or to the juicy loud segfault.
@@ -110,6 +110,9 @@ namespace cbpp {
 
             const char* Data() const;
             char* Data();
+
+            const char* Row(texint_t iNumber) const;
+            char* Row(texint_t iNumber);
 
             void Fill(Color iColor);
 

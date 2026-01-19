@@ -42,7 +42,10 @@ namespace cbpp {
 		const size_t iMemorySize = sizeof(T) * iCount;
 		T* pMemory = (T*) GetAllocatorData().fpMalloc( iMemorySize );
 
-        CbAssertf(pMemory == NULL, "Allocation of size %zu has failed", iMemorySize);
+        //CbAssertf(pMemory == NULL, "Allocation of size %zu has failed", iMemorySize);
+        if(pMemory == NULL) {
+            Throwf("Failed to allocate %zu bytes of heap memory", iMemorySize);
+        }
 
         GetMallocCounter()++;
 		return pMemory;
@@ -58,7 +61,7 @@ namespace cbpp {
 	template <typename T> T* Malloc() {
 		return Malloc<T> (1);
     }
-
+    
 	template <typename T> T* Realloc(T* pMemory, size_t iNewSize) {
 		if( pMemory == NULL ) {
 			return Malloc<T>(iNewSize);
@@ -67,7 +70,10 @@ namespace cbpp {
 		const size_t iMemorySize = sizeof(T) * iNewSize;
 		T* pTemp = (T*) GetAllocatorData().fpRealloc( pMemory, iMemorySize );
 
-        CbAssertf(pTemp == NULL, "Reallocation of 0x%x to size %zu has failed", pMemory, iMemorySize);
+        //CbAssertf(pTemp == NULL, "Reallocation of 0x%x to size %zu has failed", pMemory, iMemorySize);
+        if(pTemp == NULL) {
+            Throwf("Failed to reallocate 0x%X to the new size of %zu", pMemory, iMemorySize);
+        }
 
 		return pTemp;
     }
