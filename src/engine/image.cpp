@@ -46,8 +46,26 @@ namespace cbpp {
     CImage::CImage(const char* pData, texint_t iDataLn, EImageChannels iForceChannels) {
         int iResult = stbi_info_from_memory((unsigned char*)pData, iDataLn, (int*)&m_iWidth, (int*)&m_iHeight, (int*)&m_iChannels);
 
-        CbAssert(iResult == 0, "Corrupt image data");
-        CbAssertf(m_iWidth > CBPP_MAX_IMAGE_SIZE || m_iHeight > CBPP_MAX_IMAGE_SIZE, "Image resolution is too big: (%ldx%ld)", m_iWidth, m_iHeight);
+        if(iResult == 0) {
+            WriteLogf(ELogLevel::Error, "Corrupt image data");
+
+            m_iWidth = 0;
+            m_iHeight = 0;
+            m_iChannels = EImageChannels::NONE;
+
+            return;
+        }
+
+        if(m_iWidth > CBPP_MAX_IMAGE_SIZE || m_iHeight > CBPP_MAX_IMAGE_SIZE) {
+            WriteLogf(ELogLevel::Error, "Image (%ux%u) exceeds the resolution limit (%ux%u). Operation aborted.", 
+                        m_iWidth, m_iHeight, CBPP_MAX_IMAGE_SIZE, CBPP_MAX_IMAGE_SIZE);
+
+            m_iWidth = 0;
+            m_iHeight = 0;
+            m_iChannels = EImageChannels::NONE;
+
+            return;   
+        }
 
         m_pData = (char*)stbi_load_from_memory((const unsigned char*)pData, iDataLn, (int*)&m_iWidth, (int*)&m_iHeight, (int*)&m_iChannels, (int)iForceChannels);
 
@@ -82,6 +100,8 @@ namespace cbpp {
     }
 
     CImage& CImage::operator=(const CImage& Other) {
+        if(Other.Channels() != m_iChannels) { return *this; }
+
         const texint_t iLength = Other.Length();
 
         m_pData = Realloc<char>(m_pData, iLength);
@@ -95,7 +115,10 @@ namespace cbpp {
     }
 
     CImage& CImage::operator=(CImage&& Other) {
-        memcpy(this, &Other, sizeof(CImage));
+        if(Other.Channels() == m_iChannels) {
+            memcpy(this, &Other, sizeof(CImage));
+        }
+        
         memset(&Other, 0, sizeof(CImage));
 
         return *this;
@@ -204,11 +227,21 @@ namespace cbpp {
 
     void CImage::Resize(texint_t iW, texint_t iH, EImageFilter iFilter) {
         const size_t iOutLength = iW * iH * (int)m_iChannels;
+
+        if(iW > CBPP_MAX_IMAGE_SIZE || iH > CBPP_MAX_IMAGE_SIZE) {
+            WriteLogf(ELogLevel::Error, "Upscaled image (%ux%u) is going to exceed the resolution limit (%ux%u). Operation aborted.", 
+                        iW, iH, CBPP_MAX_IMAGE_SIZE, CBPP_MAX_IMAGE_SIZE);
+
+            return;
+        }
+
         char* pOutput = Malloc<char>(iOutLength);
 
         int iAlpha = STBIR_ALPHA_CHANNEL_NONE;
         if(m_iChannels == EImageChannels::RGBA) {
             iAlpha = 3;
+        } else if(m_iChannels == EImageChannels::LA) {
+            iAlpha = 1;
         }
 
         int iResult = stbir_resize_uint8_generic((unsigned char*)m_pData, (int)m_iWidth, (int)m_iHeight,
@@ -237,6 +270,13 @@ namespace cbpp {
         
         texint_t iNewWidth = CeilToPowerOf2(m_iWidth), iNewHeight = CeilToPowerOf2(m_iHeight);
 
+        if(iNewHeight > CBPP_MAX_IMAGE_SIZE || iNewWidth > CBPP_MAX_IMAGE_SIZE) {
+            WriteLogf(ELogLevel::Error, "Upscaled image (%ux%u) is going to exceed the resolution limit (%ux%u). Operation aborted.", 
+                        iNewWidth, iNewHeight, CBPP_MAX_IMAGE_SIZE, CBPP_MAX_IMAGE_SIZE);
+
+            return Vec2i(m_iWidth, m_iHeight);
+        }
+
         char* pNewImage = Malloc<char>(iNewWidth * iNewHeight * (texint_t)m_iChannels);
         
         for(size_t i = 0; i < m_iHeight; i++) { // copy old image to the new buffer
@@ -255,7 +295,7 @@ namespace cbpp {
 
         return Out;
     }
-    
+
     Vec2i CImage::ModToPOT(EImageFilter iFilter) {
         if(cbpp::IsPOT(m_iWidth) && cbpp::IsPOT(m_iHeight)) {
             return Vec2i(m_iWidth, m_iHeight); // already is POT
@@ -273,14 +313,17 @@ namespace cbpp {
         int iAlpha = STBIR_ALPHA_CHANNEL_NONE;
         if(m_iChannels == EImageChannels::RGBA) {
             iAlpha = 3;
+        } else if(m_iChannels == EImageChannels::LA) {
+            iAlpha = 1;
         }
 
         texint_t iNewWidth, iNewHeight;
 
-        if(m_iWidth > m_iHeight) {
+        if(m_iWidth > m_iHeight) {  // horizontal image
             iNewWidth = iNewWidthPOT;
             iNewHeight = (texint_t)((float)m_iHeight * (float)iNewWidthPOT / (float)m_iWidth);
-        } else {
+            
+        } else {                    // vertical image
             iNewHeight = iNewHeightPOT;
             iNewWidth = (texint_t)((float)m_iWidth * (float)iNewHeightPOT / (float)m_iHeight);
         }

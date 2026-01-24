@@ -17,6 +17,8 @@ namespace cbpp {
         if(bOpen) {
             return static_cast<IFile*>(pFile);
         }else{
+            WriteLogf(ELogLevel::Warning, "Failed to open file '%s'", sPath);
+
             Delete(pFile);
             return NULL;
         }

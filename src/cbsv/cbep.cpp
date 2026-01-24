@@ -19,7 +19,7 @@ void InitGLFW() {
 int main(int argc, char** argv) {
     InitGLFW();
 
-    cbpp::IFile* File = cbpp::OpenFile("assets/alpha_test.png", "rb");
+    cbpp::IFile* File = cbpp::OpenFile("assets/test.jpg", "rb");
     if(File == NULL) {
         return 1;
     }
@@ -39,16 +39,11 @@ int main(int argc, char** argv) {
         printf("%s\n", sBuff);
     }*/
 
-    cbpp::CImage imageTest(sFileText, iFileLength, cbpp::EImageChannels::RGBA);
+    cbpp::CImage imageTest(sFileText, iFileLength, cbpp::EImageChannels::LA);
+    imageTest.PadToPOT();
     imageTest.SaveAs("test.png", cbpp::EImageType::PNG);
 
-    cbpp::CLogger* pLog = cbpp::GetGlobalLog();
-    pLog->Logf(cbpp::ELogLevel::Info, "babbabooey");
-    pLog->Logf(cbpp::ELogLevel::Warning, "babbabooey");
-    pLog->Logf(cbpp::ELogLevel::Error, "babbabooey");
-
-    CbAssert(true, "amongus");
-    CbAssertf(true, "aboba '%d'", 52);
+    cbpp::Realloc<char>(cbpp::Malloc<char>(52), 0);
 
     return EXIT_SUCCESS;
 }

@@ -34,9 +34,12 @@
 
 namespace cbpp {
     enum class ELogLevel : uint32_t {
+        Debug,
         Info,
         Warning,
-        Error
+        Error,
+
+        Nothing
     };
 
     /*
@@ -55,6 +58,12 @@ namespace cbpp {
         FILE* m_hFile = NULL;
         const char* m_sName;
 
+        #ifdef CBPP_DEBUG
+            ELogLevel m_iLevel = ELogLevel::Debug;
+        #else
+            ELogLevel m_iLevel = ELogLevel::Info;
+        #endif
+
         public:
             CLogger() = delete;
             CLogger(const CLogger&) = delete;
@@ -62,6 +71,8 @@ namespace cbpp {
 
             CLogger& operator=(const CLogger&) = delete;
             CLogger& operator=(CLogger&&) = delete;
+
+            void SetLoggingLevel(ELogLevel iMinLevel);
 
             void Logf(ELogLevel iLevel, const char* sFormat, ...);
             void Logv(ELogLevel iLevel, const char* sFormat, va_list vaList);

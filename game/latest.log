@@ -1,6 +1,4 @@
-[00:02:05] INFO :  == Log start == 
-[00:02:05] INFO : babbabooey
-[00:02:05] WARN : babbabooey
-[00:02:05] ERROR: babbabooey
-[00:02:05] ERROR: File: 'cbep.cpp', Line: 50; Assertion [ true ] has failed: amongus
-[00:02:05] ERROR: File: 'cbep.cpp', Line: 51; Assertion [ true ] has failed: aboba '52'
+[02:34:47] INFO :  == Log start == 
+[02:34:47] ERROR: Failed to reallocate 0xC26C3000 to the new size of 0
+[02:46:08] INFO :  == Log start == 
+[02:46:08] ERROR: Failed to reallocate 0x769A0000 to the new size of 0

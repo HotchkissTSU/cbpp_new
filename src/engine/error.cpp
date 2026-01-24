@@ -8,9 +8,11 @@
 namespace cbpp {
     const char* GetLogLevelString(ELogLevel iLevel) {
         switch(iLevel) {
+            case ELogLevel::Debug:      return "DEBUG";
             case ELogLevel::Info:       return "INFO ";
             case ELogLevel::Warning:    return "WARN ";
             case ELogLevel::Error:      return "ERROR";
+            case ELogLevel::Nothing:    return " <!> ";
         }
 
         return ":)";
@@ -21,6 +23,8 @@ namespace cbpp {
     }
 
     void CLogger::Logv(ELogLevel iLevel, const char* sFormat, va_list Args) {
+        if((int)iLevel < (int)m_iLevel) { return; }
+
         m_hFile = fopen(m_sName, "ab");
         if(m_hFile == NULL) { return; }
 
@@ -42,6 +46,8 @@ namespace cbpp {
 
         va_end(Args);
     }
+
+    void CLogger::SetLoggingLevel(ELogLevel iLvl) { m_iLevel = iLvl; }
 
     CLogger* GetGlobalLog() {
         static CLogger s_hGlobalLogger("latest.log");

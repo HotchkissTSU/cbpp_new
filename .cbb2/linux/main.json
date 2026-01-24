@@ -15,7 +15,7 @@
         "obj":".obj",
         "out":""
     },
-
+    
 	"targets":{
         "cbb":{
 			"type" : "EXE",
@@ -34,6 +34,25 @@
             "obj" : ".obj/cbpp",
             "comp_params":"-O2 -fPIC",
             "src" : ["src/stb/*.cpp"]
+        },
+
+        "soundio":{
+            "compiler":"gcc",
+            "type":"OBJ",
+            "include" : ["src", "src/soundio", "include"],
+            "obj" : ".obj/soundio",
+            "comp_params":"-O2 -fPIC",
+            "src" : ["src/soundio/*.c",
+                    "src/soundio/backends/pulseaudio.c"]
+        },
+        
+        "dr_flac":{
+            "compiler":"gcc",
+            "type":"OBJ",
+            "include" : ["src", "include"],
+            "obj" : ".obj/cbpp",
+            "comp_params":"-O2 -fPIC",
+            "src" : ["src/drflac/drflac_impl.cpp"]
         },
         
 		"cbsv":{
@@ -84,7 +103,7 @@
             "type" : "DLL",
             "from_obj" : 1,
             "out" : "game/bin",
-            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/jsoncpp/*.o", ".obj/*.o", ".obj/cbpp/sv/*.o"],
+            "src" : [".obj/cbpp/*.o", ".obj/gl/gl40.o", ".obj/jsoncpp/*.o", ".obj/*.o", ".obj/cbpp/sv/*.o", ".obj/soundio/*.o"],
             "link_static" : ["z"]
         },
 
