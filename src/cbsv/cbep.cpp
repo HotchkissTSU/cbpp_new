@@ -19,7 +19,7 @@ void InitGLFW() {
 int main(int argc, char** argv) {
     InitGLFW();
 
-    cbpp::IFile* File = cbpp::OpenFile("assets/test.jpg", "rb");
+    cbpp::IFile* File = cbpp::OpenFile("assets/test.cml", "rb");
     if(File == NULL) {
         return 1;
     }
@@ -30,20 +30,14 @@ int main(int argc, char** argv) {
 
     File->ReadAll(sFileText);
     
-    /*cbpp::cml::CParser Parser;
+    cbpp::cml::CParser Parser;
     if(Parser.ParseString(sFileText)) {
         PrintObject(Parser.Root());
     } else {
         char sBuff[256];
         Parser.GetErrorLog(sBuff, sizeof(sBuff));
         printf("%s\n", sBuff);
-    }*/
-
-    cbpp::CImage imageTest(sFileText, iFileLength, cbpp::EImageChannels::LA);
-    imageTest.PadToPOT();
-    imageTest.SaveAs("test.png", cbpp::EImageType::PNG);
-
-    cbpp::Realloc<char>(cbpp::Malloc<char>(52), 0);
+    }
 
     return EXIT_SUCCESS;
 }

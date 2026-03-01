@@ -54,9 +54,7 @@ namespace cbpp::cml {
     enum class EQualifier : uint32_t {
         None,
         FileTextRef,
-        FileBinRef,
-        ConstRef,
-        ConstDecl
+        FileBinRef
     };
     
     enum class EValueType : uint32_t {
@@ -66,8 +64,7 @@ namespace cbpp::cml {
         Binary,
         
         Array,
-        Object,
-        Struct
+        Object
     };
 
     enum class EErrorType : uint32_t {
@@ -78,13 +75,10 @@ namespace cbpp::cml {
         StrayString,            // Random out-of-context string
         StrayBlock,
         StrayArray,
-        StrayKeyword,
         IllBlock,               // Badly formatted block (curvy braces mismatch)
         IllArray,               // Badly formatted array (square braces mismatch)
         BadFileRef,             // Can`t open said file path
         IncludeNonString,
-        BadConstRef,
-        BadConstType,
         BadQualifier,
 
         StackOverflow,

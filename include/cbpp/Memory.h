@@ -4,7 +4,7 @@
 /*
 	Memory management call wrappers. 
     
-    Engine allocator is fully replaceable, if the new one keeps
+    The allocator is fully replaceable, if the new one keeps
     the exact malloc/realloc/free C interface
 */
 

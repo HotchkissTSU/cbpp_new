@@ -17,6 +17,15 @@
     #define CBPP_ON_DEBUG(code)
 #endif
 
+/*
+    A protected class cannot be copied or constructed from itself
+*/
+#define CBPP_PROTECTED_CLASS(classname)                     \
+    classname(const classname&) = delete;                   \
+    classname(classname&&) = delete;                        \
+    classname& operator=(const classname&) = delete;        \
+    classname& operator=(classname&&) = delete;
+
 // The smallest possible number to consider in calculations
 #define CBPP_EPSILON 1e-10f
 

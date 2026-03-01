@@ -2,7 +2,7 @@
 #define CBPP_BINARY_MAP_H
 
 #include "cbpp/Array.h"
-#include "cbpp/Math.h"
+//#include "cblib/Math.h"
 
 namespace cbpp {
     /*

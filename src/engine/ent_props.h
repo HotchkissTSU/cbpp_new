@@ -40,7 +40,9 @@
     cbpp::New<CEnumProperty>(this, #_member, &_member, sizeof(_member), __VA_ARGS__)
 
 // Start describing this entity`s properties
-#define CbProperties virtual const char* Class() const; virtual bool IsAbstract() const; virtual void ConstructProps()
+#define CbProperties    virtual const char* Class() const;      \
+                        virtual bool IsAbstract() const;        \
+                        virtual void ConstructProps()
 
 namespace cbpp {
     // Property storage
@@ -177,12 +179,11 @@ namespace cbpp {
                     snprintf(sLocKeyBuff, sizeof(sLocKeyBuff), "#entity.%s.%s.%s_desc", sMasterClass, sPropName, sName);
                     //printf("Enum '%s' entry -> '%s' (desc)\n", sPropName, sLocKeyBuff);
 
-                    Pair Pair { sName, (uint16_t)iValue };
-                    m_aPairs.PushBack(Pair);
+                    m_aPairs.PushBack( { sName, (uint16_t)iValue } );
                     ProcessPair(sMasterClass, sPropName, Args...);
                     m_iCounter++;
                 }
-
+                
                 template <typename... args_t> Reg(const char* sMasterClass, const char* sPropName, args_t... Args) {
                     ProcessPair(sMasterClass, sPropName, Args...);
                     m_aPairs.Shrink();

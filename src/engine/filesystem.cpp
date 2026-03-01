@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <cerrno>
 
 #include "cbpp/Bit.h"
 
@@ -15,9 +16,9 @@ namespace cbpp {
         bool bOpen = pFile->Open(sPath, sModes);
 
         if(bOpen) {
-            return static_cast<IFile*>(pFile);
+            return (IFile*)(pFile);
         }else{
-            WriteLogf(ELogLevel::Warning, "Failed to open file '%s'", sPath);
+            WriteLogf(ELogLevel::Warning, "Failed to open file '%s' : %s", sPath, strerror(errno));
 
             Delete(pFile);
             return NULL;

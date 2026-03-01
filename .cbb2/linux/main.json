@@ -17,17 +17,6 @@
     },
     
 	"targets":{
-        "cbb":{
-			"type" : "EXE",
-			"out":"game/bin",
-            "link_static" : ["cbcl"],
-            "static" : ["game/bin"],
-            "link_params" : "-Wl,-rpath=.",
-            "comp_params":"-std=c++17 -g3",
-			"src":["src/cbb/*.cpp"],
-            "obj":".obj/sdk"
-        },
-
         "stb":{
             "type":"OBJ",
             "include" : ["src", "include"],
@@ -58,7 +47,7 @@
 		"cbsv":{
 			"type" : "EXE",
 			"out":"game",
-            "link_static" : ["cbsv", "z", "GLX", "glfw3"],
+            "link_static" : ["cbsv", "z", "GLX", "glfw3", "pulse"],
             "static" : ["game/bin"],
             "link_params" : "-Wl,-rpath=./bin",
             "comp_params":"-std=c++17 -g3",
@@ -79,7 +68,7 @@
             "obj":".obj/cbpp",
             "src":[ "src/engine/*.cpp", 
                     "src/engine/entity/shared/*.cpp",
-                    "src/engine/cml/*.cpp" ]
+                    "src/cml/*.cpp" ]
         },
         
         "cbpp_server":{

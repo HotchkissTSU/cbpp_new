@@ -23,9 +23,9 @@ namespace cbpp::cml {
             case EErrorType::StrayNumber:       return "Stray number";
             case EErrorType::StrayString:       return "Stray string";
             case EErrorType::BadFileRef:        return "Undefined file reference";
-            case EErrorType::StrayKeyword:      return "Stray keyword";
-            case EErrorType::BadConstRef:       return "Undefined constant reference";
-            case EErrorType::BadConstType:      return "Bad constant type";
+            //case EErrorType::StrayKeyword:      return "Stray keyword";
+            //case EErrorType::BadConstRef:       return "Undefined constant reference";
+            //case EErrorType::BadConstType:      return "Bad constant type";
             case EErrorType::IncludeNonString:  return "'include' followed by a non-string value";
             case EErrorType::BadQualifier:      return "Bad qualifier";
             case EErrorType::StackOverflow:     return "Stack overflow";
@@ -129,7 +129,7 @@ namespace cbpp::cml {
     }
 
     EErrorType CParser::ProcessToken(Token& Data) {
-        if(Data.iType != EToken::Identifier && Data.iRef == EQualifier::ConstDecl) {
+        /*if(Data.iType != EToken::Identifier && Data.iRef == EQualifier::ConstDecl) {
             return EErrorType::BadQualifier;
         }
 
@@ -139,7 +139,7 @@ namespace cbpp::cml {
 
         if(Data.iType == EToken::String && Data.iRef == EQualifier::ConstRef) {
             return EErrorType::BadQualifier;
-        }
+        }*/
     
         procfunc_t fpFunc = m_aTokenProcessors[(int32_t)(Data.iType)];
 

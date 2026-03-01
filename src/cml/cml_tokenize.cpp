@@ -162,14 +162,7 @@ namespace cbpp::cml {
                 else if(cChar == '&') {
                     m_iRefType = EQualifier::FileBinRef;
                 }
-
-                else if(cChar == ':') {
-                    m_iRefType = EQualifier::ConstDecl;
-                }
-
-                else if(cChar == '$') {
-                    m_iRefType = EQualifier::ConstRef;
-                }
+                
                 break;
 
             case ETokenizerState::InComment:

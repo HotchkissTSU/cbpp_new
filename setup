@@ -1,16 +1,83 @@
 #!/bin/sh
 
-echo "Setting up the project..."
+#   A script to compile a minimal version of the engine, and then 
+#   build the builder to start your amazing CBPP development
 
-mkdir .obj
-    mkdir .obj/cbpp -v
-        mkdir .obj/cbpp/cl -v
-        mkdir .obj/cbpp/sv -v
+echo "Building a minimal CBPP library..."
 
-    mkdir .obj/cbep -v
-        mkdir .obj/cbep/sv -v
-        mkdir .obj/cbep/cl -v
-    
-    mkdir .obj/gl -v
-    mkdir .obj/zlib -v
-    mkdir .obj/yyjson -v
+CBLIBM_FILES="src/engine/string.cpp 
+                src/engine/string_utils.cpp 
+                src/engine/malloc_wrapper.cpp 
+                src/engine/const_string.cpp 
+                src/engine/sub_string.cpp
+                src/engine/error.cpp"
+
+mkdir ./libcbminimal_obj > /dev/null 2>&1
+
+COUNT=0
+
+for CFILE in $CBLIBM_FILES; do
+    echo "  File: $CFILE"
+
+    g++ -O2 -c "$CFILE" -o "./libcbminimal_obj/obj_$COUNT.o" -I"include" -I"src"
+
+    if [ $? -ne 0 ]; then
+        echo "Compilation failed"
+        exit 1
+    fi
+
+    ((COUNT=COUNT+1))
+done
+
+CBLIBM_NAME="libcbminimal.a"
+
+FILES=$(find ./libcbminimal_obj -name "*.o")
+ar rcs "./$CBLIBM_NAME" $FILES
+
+if [ $? -ne 0 ]; then
+    echo "Compilation failed"
+    exit 1
+fi
+
+echo "Out: $CBLIBM_NAME"
+
+echo
+echo "Building CBB..."
+
+mkdir ./cbb_obj > /dev/null 2>&1
+
+CBB_FILES=$(find ./src/cbb -name "*.cpp")
+
+BUILD_JSON=1
+if [ $BUILD_JSON -gt 0 ]; then
+    CBB_FILES+=" ./src/yyjson/yyjson.c"
+fi
+
+COUNTER=0
+
+for CFILE in $CBB_FILES; do
+    echo "  File: $CFILE"
+
+    g++ -O2 -c "$CFILE" -o "./cbb_obj/obj_$COUNTER.o" -I"include" -I"src/cbb" -I"src/yyjson"
+
+    if [ $? -ne 0 ]; then
+        echo "Compilation failed"
+        exit 1
+    fi
+
+    ((COUNTER=COUNTER+1))
+done
+
+FILES=$(find ./cbb_obj -name "*.o")
+g++ $FILES -o cbb -L"." -lcbminimal
+
+if [ $? -ne 0 ]; then
+    echo "Compilation failed"
+    exit 1
+fi
+
+echo "CBB done"
+
+echo
+echo "Cleanup..."
+#rm -rv ./cbb_obj ./libcbminimal_obj

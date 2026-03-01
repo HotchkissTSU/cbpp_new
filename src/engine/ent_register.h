@@ -27,6 +27,13 @@ namespace cbpp {
             static entfact_t GetFactoryPointer(const char* sClassName);
     };
 
+    template <typename ent_t, typename mfp_t> class CPropertyConstructor {
+        public:
+            CPropertyConstructor(ent_t* pEntity, mfp_t fpConstructor) {
+                (*pEntity.*fpConstructor)();
+            }
+    };
+
     typedef CBinTable<CConstString, CEntityRegistrator::entfact_t> entmap_t;
 
     entmap_t& GetEntityFactories();

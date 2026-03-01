@@ -47,7 +47,7 @@ namespace cbpp {
         int iResult = stbi_info_from_memory((unsigned char*)pData, iDataLn, (int*)&m_iWidth, (int*)&m_iHeight, (int*)&m_iChannels);
 
         if(iResult == 0) {
-            WriteLogf(ELogLevel::Error, "Corrupt image data");
+            WriteLogf(ELogLevel::Error, "Failed to read image data: %s", stbi_failure_reason());
 
             m_iWidth = 0;
             m_iHeight = 0;
@@ -165,6 +165,7 @@ namespace cbpp {
         texint_t iLinear = PlanarToLinear(m_iWidth, iX, iY) * (texint_t)m_iChannels;
 
         Color Out;
+        memset(&Out, 0, sizeof(Out));
         memcpy(&Out, &m_pData[iLinear], (texint_t)m_iChannels);
 
         return Out;

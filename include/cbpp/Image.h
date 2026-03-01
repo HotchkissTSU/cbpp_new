@@ -14,7 +14,7 @@
 
 #include "cbpp/Vector.h"
 
-#define CBPP_MAX_IMAGE_SIZE 8192 // 8192 is supported by the most graphics cards at this point
+#define CBPP_MAX_IMAGE_SIZE 8192 // supported by the most graphics cards at this point
 
 namespace cbpp {
     typedef uint32_t texint_t;

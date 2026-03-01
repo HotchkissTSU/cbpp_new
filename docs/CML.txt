@@ -9,7 +9,6 @@ We have 7 supported types:
     - Raw binary data
     - Arrays
     - Objects
-    - Structures
 
 Mostly all language syntax looks like [name] [value]. You don`t have to embed 
 all your entries inside a root object - the parser will do it for you.
@@ -66,34 +65,3 @@ Here are some examples:
 
     Also note that UTF-8 is supported only inside strings, and using unicode anywhere 
     else may lead to undefined behaviour.
-
-6) Keywords
-
-    6.1) include
-
-        'include' will try opening said file and paste it inside the current one, replacing
-        itself with the content.
-
-        > include "/path/to/cml"
-
-7) Constants
-
-    To define a constant, just prefix entry`s name with the ':'. Note that constants are global no matter
-    where they are defined.
-
-    > :MyConstant "i`m a constant!"
-
-    To create it`s instance, do this:
-
-    > MyConstantInstance $MyConstant
-
-    Instance objects are completely independent because they are copied.
-
-8) Structures 
-
-    A structure is a binary data block which can be made of primitive values only.
-    All entries listened inside a struct will be tightly packed as their binary representations.
-
-    > MyImageInfo ( 1024 512 4 )
-
-    You can later find out the offset of each entry by it`s index.

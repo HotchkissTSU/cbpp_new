@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "cbpp/String.h"
+#include "cbpp/Array.h"
 
 #include "engine/property_interface.h"
 
@@ -21,6 +22,8 @@ namespace cbpp {
 
         protected:
             void SetUID(eid_t iNewID);
+
+            CArray<IProperty*> m_aProperties;
 
         public:
             virtual void Think();

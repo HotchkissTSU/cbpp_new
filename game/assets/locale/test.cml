@@ -1,7 +1,0 @@
-models : dir {
-    default error.mdl
-
-    props : dir {
-        test.mdl
-    }
-}

@@ -10,8 +10,8 @@
 /*
     Note that almost all internal math is using floats
 
-    The vector is heavily templated to make it work with almost anything
-    one could encounter
+    The vector is heavily templated to make it work with almost any type
+    one may want to put in.
 */
 
 namespace cbpp {
@@ -83,8 +83,12 @@ namespace cbpp {
             }
 
             CVector<member_t> Rotated(float fAngle) const {
-                float fX = m_x*std::cos(fAngle) - m_y*std::sin(fAngle);
-		        float fY = m_x*std::sin(fAngle) + m_y*std::cos(fAngle);
+                const float fS = std::sin(fAngle);
+                const float fC = std::sin(fAngle);
+
+                float fX = m_x*fC - m_y*fS;
+		        float fY = m_x*fS + m_y*fC;
+
                 return CVector<member_t>(fX, fY);
             }
 
