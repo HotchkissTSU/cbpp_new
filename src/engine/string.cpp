@@ -224,6 +224,21 @@ namespace cbpp {
         return *this;
     }
 
+    // Formatted printing
+
+    size_t CString::Printv(const char* sFormat, va_list Args) {
+        return vsnprintf(m_sData, m_iLength, sFormat, Args);
+    }
+
+    size_t CString::Printf(const char* sFormat, ...) {
+        va_list Args;
+        va_start(Args, sFormat);
+        size_t iLn = vsnprintf(m_sData, m_iLength, sFormat, Args);
+        va_end(Args);
+
+        return iLn;
+    }
+    
     // Type casts
 
     CString::operator const char*() const {

@@ -4,25 +4,6 @@ namespace cbpp::cml {
     EErrorType CParser::ProcessIdentifier(Token& Data) {
         char* sBuffer = LexemBuffer();
 
-        /*if(Data.iRef == EQualifier::ConstRef) { // name $<current>
-            IObject** pTest = m_dConstants.At(Data.sLexeme);
-            if(pTest == NULL) {
-                return EErrorType::BadConstRef;
-            }
-
-            if(m_aStack.Length() >= CBPP_CML_MAX_DEPTH) {
-                return EErrorType::StackOverflow;
-            }
-
-            IObject* pCurrent = m_aStack.Head();
-
-            m_sCurrentIdentifier.Bufferize(sBuffer, CBPP_CML_LEXEM_BUFFER_SIZE);
-            pCurrent->PushChild(sBuffer, (*pTest)->GetCopy());
-            m_bExpectObject = false;
-
-            return EErrorType::Ok;
-        }*/
-
         if(m_bExpectObject) {
             return EErrorType::StrayIdentifier;
         }
@@ -46,14 +27,25 @@ namespace cbpp::cml {
         IObject* pNumberObj;
 
         Data.sLexeme.Bufferize(sBuffer, CBPP_CML_LEXEM_BUFFER_SIZE);
-        char* pDot = strchr(sBuffer, '.');
+        
+        int iIntType = IsNumber(sBuffer);
 
-        if(pDot == NULL) {
-            pNumberObj = CreateObject(EValueType::Integer);
-            pNumberObj->Value()->SetValue(atoi(sBuffer));
-        } else {
-            pNumberObj = CreateObject(EValueType::Float);
-            pNumberObj->Value()->SetValue((float)atof(sBuffer));
+        switch(iIntType) {
+            case 1: {
+                pNumberObj = CreateObject(EValueType::Float);
+                pNumberObj->Value()->SetValue( strtof(sBuffer, NULL) );
+                break;
+            }
+
+            case 0: {
+                pNumberObj = CreateObject(EValueType::Integer);
+                pNumberObj->Value()->SetValue( atoi(sBuffer) );
+                break;
+            }
+
+            case -1: {
+                return EErrorType::BadNumber;
+            }
         }
         
         IObject* pCurrent = m_aStack.Head();
@@ -65,7 +57,6 @@ namespace cbpp::cml {
         m_sCurrentIdentifier.Bufferize(sBuffer, CBPP_CML_LEXEM_BUFFER_SIZE);
         pCurrent->PushChild(sBuffer, pNumberObj);
         
-
         m_bExpectObject = false;
 
         return EErrorType::Ok;

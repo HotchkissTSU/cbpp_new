@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
+#include <stdarg.h>
 
 namespace cbpp {
     typedef const char* cstring_t;
@@ -81,6 +82,9 @@ namespace cbpp {
             
             CString& operator+=(const CString& Other);
             CString& operator+=(char iOther);
+
+            size_t Printv(const char* sFormat, va_list Args);
+            size_t Printf(const char* sFormat, ...);
             
             operator cstring_t() const;
             operator char*();
@@ -149,6 +153,13 @@ namespace cbpp {
         Returns the amount of bytes written
     */
     size_t StringFormatTime(char* sBuffer, size_t iLength, const char* sFormat, time_t iTimer);
+
+    /*
+        -1 - not a number
+        0  - integer
+        1  - float 
+    */
+    int32_t IsNumber(const char* sString);
 }
 
 #endif

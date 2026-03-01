@@ -26,8 +26,9 @@ namespace cbpp::cml {
             //case EErrorType::StrayKeyword:      return "Stray keyword";
             //case EErrorType::BadConstRef:       return "Undefined constant reference";
             //case EErrorType::BadConstType:      return "Bad constant type";
-            case EErrorType::IncludeNonString:  return "'include' followed by a non-string value";
-            case EErrorType::BadQualifier:      return "Bad qualifier";
+            //case EErrorType::IncludeNonString:  return "'include' followed by a non-string value";
+            //case EErrorType::BadQualifier:      return "Bad qualifier";
+            case EErrorType::BadNumber:         return "Not a number";
             case EErrorType::StackOverflow:     return "Stack overflow";
 
             default:                            return "(null)";
@@ -38,7 +39,7 @@ namespace cbpp::cml {
         m_aStack.Reserve(CBPP_CML_MAX_DEPTH);
     }
     
-    bool CParser::ParseString(const char* sCode, bool bAllowInclude) {
+    bool CParser::ParseString(const char* sCode) {
         m_aArrBraceStack.Clear();
         m_aObjBraceStack.Clear();
 

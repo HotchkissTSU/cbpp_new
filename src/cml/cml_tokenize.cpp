@@ -172,7 +172,7 @@ namespace cbpp::cml {
                 break;
 
             case ETokenizerState::InNumber:
-                if (isdigit(cChar) || cChar == '.') {
+                if (isdigit(cChar) || cChar == '.' || cChar == 'e' || cChar == 'E') {
                     m_iLexemLength++;
                 } else {
                     m_aTokens.PushBack({

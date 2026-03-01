@@ -78,8 +78,8 @@ namespace cbpp::cml {
         IllBlock,               // Badly formatted block (curvy braces mismatch)
         IllArray,               // Badly formatted array (square braces mismatch)
         BadFileRef,             // Can`t open said file path
-        IncludeNonString,
-        BadQualifier,
+
+        BadNumber,
 
         StackOverflow,
 
@@ -271,7 +271,7 @@ namespace cbpp::cml {
         public:
             CParser();
 
-            bool ParseString(const char* sCode, bool bAllowInclude = true);
+            bool ParseString(const char* sCode);
 
             bool HasErrors() const;
             size_t GetErrorLog(char* sBuffer, size_t iMaxSize) const;
