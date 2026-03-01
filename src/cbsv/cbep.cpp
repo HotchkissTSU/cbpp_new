@@ -17,7 +17,7 @@ void InitGLFW() {
 }
 
 int main(int argc, char** argv) {
-    InitGLFW();
+    /*InitGLFW();
 
     cbpp::IFile* File = cbpp::OpenFile("assets/test.cml", "rb");
     if(File == NULL) {
@@ -37,7 +37,10 @@ int main(int argc, char** argv) {
         char sBuff[256];
         Parser.GetErrorLog(sBuff, sizeof(sBuff));
         printf("%s\n", sBuff);
-    }
+    }*/
+
+    cbpp::ent::CBase* pTest = cbpp::CreateEntityClass("CTest");
+    puts(pTest->Classname());
 
     return EXIT_SUCCESS;
 }

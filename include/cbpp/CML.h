@@ -111,8 +111,6 @@ namespace cbpp::cml {
 
         EQualifier m_iRefType = EQualifier::None;
 
-        char32_t m_iCurrentChar;
-
         void ProcessLastChar(char cCurrent);
         void ProcessCharacter(char cCurrent);
 
