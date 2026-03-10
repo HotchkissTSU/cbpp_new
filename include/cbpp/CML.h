@@ -16,7 +16,7 @@
 #include "cbpp/Stack.h"
 
 // Maximal stack depth for the CML parser
-#define CBPP_CML_MAX_DEPTH 128
+#define CBPP_CML_MAX_DEPTH 64
 
 /*
     Maximal length for a single lexem

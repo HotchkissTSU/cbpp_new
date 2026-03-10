@@ -94,7 +94,7 @@ namespace cbpp {
             
             // Insert a pair
             void Insert(key_t&& Key, value_t&& Value) {
-                if (m_aData.Size() == 0) {
+                if (m_aData.Length() == 0) {
                     Pair Pair(Key, Value);
                     m_aData.PushBack(std::move(Pair));
                     return;

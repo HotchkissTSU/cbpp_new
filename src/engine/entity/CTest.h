@@ -6,15 +6,12 @@
 
 namespace cbpp::ent {
     class CTest : public CBase {
-        CbProperties (
-            NULL,
-            NULL
-        )
+        CbEntity(CTest, CBase, NULL)
 
         public:
-            virtual ~CTest() = default;
-    };
-    CbRegisterEntity(CTest);
+            void Init(Datadesc*);
+            void Destruct();
+    };         
 }
 
 #endif

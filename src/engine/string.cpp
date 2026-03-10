@@ -43,7 +43,7 @@ namespace cbpp {
         memcpy(m_sData, Other.m_sData, m_iLength + 1);
     }
 
-    CString::CString(CString&& Other) noexcept 
+    CString::CString(CString&& Other) 
         : m_sData(Other.m_sData), m_iLength(Other.m_iLength) {
         Other.m_sData = NULL;
         Other.m_iLength = 0;
@@ -90,7 +90,7 @@ namespace cbpp {
         return *this;
     }
 
-    CString& CString::operator=(CString&& Other) noexcept {
+    CString& CString::operator=(CString&& Other) {
         if (this == &Other) {
             return *this;
         }
@@ -133,30 +133,47 @@ namespace cbpp {
         return m_sData != NULL && m_sData[0] != '\0';
     }
 
+    void CString::Set(const char* sData) {
+        m_iLength = strlen(sData);
+
+        m_sData = Realloc<char>(m_sData, m_iLength+1);
+        m_sData[m_iLength] = '\0';
+
+        memcpy(m_sData, sData, m_iLength);
+    }
+
+    void CString::Set(const CString& sData) {
+        m_iLength = sData.m_iLength;
+
+        m_sData = Realloc<char>(m_sData, m_iLength+1);
+        m_sData[m_iLength] = '\0';
+
+        memcpy(m_sData, sData.String(), m_iLength);
+    }
+
     // Index access
 
-    #define STR_INDEX                                       \
-        if (iIndex >= m_iLength) {                          \
-            static char dummy;                              \
-            return dummy;                                   \
-        }                                                   \
-        return m_sData[iIndex]
+    #define STR_INDEX                                                                                   \
+        CbAssertf(iIndex >= m_iLength, "String index %zu is out of range (%zu)", iIndex, m_iLength);    \
+        return m_sData[iIndex];
 
     char& CString::operator[](size_t iIndex) {
-        STR_INDEX;
+        STR_INDEX
     }
 
     const char& CString::operator[](size_t iIndex) const {
-        STR_INDEX;
+        STR_INDEX
     }
 
     char& CString::At(size_t iIndex) {
-        STR_INDEX;
+        STR_INDEX
     }
 
     const char& CString::At(size_t iIndex) const {
-        STR_INDEX;
+        STR_INDEX
     }
+
+    #undef STR_INDEX
 
     // Comparison operators
 

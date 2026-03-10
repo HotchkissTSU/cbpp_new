@@ -17,9 +17,9 @@ void InitGLFW() {
 }
 
 int main(int argc, char** argv) {
-    /*InitGLFW();
+    InitGLFW();
 
-    cbpp::IFile* File = cbpp::OpenFile("assets/test.cml", "rb");
+    cbpp::IFile* File = cbpp::OpenFile("assets/goofy.h", "rb");
     if(File == NULL) {
         return 1;
     }
@@ -29,8 +29,13 @@ int main(int argc, char** argv) {
     sFileText[iFileLength] = '\0';
 
     File->ReadAll(sFileText);
+    cbpp::CString sSource(sFileText);
+
+    cbpp::cml::CTokenizer Lexer(sSource);
+    Lexer.ProcessString();
+    Lexer.Print();
     
-    cbpp::cml::CParser Parser;
+    /*cbpp::cml::CParser Parser;
     if(Parser.ParseString(sFileText)) {
         PrintObject(Parser.Root());
     } else {
@@ -38,6 +43,8 @@ int main(int argc, char** argv) {
         Parser.GetErrorLog(sBuff, sizeof(sBuff));
         printf("%s\n", sBuff);
     }*/
+
+    cbpp::Free(sFileText);
 
     cbpp::ent::CBase* pTest = cbpp::CreateEntityClass("CTest");
     puts(pTest->Classname());

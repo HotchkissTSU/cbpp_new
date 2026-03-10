@@ -5,7 +5,8 @@
 #include "engine/ent_utils.h"
 
 namespace cbpp {
-    ent::CBase* CreateEntityClass(const char* sClassname);
+    ent::CBase* CreateEntityClass(const char* sClassname, void* pData = NULL);
+    IEntityDatadesc* CreateEntityDatadesc(const char* sClassname);
 }
 
 #endif

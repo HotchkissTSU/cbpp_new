@@ -5,29 +5,34 @@
 #include "cbpp/String.h"
 #include "cbpp/Constants.h"
 
+#include "engine/ent_utils.h"
+
 namespace cbpp { class IEntityProperty; }
 namespace cbpp::ent {
-    // A basis for all game entities
     class CBase {
-        protected:
-            CBase* __get_this();
-            CArray<IEntityProperty*> m_aProperties;
-
-            CString m_sWorldName; // Other entities can refer to us by this name
-
         public:
-            typedef CArray<IEntityProperty*> properties_t;
+            class Datadesc : public IEntityDatadesc {
+                private:
+                    CEntityPropsConstructor m_Props = { __get_this(), {} };
 
-            CBase() = default;
-            CBPP_PROTECTED_CLASS(CBase)
-            virtual ~CBase() = default;
+                protected:
+                    CArray<IEntityProperty*> m_aProps;
+                    Datadesc* __get_this();
 
-            const char* Name();
-            void SetName(const char* sName);
+                public:
+                    CString sWorldName;
+
+                    size_t Length();
+                    IEntityProperty* At(size_t iIndex);
+
+                    void PushProperty(IEntityProperty* pProp);
+            };
+
+            CBase() = delete;
+            CBase(Datadesc* pData);
 
             virtual const char* Classname();
-
-            properties_t& GetProperties();
+            virtual const char* Base();
     };
 }
 

@@ -5,11 +5,18 @@
 
 #include "cbpp/Table.h"
 #include "cbpp/String.h"
+#include "cbpp/Memory.h"
+
+#include "engine/ent_property.h"
 
 namespace cbpp {
-    namespace ent { class CBase; }
-
-    class IEntityProperty {};
+    namespace ent { class CBase; }  
+    
+    class IEntityDatadesc {
+        public:
+            virtual size_t Length() = 0;
+            virtual IEntityProperty* At(size_t iIndex) = 0;
+    };
 
     class CEntityPropsConstructor {
         public:
@@ -18,24 +25,31 @@ namespace cbpp {
 
     class CEntityRegistrator {
         public:
-            typedef ent::CBase* (*factory_t)(void); 
-            CEntityRegistrator(const char* sClassname, factory_t fpConstr);
+            typedef ent::CBase* (*factory_t)(void*);
+            typedef IEntityDatadesc* (*datadesc_factory_t)(void);
+
+            CEntityRegistrator(const char* sClassname, factory_t fpConstr, datadesc_factory_t fpDatadescConstr);
     };
 
-    CBinTable<CConstString, CEntityRegistrator::factory_t>& GetEntFactoryMap();
+    struct EntityRegistryInfo {
+        CEntityRegistrator::factory_t fpEntityCreator;
+        CEntityRegistrator::datadesc_factory_t fpDatadescCreator;
+    };
 
-    #define CbProperties(...)\
-    virtual const char* Classname();\
-    CEntityPropsConstructor __cb_props = { (void*)(__get_this()), {__VA_ARGS__} };
+    CBinTable<CConstString, EntityRegistryInfo>& GetEntFactoryMap();
 
-    #define CbRegisterEntity(_classname)                                \
-        const char* _classname::Classname() { return #_classname; }     \
-        cbpp::ent::CBase* __cb_entfact_##_classname() {                 \
-            _classname* pEnt = cbpp::New<_classname>();                 \
-            pEnt->GetProperties().Shrink();                             \
-            return (cbpp::ent::CBase*)(pEnt);                           \
-        }\
-        static cbpp::CEntityRegistrator __cb_entreg_##_classname( #_classname, __cb_entfact_##_classname );
-};
+    #define CbEntity(_class, _base, ...)                                                                                            \
+        public: virtual const char* Classname() { return #_class; }                                                                 \
+        virtual const char* Base() { return #_base; }                                                                               \
+        class Datadesc : public _base::Datadesc { private:                                                                          \
+        CEntityPropsConstructor m_Props = {__get_this(), {__VA_ARGS__}}; };                                                         \
+        _class(Datadesc* pData) : _base(pData) { this->Init(pData); }                                                               \
+        ~_class() { this->Destruct(); }                                                                                             \
+        private: static IEntityDatadesc* CreateDatadesc() { return (cbpp::IEntityDatadesc*)(cbpp::New<Datadesc>()); }               \
+        static cbpp::ent::CBase* CreateInstance(void* pData) {                                                                      \
+            return (cbpp::ent::CBase*)(cbpp::New<_class>((Datadesc*)pData));}                                                       \
+        inline static cbpp::CEntityRegistrator __s_registrator =                                                                    \
+            cbpp::CEntityRegistrator( #_class, _class::CreateInstance, _class::CreateDatadesc );       
+}
 
 #endif

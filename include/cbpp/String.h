@@ -50,19 +50,22 @@ namespace cbpp {
             CString(size_t iLength);
             CString(const char* sSource);
             CString(const CString& Other);
-            CString(CString&& Other) noexcept;
+            CString(CString&& Other);
             
             ~CString();
             
             CString& operator=(const char* sOther);
             CString& operator=(const CString& Other);
-            CString& operator=(CString&& Other) noexcept;
+            CString& operator=(CString&& Other);
             
             const char* String() const;
             char* Pointer();
             
             size_t Length() const;
             size_t LengthUpdate();
+
+            void Set(const CString& sData);
+            void Set(const char* sData);
             
             bool IsValid() const;
             
