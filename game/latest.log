@@ -12,3 +12,7 @@
 [16:55:57] ERROR: Attempt to create an unregistered entity of class 'CTest'
 [16:56:36] INFO :  == Log start == 
 [16:56:36] ERROR: Attempt to create an unregistered entity of class 'CTest'
+[18:41:56] INFO :  == Log start == 
+[18:41:56] ERROR: Attempt to create a datadesc of the unregistered entity 'CBase'
+[18:45:18] INFO :  == Log start == 
+[18:45:18] ERROR: Attempt to create a datadesc of the unregistered entity 'CBase'

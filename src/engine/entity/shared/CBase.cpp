@@ -1,17 +1,11 @@
 #include "engine/entity/CBase.h"
 
 namespace cbpp::ent {
-    CBase::CBase(Datadesc* pData) {
-        puts("CBase construction!");
+    CBase::~CBase() {
+
     }
 
-    const char* CBase::Classname() {
-        return "CBase";
-    }
-
-    const char* CBase::Base() {
-        return "CBPP";
-    }
+    void CBase::Init(Datadesc*) {}
 
     CBase::Datadesc* CBase::Datadesc::__get_this() {
         return this;
@@ -27,5 +21,12 @@ namespace cbpp::ent {
 
     void CBase::Datadesc::PushProperty(IEntityProperty* pProp) {
         m_aProps.PushBack(pProp);
+    }
+
+    CBase::Datadesc::~Datadesc() {
+        for(int i = 0; i < m_aProps.Length(); i++) {
+            IEntityProperty* pCurrent = m_aProps[i];
+            cbpp::Delete(pCurrent);
+        }
     }
 }

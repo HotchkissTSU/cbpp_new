@@ -6,6 +6,18 @@ namespace cbpp {
     const char* IEntityProperty::Name() const { return m_sName; }
     IEntityProperty::EType IEntityProperty::Type() const { return m_iType; }
 
+    const char* IEntityProperty::GetTypeName(IEntityProperty::EType iType) {
+        switch (iType) {
+            case IEntityProperty::EType::Integer:   return "Integer";
+            case IEntityProperty::EType::Float:     return "Float";
+            case IEntityProperty::EType::String:    return "String";
+            case IEntityProperty::EType::Color:     return "Color";
+            case IEntityProperty::EType::Vector:    return "Vector";
+            case IEntityProperty::EType::Enum:      return "Enumeration";
+            default:                                return "Unknown";
+        }
+    }
+    
     void CNumberEntityProperty::SetValue(int32_t iValue) {
         *m_pData = Clamp(iValue, m_iMin, m_iMax);
     }
@@ -21,4 +33,20 @@ namespace cbpp {
     float CFloatEntityProperty::GetValue() { return *m_pData; }
 
     Vec2f CFloatEntityProperty::Limits() { return {m_fMin, m_fMax}; }
+
+    void CStringEntityProperty::SetValue(const char* sData) {
+        m_pData->Set(sData);
+    }
+
+    void CStringEntityProperty::SetValue(const CString& sData) {
+        m_pData->Set(sData);
+    }
+
+    const char* CStringEntityProperty::GetValue() {
+        return m_pData->String();
+    }
+
+    size_t CStringEntityProperty::Length() {
+        return m_pData->Length();
+    }
 }

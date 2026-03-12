@@ -7,34 +7,40 @@
 
 #include "engine/ent_utils.h"
 
-namespace cbpp { class IEntityProperty; }
 namespace cbpp::ent {
+
+    // A basis for all game entities
     class CBase {
-        public:
-            class Datadesc : public IEntityDatadesc {
-                private:
-                    CEntityPropsConstructor m_Props = { __get_this(), {} };
+        public: 
+            virtual const char* Classname() { return "CBase"; }                                                                 
+            virtual const char* Base() { return "CB++"; }    
 
-                protected:
+            class Datadesc : public cbpp::IEntityDatadesc {
+                protected: 
                     CArray<IEntityProperty*> m_aProps;
-                    Datadesc* __get_this();
-
-                public:
-                    CString sWorldName;
+                    Datadesc* __get_this(); 
+                public:                                   
+                    virtual ~Datadesc();
 
                     size_t Length();
                     IEntityProperty* At(size_t iIndex);
-
                     void PushProperty(IEntityProperty* pProp);
 
-                    virtual ~Datadesc() = default;
+                    CbStringPropertyEx(sWorldName, "unnamed", EStringType::EntityName)
             };
 
             CBase() = delete;
-            CBase(Datadesc* pData);
+            CBase(Datadesc* pData) { this->Init(pData); }                                                                    
+            virtual ~CBase();  
 
-            virtual const char* Classname();
-            virtual const char* Base();
+        private: 
+            static IEntityDatadesc* CreateDatadesc() { return (cbpp::IEntityDatadesc*)(cbpp::New<Datadesc>()); }              
+            inline static cbpp::CEntityRegistrator __s_registrator = cbpp::CEntityRegistrator( "CBase", NULL, CBase::CreateDatadesc );
+
+        public:
+            void Init(Datadesc*);
+            void Destruct();
+
     };
 }
 

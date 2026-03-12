@@ -46,8 +46,49 @@ int main(int argc, char** argv) {
 
     cbpp::Free(sFileText);
 
-    cbpp::ent::CBase* pTest = cbpp::CreateEntityClass("CTest");
-    puts(pTest->Classname());
+    cbpp::IEntityDatadesc* pTest = cbpp::CreateEntityDatadesc("CBase");
+
+    size_t iDataLen = pTest->Length();
+
+    printf("Num: %d\n", iDataLen);
+
+    for(int i = 0; i < iDataLen; i++) {
+        cbpp::IEntityProperty* pCurrent = pTest->At(i);
+        printf("Property '%s' of type %s\n", pCurrent->Name(), cbpp::IEntityProperty::GetTypeName( pCurrent->Type() ));
+
+        printf("\tValue: ");
+
+        switch(pCurrent->Type()) {
+            case cbpp::IEntityProperty::EType::Integer: {
+                cbpp::CNumberEntityProperty* pNumber = (cbpp::CNumberEntityProperty*)pCurrent;
+                printf("%d\n", pNumber->GetValue());
+                break;
+            }
+
+            case cbpp::IEntityProperty::EType::Float: {
+                cbpp::CFloatEntityProperty* pFloat = (cbpp::CFloatEntityProperty*)pCurrent;
+                printf("%f\n", pFloat->GetValue());
+                break;
+            }
+
+            case cbpp::IEntityProperty::EType::String: {
+                cbpp::CStringEntityProperty* pString = (cbpp::CStringEntityProperty*)pCurrent;
+                printf("'%s'\n", pString->GetValue());
+                break;
+            }
+
+            case cbpp::IEntityProperty::EType::Enum: {
+                cbpp::CEnumEntityProperty* pNumber = (cbpp::CEnumEntityProperty*)pCurrent;
+                
+                for(int k = 0; k < pNumber->PairsAmount(); k++) {
+                    printf("\n\t'%s' = %d", pNumber->GetPairs()[k].Name, pNumber->GetPairs()[k].Value);
+                }
+                putc('\n', stdout);
+
+                break;
+            }
+        }
+    }
 
     return EXIT_SUCCESS;
 }

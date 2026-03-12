@@ -5,5 +5,5 @@ namespace cbpp::ent {
         puts("CTest init!");
     }
 
-    void Destruct() {}
+    void CTest::Destruct() {}
 }
