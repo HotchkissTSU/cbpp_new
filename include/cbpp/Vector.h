@@ -41,6 +41,9 @@ namespace cbpp {
             member_t& X() { return m_x; }
             member_t& Y() { return m_y; }
 
+            member_t X() const { return m_x; }
+            member_t Y() const { return m_y; }
+
             float Length() const {
                 return sqrt((float)(m_x*m_x + m_y*m_y));
             }

@@ -1,11 +1,12 @@
 #include "engine/entity/CBase.h"
 
 namespace cbpp::ent {
-    CBase::~CBase() {
+    CBase::~CBase() {}
 
-    }
+    void CBase::Construct() {puts("CBase construct!");}
+    void CBase::Destruct() {}
 
-    void CBase::Init(Datadesc*) {}
+    void CBase::Init(Datadesc*) {puts("CBase init!");}
 
     CBase::Datadesc* CBase::Datadesc::__get_this() {
         return this;

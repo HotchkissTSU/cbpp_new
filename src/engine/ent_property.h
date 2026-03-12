@@ -8,6 +8,7 @@
 #include "cbpp/Vector.h"
 #include "cbpp/String.h"
 #include "cbpp/Array.h"
+#include "cbpp/Image.h"
 
 namespace cbpp {
     namespace ent {
@@ -44,8 +45,10 @@ namespace cbpp {
 
             const char* Name() const;
             EType Type() const;
+
+            virtual ~IEntityProperty() = default;
     };
-    
+
     template <typename T> class CEntityPropertyStorage : public IEntityProperty {
         protected:
             T* m_pData;
@@ -55,6 +58,8 @@ namespace cbpp {
 
             T* Address() { return m_pData; }
             size_t Sizeof() { return sizeof(T); }
+
+            virtual ~CEntityPropertyStorage() = default;
     };
 
     class CNumberEntityProperty : public CEntityPropertyStorage<int32_t> {
@@ -62,12 +67,14 @@ namespace cbpp {
             const int32_t m_iMin, m_iMax;
 
         public:
-            CNumberEntityProperty(const char* sName, int32_t* pData, int32_t default_value = 0, int32_t min_value = INT32_MIN, int32_t max_value = INT32_MAX) : 
-                CEntityPropertyStorage<int32_t>(sName, EType::Integer, pData), m_iMin(min_value), m_iMax(max_value) {*pData = default_value;}
+            CNumberEntityProperty(const char* sName, int32_t* pData, int32_t iDefault = 0, int32_t iMin = INT32_MIN, int32_t iMax = INT32_MAX) : 
+                CEntityPropertyStorage<int32_t>(sName, EType::Integer, pData), m_iMin(iMin), m_iMax(iMax) {SetValue(iDefault);}
 
             Vec2i Limits();
             void SetValue(int32_t iValue);
             int32_t GetValue();
+
+            virtual ~CNumberEntityProperty() = default;
     };
 
     class CFloatEntityProperty : public CEntityPropertyStorage<float> {
@@ -75,12 +82,14 @@ namespace cbpp {
             const float m_fMin, m_fMax;
 
         public:
-            CFloatEntityProperty(const char* sName, float* pData, float default_value = 0.0f, float min_value = __FLT_MAX__, float max_value = __FLT_MIN__) : 
-                CEntityPropertyStorage<float>(sName, EType::Float, pData), m_fMin(min_value), m_fMax(max_value) {*pData = default_value;}
+            CFloatEntityProperty(const char* sName, float* pData, float fDefault = 0.0f, float fMin = __FLT_MIN__, float fMax = __FLT_MAX__) : 
+                CEntityPropertyStorage<float>(sName, EType::Float, pData), m_fMin(fMin), m_fMax(fMax) {SetValue(fDefault);}
 
             Vec2f Limits();
             void SetValue(float iValue);
             float GetValue();
+
+            virtual ~CFloatEntityProperty() = default;
     };
 
     class CStringEntityProperty : public CEntityPropertyStorage<CString> {
@@ -95,6 +104,38 @@ namespace cbpp {
 
             const char* GetValue();
             size_t Length();
+
+            virtual ~CStringEntityProperty() = default;
+    };
+
+    class CVectorEntityProperty : public CEntityPropertyStorage<Vec2f> {
+        private:
+            const Vec2f m_vMin, m_vMax;
+
+        public:
+            CVectorEntityProperty(const char* sName, Vec2f* pData, Vec2f vDefault = {0.0f, 0.0f}, 
+                Vec2f vMin = {__FLT_MIN__,__FLT_MIN__}, Vec2f vMax = {__FLT_MAX__,__FLT_MAX__}) : 
+                CEntityPropertyStorage<Vec2f>(sName, EType::Vector, pData), m_vMax(vMax), m_vMin(vMin)
+            {
+                this->SetValue(vDefault);
+            }
+
+            void SetValue(Vec2f vValue);
+            Vec2f GetValue();
+
+            Vec2f MinBound();
+            Vec2f MaxBound();
+
+            virtual ~CVectorEntityProperty() = default;
+    };
+
+    class CColorEntityProperty : public CEntityPropertyStorage<Color> {
+        public:
+            CColorEntityProperty(const char* sName, Color* pData, Color Default = {(uint8_t)0,(uint8_t)0,(uint8_t)0,(uint8_t)255}) :
+                CEntityPropertyStorage<Color>(sName, EType::Color, pData) { this->SetValue(Default); }
+
+            Color GetValue();
+            void SetValue(Color Data);
     };
 
     class CEnumEntityProperty : public CEntityPropertyStorage<int32_t> {
@@ -103,7 +144,7 @@ namespace cbpp {
                 const char* Name;
                 int32_t Value;
             };
-
+            
         private:
             CArray<Pair> m_aPairs;
 
@@ -111,8 +152,8 @@ namespace cbpp {
                 m_aPairs.Shrink();
             }
 
-            template <typename ... Args> void RegisterPair(const char* sName, int32_t iValue, Args... Pairs) {
-                m_aPairs.PushBack({sName, iValue});
+            template <typename enum_t, typename ... Args> void RegisterPair(const char* sName, enum_t iValue, Args... Pairs) {
+                m_aPairs.PushBack({sName, (int32_t)iValue});
                 RegisterPair(Pairs...);
             }
             
@@ -143,6 +184,8 @@ namespace cbpp {
             template <typename enum_t> void SetValue(enum_t iValue) {
                 *m_pData = (int32_t)iValue;
             }
+
+            virtual ~CEnumEntityProperty() = default;
     };
 }
 

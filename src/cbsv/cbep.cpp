@@ -46,7 +46,9 @@ int main(int argc, char** argv) {
 
     cbpp::Free(sFileText);
 
-    cbpp::IEntityDatadesc* pTest = cbpp::CreateEntityDatadesc("CTest");
+    cbpp::ent::CBase* pEnt = cbpp::CreateEntityClass("CSubTest");
+    cbpp::IEntityDatadesc* pTest = cbpp::CreateEntityDatadesc("CSubTest");
+    cbpp::InitEntity(pEnt, NULL);
 
     size_t iDataLen = pTest->Length();
 
@@ -54,7 +56,7 @@ int main(int argc, char** argv) {
 
     for(int i = 0; i < iDataLen; i++) {
         cbpp::IEntityProperty* pCurrent = pTest->At(i);
-        printf("Property '%s' of type %s\n", pCurrent->Name(), cbpp::IEntityProperty::GetTypeName( pCurrent->Type() ));
+        printf("\nProperty '%s' of type %s\n", pCurrent->Name(), cbpp::IEntityProperty::GetTypeName( pCurrent->Type() ));
 
         printf("\tValue: ");
 
@@ -87,9 +89,25 @@ int main(int argc, char** argv) {
 
                 break;
             }
-            putc('\n', stdout);
+
+            case cbpp::IEntityProperty::EType::Vector: {
+                cbpp::CVectorEntityProperty* pVector = (cbpp::CVectorEntityProperty*)pCurrent;
+
+                printf("(%f, %f)\n", pVector->GetValue().X(), pVector->GetValue().Y());
+                break;
+            }
+
+            case cbpp::IEntityProperty::EType::Color: {
+                cbpp::CColorEntityProperty* pColor = (cbpp::CColorEntityProperty*)pCurrent;
+
+                cbpp::Color Data = pColor->GetValue();
+                uint8_t R = Data.Comp.R, G = Data.Comp.G, B = Data.Comp.B, A = Data.Comp.A;
+
+                printf("(%u, %u, %u, %u)\n", R, G, B, A);
+                break;
+            }
         }
     }
-    
+
     return EXIT_SUCCESS;
 }

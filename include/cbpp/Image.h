@@ -20,20 +20,19 @@ namespace cbpp {
     typedef uint32_t texint_t;
 
     struct Color {
-        union {
-            uint32_t        Packed = 0;
-            union {
-                char        RGBA[4];
-                char R; char G; char B; char A;
-            };
-        };
+        //union {
+            //uint32_t Packed = 0;
+            struct {
+                uint8_t R; uint8_t G; uint8_t B; uint8_t A;
+            } Comp;
+        //};
         
         Color() = default;
 
-        Color(char RGBA);
-        Color(char RGB, char A);
-        Color(char R, char G, char B);
-        Color(char R, char G, char B, char A);
+        Color(uint8_t RGBA);
+        Color(uint8_t RGB, uint8_t A);
+        Color(uint8_t R, uint8_t G, uint8_t B);
+        Color(uint8_t R, uint8_t G, uint8_t B, uint8_t A);
     };
 
     enum class EImageFilter : uint32_t {

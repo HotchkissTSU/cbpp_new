@@ -31,18 +31,22 @@ namespace cbpp {
 
     class CEntityRegistrator {
         public:
-            typedef ent::CBase* (*factory_t)(void*);
+            typedef ent::CBase* (*factory_t)();
             typedef IEntityDatadesc* (*datadesc_factory_t)(void);
+            typedef void (*initfunc_t)(ent::CBase*, void*);
 
-            CEntityRegistrator(const char* sClassname, factory_t fpConstr, datadesc_factory_t fpDatadescConstr);
+            CEntityRegistrator(const char* sClassname, factory_t fpConstr, datadesc_factory_t fpDatadescConstr, initfunc_t fpInit);
     };
 
     struct EntityRegistryInfo {
         CEntityRegistrator::factory_t fpEntityCreator;
         CEntityRegistrator::datadesc_factory_t fpDatadescCreator;
+        CEntityRegistrator::initfunc_t fpInitFunc;
     };
 
     CBinTable<CConstString, EntityRegistryInfo>& GetEntFactoryMap();
+
+    void InitEntity(ent::CBase* pEnt, const char* sClassname, void* pDatadesc);
 
     /*
         I AM THE LIVING GOD OF C++
@@ -54,14 +58,16 @@ namespace cbpp {
         public: virtual const char* Classname() { return #_class; }                                                                 \
         virtual const char* Base() { return #_base; }                                                                               \
         class Datadesc : public _base::Datadesc { public: virtual ~Datadesc() = default; __VA_ARGS__};                              \
-        _class(Datadesc* pData) : _base(pData) { this->Init(pData); }                                                               \
+        _class() : _base() { this->Construct(); }                                                                                   \
         virtual ~_class() { this->Destruct(); }                                                                                     \
         private: static IEntityDatadesc* CreateDatadesc() { return (cbpp::IEntityDatadesc*)(cbpp::New<Datadesc>()); }               \
-        static cbpp::ent::CBase* CreateInstance(void* pData) {                                                                      \
-            return (cbpp::ent::CBase*)(cbpp::New<_class>((Datadesc*)pData));}                                                       \
+        static cbpp::ent::CBase* CreateInstance() {                                                                                 \
+            return (cbpp::ent::CBase*)(cbpp::New<_class>());}                                                                       \
+        static void ConstructInstance(cbpp::ent::CBase* pEnt, void* pData) { cbpp::InitEntity(pEnt, #_base, pData);                 \
+        (((_class*)pEnt)->Init((_class::Datadesc*)pData));}                                                                         \
         inline static cbpp::CEntityRegistrator __s_registrator =                                                                    \
-            cbpp::CEntityRegistrator( #_class, _class::CreateInstance, _class::CreateDatadesc );        
-            
+            cbpp::CEntityRegistrator( #_class, _class::CreateInstance, _class::CreateDatadesc, _class::ConstructInstance );        
+
     /*
         An integer property with default settings
     */
@@ -134,6 +140,42 @@ namespace cbpp {
         public: int32_t _member; private:                                                                                           \
         CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
         {((cbpp::IEntityProperty*)cbpp::New<cbpp::CEnumEntityProperty>(#_member, (int32_t*)(&_member), (default_value), __VA_ARGS__))}};
+
+    /*
+        A vector property with default settings
+    */
+    #define CbVectorProperty(_member)                                                                                               \
+        public: cbpp::Vec2f _member; private:                                                                                       \
+        CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
+        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CVectorEntityProperty>(#_member, &_member))}};
+
+    /*
+        A vector property. Arguments are:
+        NAME, DEFAULT_VALUE, MIN_BOUND (vector), MAX_BOUND (vector)
+    */
+    #define CbVectorPropertyEx(_member, def_x, def_y, min_x, min_y, max_x, max_y)                                                   \
+        public: cbpp::Vec2f _member; private:                                                                                       \
+        CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
+        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CVectorEntityProperty>(#_member, &_member, cbpp::Vec2f(def_x, def_y),             \
+            cbpp::Vec2f(min_x, min_y), cbpp::Vec2f(max_x, max_y)))}};
+
+    /*
+        A color property with default settings
+    */
+    #define CbColorProperty(_member)                                                                                                \
+        public: cbpp::Color _member; private:                                                                                       \
+        CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
+        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CColorEntityProperty>(#_member, &_member))}};
+
+    /*
+        A color property. Arguments are:
+        NAME, DEFAULT_R, DEFAULT_G, DEFAULT_B, DEFAULT_A
+    */
+    #define CbColorPropertyEx(_member, def_r, def_g, def_b, def_a)                                                                  \
+        public: cbpp::Color _member; private:                                                                                       \
+        CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
+        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CColorEntityProperty>(#_member, &_member,                                         \
+            cbpp::Color((uint8_t)(def_r), (uint8_t)(def_g), (uint8_t)(def_b), (uint8_t)(def_a))))}};
 }
 
 #endif

@@ -24,6 +24,8 @@ namespace cbpp {
 
     // Allocate a datadesc class for the specified entity type
     IEntityDatadesc* CreateEntityDatadesc(const char* sClassname);
+
+    void InitEntity(ent::CBase* pEnt, void* pDatadesc);
 }
 
 #endif

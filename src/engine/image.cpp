@@ -11,32 +11,32 @@
 // Color
 
 namespace cbpp {
-    Color::Color(char _RGBA) {
-        RGBA[0] = _RGBA;
-        RGBA[1] = _RGBA;
-        RGBA[2] = _RGBA;
-        RGBA[3] = _RGBA;
+    Color::Color(uint8_t _RGBA) {
+        Comp.R = _RGBA;
+        Comp.G = _RGBA;
+        Comp.B = _RGBA;
+        Comp.A = _RGBA;
     }
 
-    Color::Color(char RGB, char A) {
-        RGBA[0] = RGB;
-        RGBA[1] = RGB;
-        RGBA[2] = RGB;
-        RGBA[3] = A;
+    Color::Color(uint8_t RGB, uint8_t _A) {
+        Comp.R = RGB;
+        Comp.G = RGB;
+        Comp.B = RGB;
+        Comp.A = _A;
     }
 
-    Color::Color(char R, char G, char B) {
-        RGBA[0] = R;
-        RGBA[1] = G;
-        RGBA[2] = B;
-        RGBA[3] = 255;
+    Color::Color(uint8_t _R, uint8_t _G, uint8_t _B) {
+        Comp.R = _R;
+        Comp.G = _G;
+        Comp.B = _B;
+        Comp.A = 255;
     }
 
-    Color::Color(char R, char G, char B, char A) {
-        RGBA[0] = R;
-        RGBA[1] = G;
-        RGBA[2] = B;
-        RGBA[3] = A;
+    Color::Color(uint8_t _R, uint8_t _G, uint8_t _B, uint8_t _A) {
+        Comp.R = _R;
+        Comp.G = _G;
+        Comp.B = _B;
+        Comp.A = _A;
     }
 }
 
@@ -152,7 +152,7 @@ namespace cbpp {
         const texint_t iLength = this->Length();
 
         if(m_iChannels == EImageChannels::L) {
-            memset(m_pData, iColor.RGBA[0], iLength);
+            memset(m_pData, iColor.Comp.R, iLength);
             return;
         }
 

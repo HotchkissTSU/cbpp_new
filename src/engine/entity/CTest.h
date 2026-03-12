@@ -5,6 +5,10 @@
 #include "engine/ent_utils.h"
 
 namespace cbpp::ent {
+    enum class Dolboeb {
+        A, B, C, D
+    };
+
     class CTest : public CBase {
         
         /*
@@ -15,15 +19,31 @@ namespace cbpp::ent {
             CbIntPropertyEx(iExTest, 5, 0, 52)                                          // Describe some properties
             CbFloatPropertyEx(float_test, 0, -15, 15)
             CbStringPropertyEx(string_test, "default string", EStringType::String)
-            CbEnumProperty(enum_test,   "VALUE_A", 0,
-                                        "VALUE_B", 1,
-                                        "VALUE_C", 2)
+            CbEnumProperty(enum_test,   "VALUE_A", Dolboeb::A,
+                                        "VALUE_B", Dolboeb::B,
+                                        "VALUE_C", Dolboeb::C)
         )
 
         public:
-            void Init(Datadesc*);       // Entities have these callbacks for construction and destruction
-            void Destruct();
-    };         
+            virtual void Construct();               // Entity constructor
+            virtual void Init(Datadesc*);           // Initialization function (called by cbpp::InitEntity(...))
+            virtual void Destruct();                // Entity destructor
+    };      
+
+    class CSubTest : public CTest {
+        CbEntity(CSubTest, CTest,
+            CbIntProperty(test_int)
+
+            CbVectorPropertyEx(vector2, 5,10, -1,-1, 1,1)
+
+            CbColorPropertyEx(color_test, 255u,0u,0u,255u)
+        )
+
+        public:
+            virtual void Construct();
+            virtual void Init(Datadesc*);
+            virtual void Destruct();   
+    };   
 }
 
 #endif

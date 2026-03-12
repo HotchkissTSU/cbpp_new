@@ -29,17 +29,21 @@ namespace cbpp::ent {
                     CbStringPropertyEx(sWorldName, "unnamed", EStringType::EntityName)
             };
 
-            CBase() = delete;
-            CBase(Datadesc* pData) { this->Init(pData); }                                                                    
+            CBase() { this->Construct(); }                                                                 
             virtual ~CBase();  
 
         private: 
-            static IEntityDatadesc* CreateDatadesc() { return (cbpp::IEntityDatadesc*)(cbpp::New<Datadesc>()); }              
-            inline static cbpp::CEntityRegistrator __s_registrator = cbpp::CEntityRegistrator( "CBase", NULL, CBase::CreateDatadesc );
+            static IEntityDatadesc* CreateDatadesc() { return (cbpp::IEntityDatadesc*)(cbpp::New<Datadesc>()); }  
+            static void InitInstance(CBase* pEnt, void* pDatadesc) {
+                pEnt->Init((Datadesc*)pDatadesc);
+            }
+            
+            inline static cbpp::CEntityRegistrator __s_registrator = cbpp::CEntityRegistrator( "CBase", NULL, CBase::CreateDatadesc, CBase::InitInstance );
 
         public:
-            void Init(Datadesc*);
-            void Destruct();
+            virtual void Construct();
+            virtual void Init(Datadesc*);
+            virtual void Destruct();
 
     };
 }

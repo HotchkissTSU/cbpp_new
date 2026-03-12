@@ -17,7 +17,7 @@ namespace cbpp {
             default:                                return "Unknown";
         }
     }
-    
+
     void CNumberEntityProperty::SetValue(int32_t iValue) {
         *m_pData = Clamp(iValue, m_iMin, m_iMax);
     }
@@ -48,5 +48,30 @@ namespace cbpp {
 
     size_t CStringEntityProperty::Length() {
         return m_pData->Length();
+    }
+
+    void CVectorEntityProperty::SetValue(Vec2f vValue) {
+        m_pData->X() = Clamp(vValue.X(), m_vMin.X(), m_vMax.X());
+        m_pData->Y() = Clamp(vValue.Y(), m_vMin.Y(), m_vMax.Y());
+    }
+
+    Vec2f CVectorEntityProperty::GetValue() {
+        return *m_pData;
+    }
+
+    Vec2f CVectorEntityProperty::MinBound() {
+        return m_vMin;
+    }
+
+    Vec2f CVectorEntityProperty::MaxBound() {
+        return m_vMax;
+    }
+
+    Color CColorEntityProperty::GetValue() {
+        return *m_pData;
+    }
+
+    void CColorEntityProperty::SetValue(Color Data) {
+        (*m_pData) = Data;
     }
 }
