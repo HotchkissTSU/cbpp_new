@@ -5,44 +5,68 @@
 #include <stdint.h>
 
 #include "cbpp/Constants.h"
+#include "cbpp/Vector.h"
 
 namespace cbpp {
     class IEntityProperty {
         public:
-            enum EType : uint32_t {
-                Number,
+            enum class EType : uint32_t {
+                Integer,
+                Float,
                 String,
-                AssetPath,
+                Vector,
                 Color,
-                Vector
+                Enum
             };
 
         protected:
-            EType m_iType = EType::Number;
-            const char *m_sName, *m_sDesc;
+            EType m_iType = EType::Integer;
+            const char *m_sName;
 
         public:
-            IEntityProperty(const char* sName, const char* sDesc);
+            IEntityProperty(const char* sName, EType iType) : m_sName(sName), m_iType(iType) {}
 
             CBPP_PROTECTED_CLASS(IEntityProperty);
 
             const char* Name() const;
-            const char* Desc() const;
             EType Type() const;
     };
 
-    class CNumberEntityProperty : public IEntityProperty {
-        private:
-            union {
-                int32_t m_iData;
-                float m_fData;
-            };
+    template <typename T> class CEntityPropertyStorage : public IEntityProperty {
+        protected:
+            T* m_pData;
 
         public:
-            CNumberEntityProperty(const char* sName, const char* sDesc);
+            CEntityPropertyStorage(const char* sName, EType iType, T* pData) : IEntityProperty(sName, iType), m_pData(pData) {}
 
-            void SetValue(int32_t iData);
-            void SetValue(float fData);
+            T* Address() { return m_pData; }
+            size_t Sizeof() { return sizeof(T); }
+    };
+
+    class CNumberEntityProperty : public CEntityPropertyStorage<int32_t> {
+        private:
+            const int32_t m_iMin, m_iMax;
+
+        public:
+            CNumberEntityProperty(const char* sName, int32_t* pData, int32_t min_value = INT32_MIN, int32_t max_value = INT32_MAX) : 
+                CEntityPropertyStorage<int32_t>(sName, EType::Integer, pData), m_iMin(min_value), m_iMax(max_value) {}
+
+            Vec2i Limits();
+            void SetValue(int32_t iValue);
+            int32_t GetValue();
+    };
+
+    class CFloatEntityProperty : public CEntityPropertyStorage<float> {
+        private:
+            const float m_fMin, m_fMax;
+
+        public:
+            CFloatEntityProperty(const char* sName, float* pData, int32_t min_value = __FLT_MAX__, int32_t max_value = __FLT_MIN__) : 
+                CEntityPropertyStorage<float>(sName, EType::Float, pData), m_fMin(min_value), m_fMax(max_value) {}
+
+            Vec2f Limits();
+            void SetValue(float iValue);
+            float GetValue();
     };
 }
 

@@ -26,6 +26,8 @@ namespace cbpp::ent {
                     IEntityProperty* At(size_t iIndex);
 
                     void PushProperty(IEntityProperty* pProp);
+
+                    virtual ~Datadesc() = default;
             };
 
             CBase() = delete;

@@ -6,7 +6,12 @@
 
 namespace cbpp::ent {
     class CTest : public CBase {
-        CbEntity(CTest, CBase, NULL)
+        
+        CbEntity(CTest, CBase,
+            CbIntProperty(iTest)
+            CbIntPropertyEx(iExTest, min_value = 0, max_value = 52)
+            CbFloatPropertyEx(float_test, min_value = -15.0f, max_value = 15.0f)
+        )
 
         public:
             void Init(Datadesc*);
