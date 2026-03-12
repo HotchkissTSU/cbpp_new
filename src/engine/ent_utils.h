@@ -45,7 +45,7 @@ namespace cbpp {
     CBinTable<CConstString, EntityRegistryInfo>& GetEntFactoryMap();
 
     /*
-        The final boss of C preprocessor.
+        I AM THE LIVING GOD OF C++
         Can your filthy peasant Rust do this???
     */
 
@@ -119,7 +119,7 @@ namespace cbpp {
 
             Pass any amount of "string-number" pairs to the macro to add them to the enumeration
     */
-    #define CbEnumProperty(_member, ...)\
+    #define CbEnumProperty(_member, ...)                                                                                            \
         public: int32_t _member; private:                                                                                           \
         CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
         {((cbpp::IEntityProperty*)cbpp::New<cbpp::CEnumEntityProperty>(#_member, (int32_t*)(&_member), 0, __VA_ARGS__))}};
@@ -130,7 +130,7 @@ namespace cbpp {
 
             Pass any amount of "string-number" pairs to the macro to add them to the enumeration
     */
-    #define CbEnumProperty(_member, default_value, ...)\
+    #define CbEnumPropertyEx(_member, default_value, ...)                                                                           \
         public: int32_t _member; private:                                                                                           \
         CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
         {((cbpp::IEntityProperty*)cbpp::New<cbpp::CEnumEntityProperty>(#_member, (int32_t*)(&_member), (default_value), __VA_ARGS__))}};

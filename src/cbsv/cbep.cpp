@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 
     cbpp::Free(sFileText);
 
-    cbpp::IEntityDatadesc* pTest = cbpp::CreateEntityDatadesc("CBase");
+    cbpp::IEntityDatadesc* pTest = cbpp::CreateEntityDatadesc("CTest");
 
     size_t iDataLen = pTest->Length();
 
@@ -87,8 +87,9 @@ int main(int argc, char** argv) {
 
                 break;
             }
+            putc('\n', stdout);
         }
     }
-
+    
     return EXIT_SUCCESS;
 }
