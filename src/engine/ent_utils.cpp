@@ -19,7 +19,7 @@ namespace cbpp {
         GetEntFactoryMap().Insert(sClassname, {fpConstr, fpDataConstr, fpInit});
     }
 
-    ent::CBase* CreateEntityClass(const char* sClassname, void* pData) {
+    ent::CBase* CreateEntityClass(const char* sClassname) {
         EntityRegistryInfo* Info = GetEntFactoryMap().At(sClassname);
 
         if(Info == NULL) {
@@ -39,7 +39,7 @@ namespace cbpp {
         EntityRegistryInfo* Info = GetEntFactoryMap().At(pEnt->Classname());
         Info->fpInitFunc(pEnt, pDatadesc);
     }
-    
+
     void InitEntity(ent::CBase* pEnt, const char* sClassname, void* pDatadesc) {
         EntityRegistryInfo* Info = GetEntFactoryMap().At(sClassname);
         Info->fpInitFunc(pEnt, pDatadesc);
@@ -49,12 +49,13 @@ namespace cbpp {
         EntityRegistryInfo* Info = GetEntFactoryMap().At(sClassname);
 
         if(Info == NULL) {
-            WriteLogf(ELogLevel::Error, "Attempt to create a datadesc of the unregistered entity '%s'", sClassname);
+            WriteLogf(ELogLevel::Error, "Attempt to create a datadesc of the unregistered entity class '%s'", sClassname);
             return NULL;
         }
 
         if(Info->fpDatadescCreator == NULL) {
             WriteLogf(ELogLevel::Error, "Entity class '%s' somehow has no datadesc available", sClassname);
+            return NULL;
         }
 
         return (*Info->fpDatadescCreator)();

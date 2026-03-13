@@ -26,7 +26,7 @@ namespace cbpp::ent {
                     IEntityProperty* At(size_t iIndex);
                     void PushProperty(IEntityProperty* pProp);
 
-                    CbStringPropertyEx(sWorldName, "unnamed", EStringType::EntityName)
+                    CbStringPropertyEx(WorldName, "unnamed", EStringType::EntityName)
             };
 
             CBase() { this->Construct(); }                                                                 
@@ -34,9 +34,7 @@ namespace cbpp::ent {
 
         private: 
             static IEntityDatadesc* CreateDatadesc() { return (cbpp::IEntityDatadesc*)(cbpp::New<Datadesc>()); }  
-            static void InitInstance(CBase* pEnt, void* pDatadesc) {
-                pEnt->Init((Datadesc*)pDatadesc);
-            }
+            static void InitInstance(CBase* pEnt, void* pDatadesc) { pEnt->Init((Datadesc*)pDatadesc); }
             
             inline static cbpp::CEntityRegistrator __s_registrator = cbpp::CEntityRegistrator( "CBase", NULL, CBase::CreateDatadesc, CBase::InitInstance );
 

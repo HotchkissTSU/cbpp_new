@@ -74,4 +74,12 @@ namespace cbpp {
     void CColorEntityProperty::SetValue(Color Data) {
         (*m_pData) = Data;
     }
+
+    void CBoolEntityProperty::SetValue(bool bValue) {
+        *m_pData = bValue;
+    }
+
+    bool CBoolEntityProperty::GetValue() {
+        return *m_pData;
+    }
 }

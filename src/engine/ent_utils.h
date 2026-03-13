@@ -37,7 +37,7 @@ namespace cbpp {
 
             CEntityRegistrator(const char* sClassname, factory_t fpConstr, datadesc_factory_t fpDatadescConstr, initfunc_t fpInit);
     };
-
+    
     struct EntityRegistryInfo {
         CEntityRegistrator::factory_t fpEntityCreator;
         CEntityRegistrator::datadesc_factory_t fpDatadescCreator;
@@ -51,6 +51,7 @@ namespace cbpp {
     /*
         I AM THE LIVING GOD OF C++
         Can your filthy peasant Rust do this???
+        Witness the divine unmatched power of the C preprocessor!
     */
 
     // Register this class as an entity
@@ -83,7 +84,8 @@ namespace cbpp {
     #define CbIntPropertyEx(_member, default_value, min_value, max_value)                                                           \
         public: int32_t _member; private:                                                                                           \
         CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
-        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CNumberEntityProperty>(#_member, &_member, (default_value), (min_value), (max_value)))}};
+        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CNumberEntityProperty>(#_member, &_member,                                        \
+            (default_value), (min_value), (max_value)))}};
 
     /*
         A float property with default settings
@@ -100,7 +102,8 @@ namespace cbpp {
     #define CbFloatPropertyEx(_member, default_value, min_value, max_value)                                                         \
         public: float _member; private:                                                                                             \
         CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
-        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CFloatEntityProperty>(#_member, &_member, (default_value), (min_value), (max_value)))}};
+        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CFloatEntityProperty>(#_member, &_member,                                         \
+            (default_value), (min_value), (max_value)))}};
 
     /*
         A string property with default settings
@@ -139,7 +142,8 @@ namespace cbpp {
     #define CbEnumPropertyEx(_member, default_value, ...)                                                                           \
         public: int32_t _member; private:                                                                                           \
         CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
-        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CEnumEntityProperty>(#_member, (int32_t*)(&_member), (default_value), __VA_ARGS__))}};
+        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CEnumEntityProperty>(#_member, (int32_t*)(&_member),                              \
+            (default_value), __VA_ARGS__))}};
 
     /*
         A vector property with default settings
@@ -176,6 +180,22 @@ namespace cbpp {
         CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
         {((cbpp::IEntityProperty*)cbpp::New<cbpp::CColorEntityProperty>(#_member, &_member,                                         \
             cbpp::Color((uint8_t)(def_r), (uint8_t)(def_g), (uint8_t)(def_b), (uint8_t)(def_a))))}};
+
+    /*
+        A boolean property with default settings
+    */
+    #define CbBoolProperty(_member)                                                                                                 \
+        public: bool _member; private:                                                                                              \
+        CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
+        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CBoolEntityProperty>(#_member, &_member))}};
+
+    /*
+        A boolean property with default settings
+    */
+    #define CbBoolPropertyEx(_member, default_value)                                                                                \
+        public: bool _member; private:                                                                                              \
+        CEntityPropsConstructor __cb_property_##_member = {__get_this(),                                                            \
+        {((cbpp::IEntityProperty*)cbpp::New<cbpp::CBoolEntityProperty>(#_member, &_member, (default_value)))}};
 }
 
 #endif

@@ -22,6 +22,8 @@ namespace cbpp::ent {
             CbEnumProperty(enum_test,   "VALUE_A", Dolboeb::A,
                                         "VALUE_B", Dolboeb::B,
                                         "VALUE_C", Dolboeb::C)
+
+            CbBoolProperty(bool_test)
         )
 
         public:
@@ -36,7 +38,7 @@ namespace cbpp::ent {
 
             CbVectorPropertyEx(vector2, 5,10, -1,-1, 1,1)
 
-            CbColorPropertyEx(color_test, 255u,0u,0u,255u)
+            CbColorPropertyEx(color_test, 255, 0, 0, 255)
         )
 
         public:

@@ -29,7 +29,8 @@ namespace cbpp {
                 String,                         // Any string data
                 Vector,                         // Two floats combined
                 Color,                          // 4 bytes of RGBA
-                Enum                            // Enumeration
+                Enum,                           // Enumeration
+                Bool                            // Boolean value
             };
 
             static const char* GetTypeName(EType iType);
@@ -136,6 +137,19 @@ namespace cbpp {
 
             Color GetValue();
             void SetValue(Color Data);
+
+            virtual ~CColorEntityProperty() = default;
+    };
+
+    class CBoolEntityProperty : public CEntityPropertyStorage<bool> {
+        public:
+            CBoolEntityProperty(const char* sName, bool* pData, bool bDefault = true) :
+                CEntityPropertyStorage<bool>(sName, EType::Bool, pData) { *m_pData = bDefault; }
+
+            void SetValue(bool bValue);
+            bool GetValue();
+
+            virtual ~CBoolEntityProperty() = default;
     };
 
     class CEnumEntityProperty : public CEntityPropertyStorage<int32_t> {
