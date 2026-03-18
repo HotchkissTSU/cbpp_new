@@ -2,6 +2,7 @@
 #define CBPP_ENT_HEALTH_H
 
 #include "cbpp/Entity.h"
+#include "cbpp/Network.h"
 
 namespace cbpp::ent {
     enum class EDamageType : uint32_t {
@@ -41,10 +42,12 @@ namespace cbpp::ent {
             float MaxHealth();
             bool IsAlive();
 
-            void SetHealth(float fHealth);
-            void SetMaxHealth(float fMaxHealth);
+            CBPP_ON_SERVER (
+                void SetHealth(float fHealth);
+                void SetMaxHealth(float fMaxHealth);
 
-            void ApplyDamage(DamageInfo Info);
+                void ApplyDamage(DamageInfo Info);
+            )
     };
 }
 

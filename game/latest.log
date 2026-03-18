@@ -1,18 +1,10 @@
-[02:34:47] INFO :  == Log start == 
-[02:34:47] ERROR: Failed to reallocate 0xC26C3000 to the new size of 0
-[02:46:08] INFO :  == Log start == 
-[02:46:08] ERROR: Failed to reallocate 0x769A0000 to the new size of 0
-[13:15:54] INFO :  == Log start == 
-[13:15:54] WARN : Failed to open file 'assets/locale/test.cml' : No such file or directory
-[13:16:16] INFO :  == Log start == 
-[13:16:16] WARN : Failed to open file 'assets/locale/test.cml' : No such file or directory
-[16:55:09] INFO :  == Log start == 
-[16:55:09] ERROR: Attempt to create an unregistered entity of class 'CTest'
-[16:55:57] INFO :  == Log start == 
-[16:55:57] ERROR: Attempt to create an unregistered entity of class 'CTest'
-[16:56:36] INFO :  == Log start == 
-[16:56:36] ERROR: Attempt to create an unregistered entity of class 'CTest'
-[18:41:56] INFO :  == Log start == 
-[18:41:56] ERROR: Attempt to create a datadesc of the unregistered entity 'CBase'
-[18:45:18] INFO :  == Log start == 
-[18:45:18] ERROR: Attempt to create a datadesc of the unregistered entity 'CBase'
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Unable to open 'bin/test2.so' as a shared library
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0

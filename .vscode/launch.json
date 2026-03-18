@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "cbsv",
+            "name": "cbep",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/game/cbsv",
-            "args": [],
+            "program": "${workspaceFolder}/game/cbep",
+            "args": ["-g", "bin/test.so"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/game",
             "environment": [],

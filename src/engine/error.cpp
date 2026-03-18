@@ -23,6 +23,8 @@ namespace cbpp {
     }
 
     void CLogger::Logv(ELogLevel iLevel, const char* sFormat, va_list Args) {
+        static char s_sBuffer[1024];
+
         if((int)iLevel < (int)m_iLevel) { return; }
 
         m_hFile = fopen(m_sName, "ab");
@@ -31,9 +33,11 @@ namespace cbpp {
         char sTimeBuff[128];
         StringFormatTime(sTimeBuff, sizeof(sTimeBuff), "[%H:%M:%S]");
 
-        fprintf(m_hFile, "%s %s: ", sTimeBuff, GetLogLevelString(iLevel));
-        vfprintf(m_hFile, sFormat, Args);
-        fputc('\n', m_hFile);
+        snprintf(s_sBuffer, sizeof(s_sBuffer), "%s %s: ", sTimeBuff, GetLogLevelString(iLevel));
+        vsnprintf(s_sBuffer, sizeof(s_sBuffer), sFormat, Args);
+        
+        printf("%s\n", s_sBuffer);
+        fprintf(m_hFile, "%s\n", s_sBuffer);
 
         fclose(m_hFile);
     }

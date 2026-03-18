@@ -14,21 +14,21 @@
 #define CBPP_DYNLIB_PARAMS RTLD_NOW
 
 namespace cbpp {
-    class DynamicLibrary {
-        CBPP_ON_LINUX(
+    class CDynamicLibrary {
+        const char* m_sLibName;
+
+        CBPP_ON_LINUX (
             void* m_hLibrary = NULL;
         )
 
         public:
-            DynamicLibrary(const DynamicLibrary& Other) = delete;
-            DynamicLibrary() = delete;
-            void operator=(DynamicLibrary& Other) = delete;
+            CBPP_PROTECTED_CLASS(CDynamicLibrary);
 
-            DynamicLibrary(const char* sFilePath);
+            CDynamicLibrary(const char* sFilePath);
 
             void* GetSymbol(const char* sName);
 
-            ~DynamicLibrary();
+            ~CDynamicLibrary();
     };
 }
 

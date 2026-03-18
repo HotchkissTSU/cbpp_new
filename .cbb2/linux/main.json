@@ -44,15 +44,15 @@
             "src" : ["src/drflac/drflac_impl.cpp"]
         },
         
-		"cbsv":{
+		"cbep":{
 			"type" : "EXE",
 			"out":"game",
-            "link_static" : ["cbsv", "z", "GLX", "glfw3", "pulse"],
+            "link_static" : ["cbcl", "z", "GLX", "glfw3", "pulse"],
             "static" : ["game/bin"],
             "link_params" : "-Wl,-rpath=./bin",
             "comp_params":"-std=c++17 -g3",
-			"src":["src/cbsv/*.cpp"],
-            "obj":".obj/cbsv"
+			"src":["src/cbep/*.cpp"],
+            "obj":".obj/cbep"
         },
         
         "cbpp_client":{
