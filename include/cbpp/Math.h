@@ -38,6 +38,14 @@ namespace cbpp {
     void LinearToPlanar(size_t iSideLength, size_t iLinear, size_t& iX, size_t& iY);
 
     uint32_t CeilToPowerOf2(uint32_t iV);
+
+    template <typename value_t> value_t Max(value_t A, value_t B) {
+        return (A >= B) ? A : B;
+    }
+
+    template <typename value_t> value_t Min(value_t A, value_t B) {
+        return (A <= B) ? A : B;
+    }
 }
 
 #endif

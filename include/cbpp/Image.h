@@ -54,13 +54,14 @@ namespace cbpp {
 
     enum class EImageType : uint32_t {
         RAW,
+        SDF,
         JPEG,
         PNG,
         TGA,
         BMP,
         PNM
     };
-    
+
     /*
         Represents a raw image data.
         All operations are CPU-side
@@ -98,7 +99,7 @@ namespace cbpp {
             Color GetPixel(texint_t iX, texint_t iY) const;
 
             /*
-                Note that if for example an image has only 2 channels it`s safe to access
+                Note that if for example our image has only 2 channels it`s only safe to access
                 first two bytes in the Color->RGBA etc.
 
                 Modifying other bytes may lead to the next pixels` corruption or to the juicy loud segfault.
@@ -140,6 +141,13 @@ namespace cbpp {
             bool SaveAs(const char* sPath, EImageType iType, int iArg = 0);
 
             ~CImage();
+    };
+
+    bool ComputeSDF(CImage& Target, const CImage& Source, float fThreshold);
+
+    class CSDFImage {
+        private:
+
     };
 }
 

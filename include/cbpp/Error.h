@@ -63,7 +63,7 @@ namespace cbpp {
     };
 
     /*
-        Lethal throws
+        Runtime decapitation
     */
     void Throwf(const char* sFormat, ...);
     void Throwv(const char* sFormat, va_list vaList);

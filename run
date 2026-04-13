@@ -1,4 +1,4 @@
 #!/bin/sh
 
 cd game
-./cbep
+./cbep -g $1

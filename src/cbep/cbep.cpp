@@ -5,7 +5,6 @@
 
 #include "cbpp/Error.h"
 #include "cbpp/Dynlib.h"
-#include "cbpp/Module.h"
 
 cbsv_state_t g_State;
 
@@ -30,7 +29,9 @@ int main(int argc, char** argv) {
         cbpp::Throwf("The module '%s' has no 'cbpp_main' callback specified", sBuffer);
     }
 
-    auto fpMainCallback = (cbpp::ModuleInfo::fpmain_t)( fpMainTest );
+    typedef int (*fpmain_t)(int, char**);
+
+    auto fpMainCallback = (fpmain_t)( fpMainTest );
 
     int iMainCode = fpMainCallback(argc, argv);
 

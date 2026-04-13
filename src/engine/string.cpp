@@ -309,4 +309,42 @@ namespace cbpp {
         
         return Out;
     }
+
+    EBinaryClass CString::GetBinaryClass() const {
+        return EBinaryClass::String;
+    }
+
+    size_t CString::AsBinary(uint8_t* pBuffer) const {        
+        if(pBuffer != NULL) {
+            uint64_t iFixedLength = m_iLength;
+            memcpy(pBuffer, &iFixedLength, sizeof(iFixedLength));
+
+            memcpy(pBuffer + sizeof(uint64_t), m_sData, m_iLength);
+        }
+
+        return sizeof(uint64_t) + m_iLength;
+    }
+
+    bool CString::FromBinary(const uint8_t* pData, size_t iLength) {
+        if(iLength < sizeof(uint64_t)) {
+            return false;
+        }
+
+        size_t iLength2 = *(uint64_t*)(pData);
+
+        if(iLength2 + sizeof(uint64_t) >= iLength) {
+            return false;
+        }
+
+        if(iLength2 == 0) {
+            this->Nullify();
+        } else {
+            m_iLength = iLength2;
+            m_sData = Realloc(m_sData, m_iLength + 1);
+            m_sData[m_iLength] = '\0';
+            memcpy(m_sData, pData + sizeof(uint64_t), iLength2);
+        }
+
+        return true;
+    }
 }

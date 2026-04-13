@@ -7,9 +7,10 @@
     This means that every datadesc inherits parent entities dynamic properties.
 
     Upon creation, the entity receives it`s datadesc with any values that you may want to pass there.
-    Use these info for initial setup. All values can be directly accessed with the -> operator.
+    Use this info for initial setup. All values can be directly accessed with the -> operator.
 
-    The setup data is completely separated from it`s entity class and does not affect it`s runtime life at all.
+    Think about Datadesc as of a table of settings which can be dynamically edited in runtime and then 
+    automagically fed to the correct entity class.
 */
 
 #ifndef CBPP_ENTITY_API_H

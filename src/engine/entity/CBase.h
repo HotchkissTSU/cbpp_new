@@ -16,14 +16,15 @@ namespace cbpp::ent {
             virtual const char* Base() { return "CB++"; }    
 
             class Datadesc : public cbpp::IEntityDatadesc {
+                Datadesc* __get_this(); 
+
                 protected: 
                     CArray<IEntityProperty*> m_aProps;
-                    Datadesc* __get_this(); 
                 public:                                   
                     virtual ~Datadesc();
 
-                    size_t Length();
-                    IEntityProperty* At(size_t iIndex);
+                    virtual size_t Length() override;
+                    virtual IEntityProperty* At(size_t iIndex) override;
                     void PushProperty(IEntityProperty* pProp);
 
                     CbStringPropertyEx(WorldName, "unnamed", EStringType::EntityName)

@@ -4,6 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
+#include <stdio.h>
+
+#include "cbpp/String.h"
+#include "cbpp/Constants.h"
 
 namespace cbpp {
     enum class EAssetPath : uint32_t {
@@ -19,6 +23,17 @@ namespace cbpp {
         AMOUNT
     };
 
+    const char* GetCWD(char* pBuffer, size_t iBufferSize);
+
+    /*
+        Entrap a path inside the "assets/" directory thus ensuring players` safety.
+        All asset paths which can be sourced from runtime must be passed though this call.
+
+        If NULL is passed as target buffer, then a new buffer is allocated.
+        If iBufferSize is not zero, allocated buffer is this size, else PATH_MAX.
+    */
+    const char* ValidatePath(const char* sPath, char* sBuffer, size_t iBufferSize);
+
     /*
         General file I/O interface
     */
@@ -32,11 +47,8 @@ namespace cbpp {
 
         public:
             IFile() = default;
-            IFile(const IFile&) = delete;
-            IFile(IFile&&) = delete;
-
-            IFile& operator=(IFile&&) = delete;
-            IFile& operator=(const IFile&) = delete;
+            
+            CBPP_PROTECTED_CLASS(IFile)
 
             // Write some data into the file. Returns actual amount of bytes written
             virtual size_t Write(size_t iCount, const void* pData) = 0;
@@ -51,6 +63,7 @@ namespace cbpp {
     };
 
     IFile* OpenFile(const char* sPath, const char* sModes);
+    IFile* OpenAsset(const char* sPath, const char* sModes);
     void CloseFile(IFile* hFile);
 
     enum class EFileClass : uint32_t {
@@ -67,6 +80,22 @@ namespace cbpp {
     };
 
     FileInfo GetFileInfo(const char* sPath);
+
+    class CDirIterator {
+        CString m_sPath;
+
+        public:
+            CDirIterator() = default;
+            CDirIterator(const char* sPath);
+
+            void SetPath(const char* sPath);
+
+            void Advance();
+            void operator++();
+
+            const char* Current();
+            explicit operator cstring_t();
+    };
 }
 
 #endif

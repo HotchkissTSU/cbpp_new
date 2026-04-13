@@ -1,10 +1,9 @@
  == Log start == 
-Module 'bin/test.so' has finished with exit code 0
+Unable to open 'bin/test.so' as a shared library
  == Log start == 
-Module 'bin/test.so' has finished with exit code 0
+Unable to open 'bin/test.so' as a shared library
  == Log start == 
-Unable to open 'bin/test2.so' as a shared library
+[CBEP] No gamefile is specified, assuming default ('default')
+Unable to open 'bin/default.so' as a shared library
  == Log start == 
-Module 'bin/test.so' has finished with exit code 0
- == Log start == 
-Module 'bin/test.so' has finished with exit code 0
+Unable to open 'bin/test.so' as a shared library

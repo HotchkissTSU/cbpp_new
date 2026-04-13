@@ -40,11 +40,6 @@ namespace cbpp {
         Info->fpInitFunc(pEnt, pDatadesc);
     }
 
-    void InitEntity(ent::CBase* pEnt, const char* sClassname, void* pDatadesc) {
-        EntityRegistryInfo* Info = GetEntFactoryMap().At(sClassname);
-        Info->fpInitFunc(pEnt, pDatadesc);
-    }
-
     IEntityDatadesc* CreateEntityDatadesc(const char* sClassname) {
         EntityRegistryInfo* Info = GetEntFactoryMap().At(sClassname);
 

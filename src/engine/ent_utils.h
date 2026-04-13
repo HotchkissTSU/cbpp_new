@@ -39,9 +39,9 @@ namespace cbpp {
     };
     
     struct EntityRegistryInfo {
-        CEntityRegistrator::factory_t fpEntityCreator;
-        CEntityRegistrator::datadesc_factory_t fpDatadescCreator;
-        CEntityRegistrator::initfunc_t fpInitFunc;
+        CEntityRegistrator::factory_t           fpEntityCreator;
+        CEntityRegistrator::datadesc_factory_t  fpDatadescCreator;
+        CEntityRegistrator::initfunc_t          fpInitFunc;
     };
 
     CBinTable<CConstString, EntityRegistryInfo>& GetEntFactoryMap();
@@ -53,21 +53,22 @@ namespace cbpp {
         Can your filthy peasant Rust do this???
         Witness the divine unmatched power of the C preprocessor!
     */
-
+   
     // Register this class as an entity
     #define CbEntity(_class, _base, ...)                                                                                            \
         public: virtual const char* Classname() { return #_class; }                                                                 \
         virtual const char* Base() { return #_base; }                                                                               \
-        class Datadesc : public _base::Datadesc { public: virtual ~Datadesc() = default; __VA_ARGS__};                              \
+        class Datadesc : public _base::Datadesc { Datadesc* __get_this() { return this; }                                           \
+            public: virtual ~Datadesc() = default; __VA_ARGS__};                                                                    \
         _class() : _base() { this->Construct(); }                                                                                   \
         virtual ~_class() { this->Destruct(); }                                                                                     \
         private: static IEntityDatadesc* CreateDatadesc() { return (cbpp::IEntityDatadesc*)(cbpp::New<Datadesc>()); }               \
         static cbpp::ent::CBase* CreateInstance() {                                                                                 \
             return (cbpp::ent::CBase*)(cbpp::New<_class>());}                                                                       \
-        static void ConstructInstance(cbpp::ent::CBase* pEnt, void* pData) { cbpp::InitEntity(pEnt, #_base, pData);                 \
-        (((_class*)pEnt)->Init((_class::Datadesc*)pData));}                                                                         \
+        static void ConstructInstance(cbpp::ent::CBase* pEnt, void* pData) {                                                        \
+        ((_class*)(pEnt))->Init((_class::Datadesc*)pData);}                                                                         \
         inline static cbpp::CEntityRegistrator __s_registrator =                                                                    \
-            cbpp::CEntityRegistrator( #_class, _class::CreateInstance, _class::CreateDatadesc, _class::ConstructInstance );        
+            cbpp::CEntityRegistrator( #_class, _class::CreateInstance, _class::CreateDatadesc, _class::ConstructInstance );
 
     /*
         An integer property with default settings

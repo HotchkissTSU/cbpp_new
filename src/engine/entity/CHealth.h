@@ -13,7 +13,7 @@ namespace cbpp::ent {
 
         AMOUNT
     };
-
+    
     struct DamageInfo {
         ent::CBase *pInflictor, *pVictim;
         EDamageType iDamageType;
@@ -24,30 +24,28 @@ namespace cbpp::ent {
         CbEntity(CHealth, CBase,
             CbFloatPropertyEx(MaxHealth, 100, 0, __FLT_MAX__)
             CbFloatPropertyEx(StartHealth, 100, 0, __FLT_MAX__)
-            CbStringPropertyEx(DamageResistData, "", EStringType::GenericPath)
+            CbStringPropertyEx(ArmorClass, "", EStringType::String)
         )
 
         protected:
             float m_fMaxHealth, m_fHealth;
-            float m_aResistData[(size_t)EDamageType::AMOUNT];
 
         public:
             virtual void Construct();
             virtual void Init(Datadesc*);
             virtual void Destruct();
 
-            virtual void OnTakeDamage(DamageInfo) = 0;
+            virtual void OnTakeDamage(DamageInfo) {};
 
             float Health();
             float MaxHealth();
             bool IsAlive();
 
-            CBPP_ON_SERVER (
-                void SetHealth(float fHealth);
-                void SetMaxHealth(float fMaxHealth);
+            void SetHealth(float fHealth);
+            void SetMaxHealth(float fMaxHealth);
 
-                void ApplyDamage(DamageInfo Info);
-            )
+            void ApplyDamage(DamageInfo Info);
+
     };
 }
 

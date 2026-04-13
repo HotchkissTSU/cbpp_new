@@ -2,15 +2,87 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <cerrno>
+#include <errno.h>
 
 #include "cbpp/Bit.h"
 
 #include "cbpp/Memory.h"
 #include "cbpp/Math.h"
+#include "cbpp/String.h"
+#include "cbpp/Constants.h"
+
+#ifdef CBPP_LINUX
+    #include <unistd.h>
+    #include <limits.h>
+    #define cbpp_getcwd(_buff, _size) getcwd(_buff, _size)
+#else
+    #include <direct.h>
+    #include <windef.h>
+    #define cbpp_getcwd(_buff, _size) _getcwd(_buff, _size)
+#endif
 
 // Generic interface
 namespace cbpp {
+    const char* GetCWD(char* pBuffer, size_t iBufferSize) {
+        return cbpp_getcwd(pBuffer, iBufferSize);
+    }
+
+    inline bool IsSlash(char iChar) {
+        return (iChar == '/' || iChar == '\\');
+    }
+
+    const char* ValidatePath(const char* sPath, char* sBuffer, size_t iBufferSize) {
+        const size_t iBufLen = (iBufferSize == 0) ? PATH_MAX : iBufferSize;
+
+        if(sBuffer == NULL) {
+            sBuffer = Malloc<char>(iBufLen);
+        }
+
+        static const char* s_sAssetPrefix = "assets/";
+
+        size_t iPrefixLength = Min(sizeof(s_sAssetPrefix) - 1, iBufLen);
+        memcpy(sBuffer, s_sAssetPrefix, iPrefixLength);
+
+        sBuffer += iPrefixLength;   // offset the buffer to skip the prefix
+
+        char* pCurrent = (char*)sPath;
+        size_t i = 0;
+
+        while(IsSlash(*pCurrent)) { pCurrent++; }     // skip starting slashes
+
+        while(*pCurrent != '\0') {
+            if(*pCurrent == '.' && *(pCurrent+1) == '.') {
+                // purge any '..' masks to entrap path in the "assets/"" subdirectory
+                while((*pCurrent == '.' || IsSlash(*pCurrent)) && *pCurrent != '\0') { pCurrent++; }
+            }
+
+            if(*pCurrent == '~') {
+                // purge '~' home aliases for Linux PCs
+                while((*pCurrent == '~' || IsSlash(*pCurrent)) && *pCurrent != '\0') { pCurrent++; }
+            }
+            
+            sBuffer[i] = *pCurrent;
+
+            i++;
+            pCurrent++;
+
+            if((iPrefixLength + i) == iBufLen-1 || *pCurrent == '\0') {
+                sBuffer[i] = '\0';
+                break;
+            }
+        }
+        
+        pCurrent = sBuffer;
+        while(*pCurrent != '\0') {      // purge any w*ndows '\' path separators
+            if(*pCurrent == '\\') {
+                *pCurrent = '/';
+            }
+            pCurrent++;
+        }
+
+        return sBuffer - iPrefixLength; // offset our pointer backwards
+    }
+
     IFile* OpenFile(const char* sPath, const char* sModes) {
         CFile* pFile = New<CFile>();
         bool bOpen = pFile->Open(sPath, sModes);
@@ -23,6 +95,13 @@ namespace cbpp {
             Delete(pFile);
             return NULL;
         }
+    }
+
+    IFile* OpenAsset(const char* sPath, const char* sModes) {
+        char sBuffer[512];
+        snprintf(sBuffer, sizeof(sBuffer), "assets/%s", sPath);
+
+        return OpenFile(sBuffer, sModes);
     }
 
     void CloseFile(IFile* hFile) {

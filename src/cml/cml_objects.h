@@ -80,29 +80,6 @@ namespace cbpp::cml {
 
             virtual ~CArrayObject() override;
     };
-
-    /*class CStructObject final : public IObject {
-        friend IObject* CreateObject(EValueType);
-
-        public:
-            EValueType Type() const override;
-            CValue* Value() override;
-            
-            objmap_t* GetChildren() override;
-            objlist_t* GetArray() override;
-
-            bool PushChild(const char* sName, IObject* pChild) override;
-
-            bool HasChild(const char* sName) const override;
-            size_t Length() const override;
-
-            IObject* GetByName(const char* sName) const override;
-            IObject* GetByIndex(size_t iIndex) const override;
-
-            IObject* GetCopy() override;
-
-            virtual ~CStructObject() override;
-    };*/
 }
 
 #endif

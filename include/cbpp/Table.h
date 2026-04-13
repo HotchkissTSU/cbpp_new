@@ -2,7 +2,6 @@
 #define CBPP_BINARY_MAP_H
 
 #include "cbpp/Array.h"
-//#include "cblib/Math.h"
 
 namespace cbpp {
     /*
@@ -13,8 +12,8 @@ namespace cbpp {
 
         key_t must have defined '==' and '<' operators
     */
-    template <typename key_t, typename value_t> class CBinTable {
-        struct Pair {
+    template <typename key_t, typename value_t> class CBinTable final : public IBinaryConvertible {
+        struct Pair final : public IBinaryConvertible {
             key_t Key;
             value_t Value;
             
@@ -31,6 +30,53 @@ namespace cbpp {
                 Key = other.Key;
                 Value = other.Value;
                 return *this;
+            }
+            
+            size_t AsBinary(uint8_t* pBuffer) const {
+                size_t iCounter = 0;
+
+                constexpr bool bKeySupport = std::is_base_of_v<IBinaryConvertible, key_t>;
+                constexpr bool bValueSupport = std::is_base_of_v<IBinaryConvertible, value_t>;
+
+                if constexpr(bKeySupport) {
+                    iCounter = Key.AsBinary(pBuffer);
+                } else {
+                    if(pBuffer != NULL) {
+                        memcpy(pBuffer, &Key, sizeof(Key));
+                    }
+                    iCounter = sizeof(Key);
+                }
+            
+                if constexpr(bValueSupport) {
+                    iCounter += Value.AsBinary(pBuffer);
+                } else {
+                    if(pBuffer != NULL) {
+                        memcpy(pBuffer + iCounter, &Value, sizeof(Value));
+                    }
+                    iCounter += sizeof(Value);
+                }
+                
+                return iCounter;
+            }
+            
+            bool FromBinary(const uint8_t* pData, size_t iLength) {
+                constexpr bool bKeySupport = std::is_base_of_v<IBinaryConvertible, key_t>;
+                constexpr bool bValueSupport = std::is_base_of_v<IBinaryConvertible, value_t>;
+
+                size_t iCounter = 0;
+
+                if constexpr(bKeySupport) {
+                    Key.FromBinary(pData, iLength);
+                } else {
+                    memcpy(&Key, pData, sizeof(Key));
+                    iCounter = sizeof(Key);
+                }
+
+                return true;
+            }
+
+            EBinaryClass GetBinaryClass() const {
+                return EBinaryClass::Plain;
             }
         };
         
@@ -69,6 +115,18 @@ namespace cbpp {
 
             const pairs_t& Data() {
                 return m_aData;
+            }
+
+            size_t AsBinary(uint8_t* pBuffer) const {
+                return m_aData.AsBinary(pBuffer);
+            }
+
+            bool FromBinary(const uint8_t* pData, size_t iLength) {
+                return m_aData.FromBinary(pData, iLength);
+            }
+
+            EBinaryClass GetBinaryClass() const {
+                return EBinaryClass::BinTable;
             }
             
             // Insert a pair

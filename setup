@@ -58,7 +58,7 @@ COUNTER=0
 for CFILE in $CBB_FILES; do
     echo "  File: $CFILE"
 
-    g++ -O2 -c "$CFILE" -o "./cbb_obj/obj_$COUNTER.o" -I"include" -I"src/cbb" -I"src/yyjson"
+    g++ -O2 -c "$CFILE" -o "./cbb_obj/obj_$COUNTER.o" -I"include" -I"src/cbb" -I"src/yyjson" -I"src"
 
     if [ $? -ne 0 ]; then
         echo "Compilation failed"

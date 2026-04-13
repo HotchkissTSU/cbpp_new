@@ -6,6 +6,8 @@
 #include <time.h>
 #include <stdarg.h>
 
+#include "engine/restorable.h"
+
 namespace cbpp {
     typedef const char* cstring_t;
 
@@ -33,12 +35,12 @@ namespace cbpp {
 
     /*
         A regular string. Has it`s length cached, so if you
-        did something nasty with the data you must recache it
+        have done something nasty with the data you must recache it
         with LengthUpdate() call, or something horrible might happen.
 
         Still NULL-terminated tho.
     */
-    class CString {
+    class CString final : public IBinaryConvertible {
         private:
             char* m_sData = NULL;
             size_t m_iLength = 0;
@@ -53,6 +55,10 @@ namespace cbpp {
             CString(CString&& Other);
             
             ~CString();
+
+            size_t AsBinary(uint8_t* pBuffer) const override;
+            bool FromBinary(const uint8_t* pData, size_t iLength) override;
+            EBinaryClass GetBinaryClass() const override;
             
             CString& operator=(const char* sOther);
             CString& operator=(const CString& Other);
@@ -66,6 +72,9 @@ namespace cbpp {
 
             void Set(const CString& sData);
             void Set(const char* sData);
+
+            // Resize string to host iLength characters
+            void Resize(size_t iLength);
             
             bool IsValid() const;
             
