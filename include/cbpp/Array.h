@@ -15,7 +15,7 @@ namespace cbpp {
     /*
         CB++ growable array
     */
-    template <typename T> class CArray : public IBinaryConvertible {
+    template <typename T> class CArray {
         public:
             CArray() = default;
             
@@ -66,61 +66,6 @@ namespace cbpp {
                     Free(m_pMemory);
                 }
             }
-
-            size_t AsBinary(uint8_t* pBuffer) const override {
-                constexpr bool bSupport = std::is_base_of_v<IBinaryConvertible, T>;
-
-                if(pBuffer != NULL) {
-                    uint64_t iFixedSize = m_iSize;
-                    memcpy(pBuffer, &iFixedSize, sizeof(iFixedSize));
-                }
-
-                size_t iSize = sizeof(uint64_t);
-
-                for(size_t i = 0; i < m_iSize; i++) {
-                    if constexpr(bSupport) {
-                        iSize += m_pMemory[i].AsBinary( (pBuffer != NULL) ? (pBuffer + iSize) : NULL);
-                    } else {
-                        if(pBuffer != NULL) {
-                            memcpy(pBuffer + iSize, &m_pMemory[i], sizeof(T));
-                        }
-                        iSize += sizeof(T);
-                    }
-                }
-
-                return iSize;
-            }
-
-            bool FromBinary(const uint8_t* pData, size_t iLength) override {
-                constexpr bool bSupport = std::is_base_of_v<IBinaryConvertible, T>;
-
-                /*
-                    The array unit type matching isn`t checked.
-                    Make sure you are reading an array of the correct type.
-                */
-
-                size_t iSize = *(uint64_t*)(pData);
-
-                this->Clear();
-                this->Reserve(iSize);
-
-                for(size_t i = 0; i < iSize; i++) {
-                    if(i*sizeof(T) >= iLength) {
-                        return false;
-                    }
-
-                    if constexpr(bSupport) {
-                        new (&m_pMemory[i]) T();
-                        m_pMemory[i].FromBinary(pData + i*sizeof(T), sizeof(T));
-                    } else {
-                        memcpy(&m_pMemory[i], pData + i*sizeof(T), sizeof(T));
-                    }
-                }
-
-                return true;
-            }
-            
-            EBinaryClass GetBinaryClass() const override { return EBinaryClass::Array; }
             
             CArray& operator=(const CArray<T>& aOther) {
                 Clear();
@@ -155,18 +100,25 @@ namespace cbpp {
                 return *this;
             }
             
-            T& At(size_t iIndex) {
+            T* At(size_t iIndex) {
+                if(iIndex >= m_iSize) { return NULL; }
+                return &m_pMemory[iIndex];
+            }
+            
+            const T* At(size_t iIndex) const {
+                if(iIndex >= m_iSize) { return NULL; }
+                return (const T*)(&m_pMemory[iIndex]);
+            }
+            
+            T& operator[](size_t iIndex) {
                 CbAssertf(iIndex >= m_iSize, "CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
                 return m_pMemory[iIndex];
             }
-            
-            const T& At(size_t iIndex) const {
+
+            const T& operator[](size_t iIndex) const {
                 CbAssertf(iIndex >= m_iSize, "CArray index %lu is out of bounds (%lu)", iIndex, m_iSize);
                 return m_pMemory[iIndex];
             }
-            
-            T& operator[](size_t iIndex) { return At(iIndex); }
-            const T& operator[](size_t iIndex) const { return At(iIndex); }
             
             T& Last() {
                 CbAssert(m_iSize == 0, "List is empty");

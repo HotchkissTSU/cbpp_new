@@ -15,10 +15,16 @@
     #include <unistd.h>
     #include <limits.h>
     #define cbpp_getcwd(_buff, _size) getcwd(_buff, _size)
-#else
+#endif
+
+#ifdef CBPP_WINDOWS
     #include <direct.h>
     #include <windef.h>
     #define cbpp_getcwd(_buff, _size) _getcwd(_buff, _size)
+#endif
+
+#ifndef cbpp_getcwd
+    #error "Unsupported platform"
 #endif
 
 // Generic interface
@@ -31,19 +37,19 @@ namespace cbpp {
         return (iChar == '/' || iChar == '\\');
     }
 
+    // Works with UTF-8 input on Linux (god bless POSIX), untested on other systems
+
     const char* ValidatePath(const char* sPath, char* sBuffer, size_t iBufferSize) {
         const size_t iBufLen = (iBufferSize == 0) ? PATH_MAX : iBufferSize;
 
-        if(sBuffer == NULL) {
-            sBuffer = Malloc<char>(iBufLen);
-        }
+        if(sBuffer == NULL) { sBuffer = Malloc<char>(iBufLen); }
 
         static const char* s_sAssetPrefix = "assets/";
 
         size_t iPrefixLength = Min(sizeof(s_sAssetPrefix) - 1, iBufLen);
         memcpy(sBuffer, s_sAssetPrefix, iPrefixLength);
 
-        sBuffer += iPrefixLength;   // offset the buffer to skip the prefix
+        sBuffer += iPrefixLength;
 
         char* pCurrent = (char*)sPath;
         size_t i = 0;
@@ -52,14 +58,16 @@ namespace cbpp {
 
         while(*pCurrent != '\0') {
             if(*pCurrent == '.' && *(pCurrent+1) == '.') {
-                // purge any '..' masks to entrap path in the "assets/"" subdirectory
+                // purge any '..' masks to entrap path in the "assets/" subdirectory
                 while((*pCurrent == '.' || IsSlash(*pCurrent)) && *pCurrent != '\0') { pCurrent++; }
             }
 
-            if(*pCurrent == '~') {
-                // purge '~' home aliases for Linux PCs
-                while((*pCurrent == '~' || IsSlash(*pCurrent)) && *pCurrent != '\0') { pCurrent++; }
-            }
+            // purge '~' home aliases for Linux PCs
+            CBPP_ON_LINUX (
+                if(*pCurrent == '~') {
+                    while((*pCurrent == '~' || IsSlash(*pCurrent)) && *pCurrent != '\0') { pCurrent++; }
+                }
+            )
             
             sBuffer[i] = *pCurrent;
 
@@ -74,13 +82,13 @@ namespace cbpp {
         
         pCurrent = sBuffer;
         while(*pCurrent != '\0') {      // purge any w*ndows '\' path separators
-            if(*pCurrent == '\\') {
+            if(*pCurrent == '\\') {     // me and the boys only adore forward slashes
                 *pCurrent = '/';
             }
             pCurrent++;
         }
 
-        return sBuffer - iPrefixLength; // offset our pointer backwards
+        return sBuffer - iPrefixLength;
     }
 
     IFile* OpenFile(const char* sPath, const char* sModes) {
@@ -98,8 +106,8 @@ namespace cbpp {
     }
 
     IFile* OpenAsset(const char* sPath, const char* sModes) {
-        char sBuffer[512];
-        snprintf(sBuffer, sizeof(sBuffer), "assets/%s", sPath);
+        char sBuffer[PATH_MAX];
+        ValidatePath(sPath, sBuffer, sizeof(sBuffer));
 
         return OpenFile(sBuffer, sModes);
     }
@@ -156,46 +164,5 @@ namespace cbpp {
     size_t CFile::ReadAll(char* pBuffer) const {        
         size_t iLength = Length();
         return fread(pBuffer, 1, iLength, m_hFile);
-    }
-}
-
-namespace cbpp {
-    void ParsePath(const char* sPath) {
-        EFileSystem iTargetFS;
-        char sFSNameBuff[8];
-        const char* pColon = strchr(sPath, ':');
-        char* pCurrent;
-
-        if(pColon == NULL) {    // No FS is specified, assume default
-            iTargetFS = EFileSystem::Physical;
-        }else {
-            const ptrdiff_t iFSNameLen = pColon - sPath;
-            memcpy(sFSNameBuff, sPath, Clamp(iFSNameLen, (ptrdiff_t)0, (ptrdiff_t)8));
-            sFSNameBuff[iFSNameLen] = '\0';
-
-            if( strcmp(sFSNameBuff, "CPK") == 0 ) {
-                iTargetFS = EFileSystem::Virtual;
-            } else if( strcmp(sFSNameBuff, "OS") == 0 ) {
-                iTargetFS == EFileSystem::Physical;
-            }
-            printf("FS: %s\n", sFSNameBuff);
-        }
-
-        pCurrent = (char*)strchr(sPath, '/') + 1;
-        
-        while(pCurrent != NULL) {            
-            const char* pBlockEnd = strchr(pCurrent+1, '/');
-            if(pBlockEnd == NULL) {
-                printf("%s\n", pCurrent);
-                break;
-            }
-
-            for(char* pC = pCurrent; pC != pBlockEnd && *pC != '\0'; pC++) {
-                putc(*pC, stdout);
-            }
-            putc('\n', stdout);
-
-            pCurrent = (char*)pBlockEnd + 1;
-        }
     }
 }

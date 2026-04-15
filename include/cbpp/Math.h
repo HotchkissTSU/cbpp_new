@@ -39,11 +39,11 @@ namespace cbpp {
 
     uint32_t CeilToPowerOf2(uint32_t iV);
 
-    template <typename value_t> value_t Max(value_t A, value_t B) {
+    template <typename value_t> constexpr inline value_t Max(value_t A, value_t B) {
         return (A >= B) ? A : B;
     }
 
-    template <typename value_t> value_t Min(value_t A, value_t B) {
+    template <typename value_t> constexpr inline value_t Min(value_t A, value_t B) {
         return (A <= B) ? A : B;
     }
 }

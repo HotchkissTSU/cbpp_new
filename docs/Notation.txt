@@ -2,8 +2,8 @@
 
 Enumeration naming:
 	enum EMyEnumeration {
-		EMyEnumeration_Value_1,
-		EMyEnumeration_Value_2,
+		EMyEnumeration_Value1,
+		EMyEnumeration_Value2,
 		...
 	};
 
@@ -43,8 +43,4 @@ Prefixes:
 	b	-	A boolean value
 	d	-	Any key-value like container
 
-Entity classes naming:
-    base_*  -   Baseclass entities for others to inherit from
-    prop_*  -   Interactive thingies in the map
-    dev_*   -   Developer map entities like scripts or controllers
-    ai_*    -   AI agents
+Do not forget to censor all "OS" W*ndows mentions. Be polite.

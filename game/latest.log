@@ -1,9 +1,0 @@
- == Log start == 
-Unable to open 'bin/test.so' as a shared library
- == Log start == 
-Unable to open 'bin/test.so' as a shared library
- == Log start == 
-[CBEP] No gamefile is specified, assuming default ('default')
-Unable to open 'bin/default.so' as a shared library
- == Log start == 
-Unable to open 'bin/test.so' as a shared library

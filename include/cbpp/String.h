@@ -6,8 +6,6 @@
 #include <time.h>
 #include <stdarg.h>
 
-#include "engine/restorable.h"
-
 namespace cbpp {
     typedef const char* cstring_t;
 
@@ -40,7 +38,7 @@ namespace cbpp {
 
         Still NULL-terminated tho.
     */
-    class CString final : public IBinaryConvertible {
+    class CString {
         private:
             char* m_sData = NULL;
             size_t m_iLength = 0;
@@ -55,10 +53,6 @@ namespace cbpp {
             CString(CString&& Other);
             
             ~CString();
-
-            size_t AsBinary(uint8_t* pBuffer) const override;
-            bool FromBinary(const uint8_t* pData, size_t iLength) override;
-            EBinaryClass GetBinaryClass() const override;
             
             CString& operator=(const char* sOther);
             CString& operator=(const CString& Other);
