@@ -52,3 +52,46 @@ Module 'bin/test.so' has finished with exit code 0
 Module 'bin/test.so' has finished with exit code 0
  == Log start == 
 Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+[CBEP] No gamefile is specified, assuming default ('default')
+Unable to open 'bin/default.so' as a shared library
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Failed to open file 'string!' : No such file or directory
+ == Log start == 
+Failed to open file 'string!' : No such file or directory
+ == Log start == 
+Failed to open file 'string!' : No such file or directory
+ == Log start == 
+Unable to open 'bin/bin/test.so.so' as a shared library
+ == Log start == 
+Unable to open 'bin/bin/test.so.so' as a shared library
+ == Log start == 
+Failed to open file 'string!' : No such file or directory
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0

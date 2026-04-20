@@ -6,6 +6,10 @@
 
 #include "cbpp/Filesystem.h"
 #include "cbpp/Array.h"
+#include "cbpp/Stack.h"
+
+#define CBPP_CML_VERSION 100        // Actual language version
+#define CBPP_CML_VERSION_LEAST 100  // Any versions below this are considered deprecated
 
 #define CBPP_CML_STACK_LIMIT 128
 
@@ -26,22 +30,39 @@ namespace cbpp::cml {
 
     enum class EErrorType : uint32_t {
         Ok,                     // We`re cool
+
         Redefinition,           // Multiple definition of an identifier in the single scope
         StrayIdentifier,        // Random identifier that does not connect to anything
         StrayNumber,            // Random out-of-context number
         StrayString,            // Random out-of-context string
-        StrayBlock,
-        StrayArray,
+        StrayBlock,             // Nameless block
+        StrayArray,             // Nameless array
         IllBlock,               // Badly formatted block (curvy braces mismatch)
         IllArray,               // Badly formatted array (square braces mismatch)
+
         BadFileRef,             // Can`t open said file path
+        BadReference,           // Anything except string is marked as reference
 
-        BadNumber,
-        NoFile,
-        UnexpectedEOF,
+        BadNumber,              // Badly formatted number
+        NoFile,                 // Source file not found
+        UnexpectedEOF,          // EOF jumpscare in the middle of something
+        VersionMismatch,        // Source file`s CML version is newer or too old
+        BadVersion,             // Version is negative or is a float
 
-        StackOverflow,
-        StackUnderflow
+        StackOverflow,          // Stack depth exceeded
+        StackUnderflow          // Attempt to pop an empty stack
+    };
+
+    enum class EKeyword : uint32_t {
+        Name,
+        Include,
+        Version
+    };
+
+    enum class ERefType : uint32_t {
+        NoLink,
+        Text,
+        Binary
     };
 
     const char* StringError(EErrorType);
@@ -89,25 +110,37 @@ namespace cbpp::cml {
     void DeleteObject(CObject pObj);
 
     class CParser {
+        struct IncludeNode {
+            cbpp::CString sPath;
+            cbpp::IFile* pFile = NULL;
+
+            ~IncludeNode();
+        };
+
         cbpp::CArray<char> m_sLexemBuffer;
         cbpp::CString m_sCurrentName;
 
-        cbpp::IFile* m_pFile = NULL;
+        cbpp::CStack<IncludeNode> m_aFilesStack;
 
         CObject m_pRootObject = NIL;
 
         size_t m_iLine = 0, m_iCol = 0;
 
         bool m_bExpectValue = false;
+        bool m_bExpectVersion = false;
+        bool m_bExpectInclude = false;
 
         int Peek();
 
         bool IsValidNameStart(int);
         bool CheckRedef(const char*);
+        EKeyword IsKeyword(const char*);
 
         EErrorType ParseName(int);
         EErrorType ParseString(int);
         EErrorType ParseNumber(int);
+
+        EErrorType AddFile(const char*);
 
         public:
             CParser() = default;

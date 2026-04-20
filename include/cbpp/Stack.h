@@ -27,7 +27,11 @@ namespace cbpp {
             }
 
             void Push(value_t&& Value) {
-                m_aData.PushBack(Value);
+                m_aData.PushBack(std::move(Value));
+            }
+
+            value_t& operator[](size_t iIndex) {
+                return m_aData[iIndex];
             }
 
             size_t Length() const {
