@@ -35,6 +35,8 @@ namespace cbpp::cml {
     void CObject::Push(CObject pObj) { m_pObj->PushValue(pObj.GetPointer()); }
     void CObject::Push(const char* sName, CObject pObj) { m_pObj->PushValue(sName, pObj.GetPointer()); }
 
+    const char* CObject::IndexName(size_t iIndex) const { return m_pObj->IndexName(iIndex); }
+
     CObject::operator int_t() const { return m_pObj->AsInt(); }
     CObject::operator float_t() const { return m_pObj->AsFloat(); }
     CObject::operator const char*() const { return m_pObj->AsString(); }
@@ -84,6 +86,8 @@ namespace cbpp::cml {
         return NULL;
     }
 
+    const char* CIntObject::IndexName(size_t iIndex) { return "(null)"; }
+
     void CIntObject::PushValue(IObject* pObj) {}
     void CIntObject::PushValue(const char* sName, IObject* pObj) {}
 
@@ -132,6 +136,8 @@ namespace cbpp::cml {
     IObject* CBinaryObject::At(size_t) {
         return NULL;
     }
+
+    const char* CBinaryObject::IndexName(size_t iIndex) { return "(null)"; }
 
     void CBinaryObject::PushValue(IObject* pObj) {}
     void CBinaryObject::PushValue(const char* sName, IObject* pObj) {}
@@ -188,6 +194,8 @@ namespace cbpp::cml {
         return NULL;
     }
 
+    const char* CFloatObject::IndexName(size_t iIndex) { return "(null)"; }
+
     void CFloatObject::PushValue(IObject* pObj) {}
     void CFloatObject::PushValue(const char* sName, IObject* pObj) {}
 
@@ -237,6 +245,8 @@ namespace cbpp::cml {
         return NULL;
     }
 
+    const char* CStringObject::IndexName(size_t iIndex) { return "(null)"; }
+
     void CStringObject::PushValue(IObject* pObj) {}
     void CStringObject::PushValue(const char* sName, IObject* pObj) {}
 
@@ -284,6 +294,8 @@ namespace cbpp::cml {
         if(iIndex >= m_pData.Length()) { return NULL; }
         return m_pData[iIndex];
     }
+
+    const char* CArrayObject::IndexName(size_t iIndex) { return "(null)"; }
 
     void CArrayObject::PushValue(IObject* pObj) {
         m_pData.PushBack(pObj);
@@ -344,6 +356,11 @@ namespace cbpp::cml {
     IObject* CDictObject::At(size_t iIndex) {
         if(iIndex >= m_dTable.Length()) { return NULL; }
         return m_dTable.Index(iIndex);
+    }
+
+    const char* CDictObject::IndexName(size_t iIndex) {
+        if(iIndex >= m_dTable.Length()) { return "(null)"; }
+        return m_dTable.IndexKey(iIndex);
     }
 
     void CDictObject::PushValue(IObject* pObj) { }
@@ -407,15 +424,19 @@ namespace cbpp::cml {
 
     void PrintTabs(size_t iNum) {
         for(size_t i = 0; i < iNum; i++) {
-            printf("  ");
+            printf("\t");
         }
     }
 
     void PrintObject(CObject pObj, size_t iDepth) {
-        PrintTabs(iDepth);
         switch(pObj.Class()) {
             case EObjectClass::Array: {
                 for(size_t i = 0; i < pObj.Length(); i++) {
+                    PrintTabs(iDepth);
+                    printf("[%li] ", i);
+                    if(pObj[i].Class() == EObjectClass::Object || pObj[i].Class() == EObjectClass::Array) {
+                        putc('\n', stdout);
+                    }
                     PrintObject( pObj[i], iDepth+1 );
                 }
                 break;
@@ -423,18 +444,37 @@ namespace cbpp::cml {
 
             case EObjectClass::Object: {
                 for(size_t i = 0; i < pObj.Length(); i++) {
+                    PrintTabs(iDepth);
+                    printf("%s : ", pObj.IndexName(i));
+                    if(pObj[i].Class() == EObjectClass::Object || pObj[i].Class() == EObjectClass::Array) {
+                        putc('\n', stdout);
+                    }
                     PrintObject( pObj[i], iDepth+1 );
                 }
                 break;
             }
 
             case EObjectClass::Integer: {
+                //PrintTabs(iDepth);
                 printf("%d\n", (int_t)(pObj));
                 break;
             }
 
             case EObjectClass::String: {
+                //PrintTabs(iDepth);
                 printf("%s\n", (const char*)(pObj));
+                break;
+            }
+
+            case EObjectClass::Float: {
+                //PrintTabs(iDepth);
+                printf("%f\n", (float_t)pObj);
+                break;
+            }
+
+            case EObjectClass::Binary: {
+                //PrintTabs(iDepth);
+                printf("Binary [%li]\n", pObj.Length());
                 break;
             }
         }

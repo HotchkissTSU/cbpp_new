@@ -91,7 +91,7 @@ namespace cbpp::cml {
             if(m_aFilesStack.Length() > 0) {
                 return Peek();          // peek again
             } else {
-                return 0;
+                return 0;               // include stack is empty, we are basically done
             }
         }
         
@@ -160,6 +160,39 @@ namespace cbpp::cml {
         return EErrorType::UnexpectedEOF;
     }
 
+    CObject CParser::ResolveFileRef() {
+        cbpp::IFile* pFile = OpenFile(m_sLexemBuffer.Data(), "rb");
+
+        if(pFile == NULL) { return cml::NIL; }
+
+        char* pBuffer = NULL;
+        const size_t iFileLen = pFile->Length();
+
+        CObject pRet;
+
+        if(m_iRefType == ERefType::Text) {
+            pBuffer = Malloc<char>( iFileLen+1 );
+            pBuffer[iFileLen] = '\0';
+            pFile->ReadAll(pBuffer);
+
+            pRet = CreateObject(EObjectClass::String);
+            pRet = (const char*)(pBuffer);
+
+        } else if(m_iRefType == ERefType::Binary) {
+            pBuffer = Malloc<char>( iFileLen );
+            pFile->ReadAll(pBuffer);
+
+            pRet = CreateObject(EObjectClass::Binary);
+            pRet.SetBinaryData((const uint8_t*)pBuffer, iFileLen);
+
+        } else {
+            CbAssert(true, "how?");
+        }
+
+        Free(pBuffer);
+        return pRet;
+    }
+
     EErrorType CParser::Parse(const char* sPath) {
         EErrorType iRet = AddFile(sPath);
 
@@ -216,7 +249,7 @@ namespace cbpp::cml {
                 if(iRet != EErrorType::Ok) { return iRet; }
 
                 if(m_bExpectInclude) {
-                    iRet = AddFile(m_sLexemBuffer.Data());
+                    iRet = AddFile(m_sLexemBuffer.Data());  // including
                     if(iRet != EErrorType::Ok) {
                         return iRet;
                     }
@@ -224,8 +257,18 @@ namespace cbpp::cml {
                     m_bExpectInclude = false;
 
                 } else {
-                    CObject pStringObj = CreateObject(EObjectClass::String);
-                    pStringObj = m_sLexemBuffer.Data();
+                    CObject pStringObj;// = CreateObject(EObjectClass::String);
+
+                    if(m_iRefType == ERefType::NoLink) {
+                        pStringObj = CreateObject(EObjectClass::String);
+                        pStringObj = m_sLexemBuffer.Data();
+                    } else {
+                        pStringObj = this->ResolveFileRef();
+
+                        if(pStringObj == cml::NIL) {
+                            return EErrorType::BadFileRef;
+                        }
+                    }
 
                     if(!bInsideArray) {
                         pHead.Push(m_sCurrentName.String(), pStringObj);
@@ -239,6 +282,10 @@ namespace cbpp::cml {
             } else if(isdigit(iCurrent) || (iCurrent == '-') || (iCurrent == '.')) {    // NUMBER
                 if(!m_bExpectValue && !bInsideArray && !m_bExpectVersion) {
                     return EErrorType::StrayNumber;
+                }
+
+                if(m_iRefType != ERefType::NoLink) {
+                    return EErrorType::BadReference;
                 }
 
                 CHECK_REDEF
@@ -298,10 +345,14 @@ namespace cbpp::cml {
 
                     m_bExpectValue = false;
                 }
-
+                
             } else if(iCurrent == '{') {                    // BLOCK OPENING
                 if(!m_bExpectValue && !bInsideArray) {
                     return EErrorType::StrayBlock;
+                }
+
+                if(m_iRefType != ERefType::NoLink) {
+                    return EErrorType::BadReference;
                 }
 
                 if(aStack.Length() == CBPP_CML_STACK_LIMIT) {
@@ -334,6 +385,10 @@ namespace cbpp::cml {
                     return EErrorType::StrayArray;
                 }
 
+                if(m_iRefType != ERefType::NoLink) {
+                    return EErrorType::BadReference;
+                }
+
                 if(aStack.Length() == CBPP_CML_STACK_LIMIT) {
                     return EErrorType::StackOverflow;
                 }
@@ -358,8 +413,23 @@ namespace cbpp::cml {
                 }
 
                 aStack.Pop();
-            }
 
+            } else if(iCurrent == '#') {                    // COMMENTARY
+                int iCommChar = 1;
+                while(iCommChar != 0) {
+                    iCommChar = this->Peek();
+                    if(iCommChar == '\n' || iCommChar == '#') {
+                        break;
+                    }
+                }
+
+            } else if(iCurrent == '@') {
+                m_iRefType = ERefType::Text;
+
+            } else if(iCurrent == '&') {
+                m_iRefType = ERefType::Binary;
+            }
+            
             bInsideArray = aStack.Head().Class() == EObjectClass::Array;
         }
         

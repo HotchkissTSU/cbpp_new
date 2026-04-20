@@ -95,3 +95,48 @@ Module 'bin/test.so' has finished with exit code 0
 Module 'bin/test.so' has finished with exit code 0
  == Log start == 
 Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Failed to open file 'nofile.txt' : No such file or directory
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0

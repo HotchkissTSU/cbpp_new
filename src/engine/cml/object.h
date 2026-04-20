@@ -11,6 +11,7 @@ namespace cbpp::cml {
         public:
             virtual IObject* At(const char*) = 0;
             virtual IObject* At(size_t) = 0;
+            virtual const char* IndexName(size_t) = 0;
 
             virtual EObjectClass Class() const = 0;
 
@@ -48,6 +49,7 @@ namespace cbpp::cml {
             
             IObject* At(const char*);
             IObject* At(size_t);
+            const char* IndexName(size_t);
 
             void PushValue(IObject*);
             void PushValue(const char*, IObject*);
@@ -75,6 +77,7 @@ namespace cbpp::cml {
 
             IObject* At(const char*);
             IObject* At(size_t);
+            const char* IndexName(size_t);
 
             void PushValue(IObject*);
             void PushValue(const char*, IObject*);
@@ -102,6 +105,7 @@ namespace cbpp::cml {
 
             IObject* At(const char*);
             IObject* At(size_t);
+            const char* IndexName(size_t);
 
             void PushValue(IObject*);
             void PushValue(const char*, IObject*);
@@ -129,6 +133,7 @@ namespace cbpp::cml {
 
             IObject* At(const char*);
             IObject* At(size_t);
+            const char* IndexName(size_t);
 
             void PushValue(IObject*);
             void PushValue(const char*, IObject*);
@@ -156,6 +161,7 @@ namespace cbpp::cml {
 
             IObject* At(const char*);
             IObject* At(size_t);
+            const char* IndexName(size_t);
 
             void PushValue(IObject*);
             void PushValue(const char*, IObject*);
@@ -183,6 +189,7 @@ namespace cbpp::cml {
 
             IObject* At(const char*);
             IObject* At(size_t);
+            const char* IndexName(size_t);
 
             void PushValue(IObject*);
             void PushValue(const char*, IObject*);

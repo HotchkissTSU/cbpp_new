@@ -92,6 +92,8 @@ namespace cbpp::cml {
             CObject operator[](size_t iIndex);
             CObject operator[](const char* sName);
 
+            const char* IndexName(size_t iIndex) const;
+
             void Push(CObject pObj);
             void Push(const char* sName, CObject pObj);
 
@@ -130,6 +132,8 @@ namespace cbpp::cml {
         bool m_bExpectVersion = false;
         bool m_bExpectInclude = false;
 
+        ERefType m_iRefType = ERefType::NoLink;
+
         int Peek();
 
         bool IsValidNameStart(int);
@@ -141,6 +145,8 @@ namespace cbpp::cml {
         EErrorType ParseNumber(int);
 
         EErrorType AddFile(const char*);
+
+        CObject ResolveFileRef();
 
         public:
             CParser() = default;
