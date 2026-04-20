@@ -113,6 +113,13 @@ namespace cbpp {
             /*
                 Direct index access with O(1) complexity
             */
+            key_t& IndexKey(size_t iIndex) {
+                return m_aData[iIndex].Key;
+            }
+
+            /*
+                Direct index access with O(1) complexity
+            */
             const value_t& Index(size_t iIndex) const {
                 return m_aData[iIndex].Value;
             }

@@ -19,9 +19,9 @@ namespace cbpp {
         public:
             CArray() = default;
             
-            CArray(const CArray<T>& aOther) : m_iAllocated(aOther.m_iSize), m_iSize(aOther.m_iSize) {
-                if (m_iSize > 0) {
-                    m_pMemory = Malloc<T>(m_iSize);
+            CArray(const CArray<T>& aOther) : m_iAllocated(aOther.m_iAllocated), m_iSize(aOther.m_iSize) {
+                if (m_iAllocated > 0) {
+                    m_pMemory = Malloc<T>(m_iAllocated);
                     for (size_t i = 0; i < m_iSize; ++i) {
                         new (&m_pMemory[i]) T(aOther.m_pMemory[i]);
                     }
@@ -98,6 +98,20 @@ namespace cbpp {
                     Other.m_iSize = 0;
                 }
                 return *this;
+            }
+
+            void SetArray(const T* pData, size_t iLength) {
+                this->Clear();
+
+                m_iAllocated = iLength;
+                m_iSize = iLength;
+
+                if (iLength > 0) {
+                    m_pMemory = Malloc<T>(iLength);
+                    for (size_t i = 0; i < iLength; ++i) {
+                        new (&m_pMemory[i]) T(pData[i]);
+                    }
+                }
             }
             
             T* At(size_t iIndex) {

@@ -7,6 +7,31 @@
 #include "cbpp/Table.h"
 
 namespace cbpp::cml {
+    class IObject {
+        public:
+            virtual IObject* At(const char*) = 0;
+            virtual IObject* At(size_t) = 0;
+
+            virtual EObjectClass Class() const = 0;
+
+            virtual int_t AsInt() const = 0;
+            virtual float_t AsFloat() const = 0;
+            virtual const char* AsString() const = 0;
+            virtual uint8_t* AsBinary() = 0;
+
+            virtual void SetValue(int_t) = 0;
+            virtual void SetValue(float_t) = 0;
+            virtual void SetValue(const char*) = 0;
+            virtual void SetValue(const uint8_t*, size_t) = 0;
+
+            virtual void PushValue(IObject*) = 0;
+            virtual void PushValue(const char*, IObject*) = 0;
+
+            virtual size_t Length() const = 0;
+
+            virtual ~IObject() = default;
+    };
+
     class CBinaryObject final : public IObject {
         cbpp::CArray<uint8_t> m_aData;
 
@@ -14,15 +39,18 @@ namespace cbpp::cml {
             int_t AsInt() const;
             float_t AsFloat() const;
             const char* AsString() const;
+            uint8_t* AsBinary();
 
             void SetValue(int_t);
             void SetValue(float_t);
             void SetValue(const char*);
-
-            uint8_t* AsBinary();
-
+            void SetValue(const uint8_t*, size_t);
+            
             IObject* At(const char*);
             IObject* At(size_t);
+
+            void PushValue(IObject*);
+            void PushValue(const char*, IObject*);
 
             EObjectClass Class() const;
 
@@ -38,13 +66,18 @@ namespace cbpp::cml {
             int_t AsInt() const;
             float_t AsFloat() const;
             const char* AsString() const;
+            uint8_t* AsBinary();
 
             void SetValue(int_t);
             void SetValue(float_t);
             void SetValue(const char*);
+            void SetValue(const uint8_t*, size_t);
 
             IObject* At(const char*);
             IObject* At(size_t);
+
+            void PushValue(IObject*);
+            void PushValue(const char*, IObject*);
 
             EObjectClass Class() const;
 
@@ -60,13 +93,18 @@ namespace cbpp::cml {
             int_t AsInt() const;
             float_t AsFloat() const;
             const char* AsString() const;
+            uint8_t* AsBinary();
 
             void SetValue(int_t);
             void SetValue(float_t);
             void SetValue(const char*);
+            void SetValue(const uint8_t*, size_t);
 
             IObject* At(const char*);
             IObject* At(size_t);
+
+            void PushValue(IObject*);
+            void PushValue(const char*, IObject*);
 
             EObjectClass Class() const;
 
@@ -82,13 +120,18 @@ namespace cbpp::cml {
             int_t AsInt() const;
             float_t AsFloat() const;
             const char* AsString() const;
+            uint8_t* AsBinary();
 
             void SetValue(int_t);
             void SetValue(float_t);
             void SetValue(const char*);
+            void SetValue(const uint8_t*, size_t);
 
             IObject* At(const char*);
             IObject* At(size_t);
+
+            void PushValue(IObject*);
+            void PushValue(const char*, IObject*);
 
             EObjectClass Class() const;
 
@@ -104,19 +147,24 @@ namespace cbpp::cml {
             int_t AsInt() const;
             float_t AsFloat() const;
             const char* AsString() const;
+            uint8_t* AsBinary();
 
             void SetValue(int_t);
             void SetValue(float_t);
             void SetValue(const char*);
+            void SetValue(const uint8_t*, size_t);
 
             IObject* At(const char*);
             IObject* At(size_t);
+
+            void PushValue(IObject*);
+            void PushValue(const char*, IObject*);
 
             EObjectClass Class() const;
 
             size_t Length() const;
 
-            virtual ~CArrayObject() override = default;
+            virtual ~CArrayObject() override;
     };
 
     class CDictObject final : public IObject {
@@ -126,19 +174,24 @@ namespace cbpp::cml {
             int_t AsInt() const;
             float_t AsFloat() const;
             const char* AsString() const;
+            uint8_t* AsBinary();
 
             void SetValue(int_t);
             void SetValue(float_t);
             void SetValue(const char*);
+            void SetValue(const uint8_t*, size_t);
 
             IObject* At(const char*);
             IObject* At(size_t);
+
+            void PushValue(IObject*);
+            void PushValue(const char*, IObject*);
 
             EObjectClass Class() const;
 
             size_t Length() const;
 
-            virtual ~CDictObject() override = default;
+            virtual ~CDictObject() override;
     };
 }
 

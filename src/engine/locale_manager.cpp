@@ -54,21 +54,8 @@ namespace cbpp {
         hFile->ReadAll(sCmlBuffer);
         CloseFile(hFile);
 
-        cml::CParser Parser;
-        if(!Parser.ParseString(sCmlBuffer)) {
-            char sErrorBuff[256];
-            Parser.GetErrorLog(sErrorBuff, sizeof(sErrorBuff));
-            CbAssertf(true, "'%s' CML parsing error: '%s'", sFileName, sErrorBuff);
-        }
+
         
-        cml::IObject* pRoot = Parser.Root();
-
-        cml::IObject* pPrettyName = pRoot->GetByName("name");
-        CbAssertf(pPrettyName == NULL, "'%s' locale config has no 'name' field defined", sFileName);
-
-        cml::IObject* pLocaleData = pRoot->GetByName("data");
-        CbAssertf(pLocaleData == NULL, "'%s' locale config has no 'data' field defined", sFileName);
-
         
 
         return true;

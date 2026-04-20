@@ -158,11 +158,15 @@ namespace cbpp {
     }
 
     size_t CFile::Read(size_t iCount, void* pData) {
-        return fwrite(pData, 1, iCount, m_hFile);
+        return fread(pData, 1, iCount, m_hFile);
     }
 
     size_t CFile::ReadAll(char* pBuffer) const {        
         size_t iLength = Length();
         return fread(pBuffer, 1, iLength, m_hFile);
+    }
+
+    int CFile::GetChar() const {
+        return fgetc(m_hFile);
     }
 }

@@ -1,19 +1,19 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "cbpp/Filesystem.h"
+#include "cbpp/CML.h"
 
 extern "C" int cbpp_main(int argc, char** argv) {
     printf("Module EP!\n");
 
-    char sBuffer[512];
-    char sBuffer2[512];
+    using namespace cbpp;
 
-    while(1) {
-        putc('>', stdout);
-        scanf("%s", sBuffer);
-        printf("%s\n", cbpp::ValidatePath(sBuffer, sBuffer2, 512));
-    }
+    cml::CParser test;
+
+    cml::EErrorType iCode = test.Parse("assets/test.cml");
+    puts(cml::StringError(iCode));
+
+    cml::PrintObject(test.Root());
 
     return 0;
 }

@@ -27,6 +27,8 @@ namespace cbpp {
             size_t Read(size_t iCount, void* pData) override;
             size_t ReadAll(char* pBuff) const override;
 
+            int GetChar() const override;
+
             bool IsOpen() const override;
 
             FILE* Handle() override;

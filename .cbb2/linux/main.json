@@ -61,14 +61,14 @@
             "obj":".obj/cbpp/cl",
             "src":["src/engine/entity/client/*.cpp"]
         },
-
+        
         "cbpp_shared":{
             "type" : "OBJ",
             "include" : ["include", "src"],
             "obj":".obj/cbpp",
             "src":[ "src/engine/*.cpp", 
                     "src/engine/entity/shared/*.cpp",
-                    "src/cml/*.cpp" ]
+                    "src/engine/cml/*.cpp" ]
         },
         
         "cbpp_server":{

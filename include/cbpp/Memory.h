@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "cbpp/Constants.h"
 #include "cbpp/Error.h"
 
 namespace cbpp {
