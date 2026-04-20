@@ -116,6 +116,8 @@ namespace cbpp::cml {
             cbpp::CString sPath;
             cbpp::IFile* pFile = NULL;
 
+            size_t iLine = 1;
+
             ~IncludeNode();
         };
 
@@ -151,10 +153,14 @@ namespace cbpp::cml {
         public:
             CParser() = default;
 
+            void Reset();
+
             EErrorType Parse(const char* sPath);
 
             CObject Root();
             CObject AccessPath(const char* sPath);
+
+            size_t FormatError(EErrorType iCode, char* sBuffer, size_t iBufferLn);
 
             ~CParser();
     };

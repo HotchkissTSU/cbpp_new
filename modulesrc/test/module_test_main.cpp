@@ -11,7 +11,10 @@ extern "C" int cbpp_main(int argc, char** argv) {
     cml::CParser test;
 
     cml::EErrorType iCode = test.Parse("assets/test.cml");
-    puts(cml::StringError(iCode));
+
+    char sBuffer[512];
+    test.FormatError(iCode, sBuffer, sizeof(sBuffer));
+    puts(sBuffer);
 
     cml::PrintObject(test.Root());
 

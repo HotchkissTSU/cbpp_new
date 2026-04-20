@@ -3,12 +3,6 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#define CHECK_REDEF                                                                                     \
-    CObject pHead = aStack.Head();                                                                      \
-    if(!bInsideArray && pHead[m_sCurrentName.String()] != cml::NIL) {                                   \
-        return EErrorType::Redefinition;                                                                \
-    }
-
 namespace cbpp::cml {
     const char* StringError(EErrorType iType) {
         switch(iType) {
@@ -75,7 +69,12 @@ namespace cbpp::cml {
             return EErrorType::NoFile;
         }
 
-        m_aFilesStack.Push( {sPath, pFile} );
+        printf("INCLUDING FROM %li\n", m_iLine);
+
+        m_aFilesStack.Push( {sPath, pFile, m_iLine} );
+
+        m_iCol = 1;
+        m_iLine = 1;
 
         return EErrorType::Ok;
     }
@@ -85,10 +84,13 @@ namespace cbpp::cml {
 
         int iChar = pFile->GetChar();
 
-        if(iChar == EOF) {      // this file is over, step out and resume      
+        if(iChar == EOF) {      // this file is over, step out and resume    
+            m_iCol = 1;
+            m_iLine = m_aFilesStack.Head().iLine;  
+
             m_aFilesStack.Pop();  
 
-            if(m_aFilesStack.Length() > 0) {
+            if(m_aFilesStack.Length() > 0) {                
                 return Peek();          // peek again
             } else {
                 return 0;               // include stack is empty, we are basically done
@@ -97,7 +99,7 @@ namespace cbpp::cml {
         
         m_iCol++;
         if(iChar == '\n') {
-            m_iCol = 0;
+            m_iCol = 1;
             m_iLine++;
         }
 
@@ -193,7 +195,22 @@ namespace cbpp::cml {
         return pRet;
     }
 
+    void CParser::Reset() {
+        m_bExpectInclude = false;
+        m_bExpectValue = false;
+        m_bExpectVersion = false;
+
+        m_aFilesStack.Clear();
+        m_iRefType = ERefType::NoLink;
+        m_iCol = 1; m_iLine = 1;
+
+        DeleteObject(m_pRootObject);
+        m_pRootObject = cml::NIL;
+    }
+
     EErrorType CParser::Parse(const char* sPath) {
+        this->Reset();
+
         EErrorType iRet = AddFile(sPath);
 
         if(iRet != EErrorType::Ok) { return iRet; }
@@ -206,7 +223,7 @@ namespace cbpp::cml {
 
         bool bInsideArray = false;
 
-        int iCurrent;
+        int iCurrent = 1;
         while(iCurrent != 0) {
             iCurrent = this->Peek();
 
@@ -243,7 +260,7 @@ namespace cbpp::cml {
                     return EErrorType::StrayString;
                 }
 
-                CHECK_REDEF
+                
 
                 EErrorType iRet = this->ParseString(iCurrent);
                 if(iRet != EErrorType::Ok) { return iRet; }
@@ -259,6 +276,11 @@ namespace cbpp::cml {
                 } else {
                     CObject pStringObj;// = CreateObject(EObjectClass::String);
 
+                    CObject pHead = aStack.Head();
+                    if(!bInsideArray && pHead[m_sCurrentName.String()] != cml::NIL) {
+                        return EErrorType::Redefinition;
+                    }
+
                     if(m_iRefType == ERefType::NoLink) {
                         pStringObj = CreateObject(EObjectClass::String);
                         pStringObj = m_sLexemBuffer.Data();
@@ -268,6 +290,8 @@ namespace cbpp::cml {
                         if(pStringObj == cml::NIL) {
                             return EErrorType::BadFileRef;
                         }
+
+                        m_iRefType = ERefType::NoLink;
                     }
 
                     if(!bInsideArray) {
@@ -287,8 +311,6 @@ namespace cbpp::cml {
                 if(m_iRefType != ERefType::NoLink) {
                     return EErrorType::BadReference;
                 }
-
-                CHECK_REDEF
 
                 EErrorType iRet = this->ParseNumber(iCurrent);
                 if(iRet != EErrorType::Ok) { return iRet; }
@@ -329,6 +351,11 @@ namespace cbpp::cml {
                     m_bExpectVersion = false;
 
                 } else {
+                    CObject pHead = aStack.Head();
+                    if(!bInsideArray && pHead[m_sCurrentName.String()] != cml::NIL) {
+                        return EErrorType::Redefinition;
+                    }
+
                     CObject pObj = CreateObject(iClass);
 
                     if(iNumberTest == 1) {
@@ -359,7 +386,10 @@ namespace cbpp::cml {
                     return EErrorType::StackOverflow;
                 }
                 
-                CHECK_REDEF
+                CObject pHead = aStack.Head();
+                if(!bInsideArray && pHead[m_sCurrentName.String()] != cml::NIL) {
+                    return EErrorType::Redefinition;
+                }
                 
                 CObject pDict = CreateObject(EObjectClass::Object);
 
@@ -393,7 +423,10 @@ namespace cbpp::cml {
                     return EErrorType::StackOverflow;
                 }
 
-                CHECK_REDEF
+                CObject pHead = aStack.Head();
+                if(!bInsideArray && pHead[m_sCurrentName.String()] != cml::NIL) {
+                    return EErrorType::Redefinition;
+                }
 
                 CObject pArr = CreateObject(EObjectClass::Array);
         
@@ -434,6 +467,22 @@ namespace cbpp::cml {
         }
         
         return EErrorType::Ok;
+    }
+
+    size_t CParser::FormatError(EErrorType iCode, char* sBuffer, size_t iBufferLn) {
+        const char* sError = StringError(iCode);
+        const char* sFileSrc;
+        
+        if(m_aFilesStack.Length() > 0) {
+            sFileSrc = m_aFilesStack.Head().sPath.String();
+        } else {
+            sFileSrc = "(none)";
+        }
+
+        const char* pSlash = strrchr(sFileSrc, '/') ;
+        const char* sFile = (pSlash == NULL) ? sFileSrc : pSlash + 1;
+
+        return snprintf(sBuffer, iBufferLn, "%s:%i.%i %s (near '%s')", sFile, m_iLine, m_iCol, sError, m_sLexemBuffer.Data());
     }
 
     CObject CParser::Root() {
