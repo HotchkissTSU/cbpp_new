@@ -24,6 +24,20 @@ namespace cbpp::cml {
             case EErrorType::VersionMismatch:   return "Source version is incompatible";
             case EErrorType::BadReference:      return "Non-string value is referenced";
             case EErrorType::BadVersion:        return "Bad version, must be a positive integer";
+            case EErrorType::RefHugeFile:       return "The referenced file is too big";
+
+            default:                            return "(null)";
+        }
+    }
+
+    const char* StringError(EPathError iType) {
+        switch(iType) {
+            case EPathError::Ok:                return "Ok";
+            case EPathError::ObjIndex:          return "Indexing an object";
+            case EPathError::NotFound:          return "Entry not found";
+            case EPathError::ArrayAccess:       return "Accessing an array as a table";
+            case EPathError::BadIndex:          return "Bad array index";
+            case EPathError::BadSeparator:      return "Bad name separator";
 
             default:                            return "(null)";
         }
@@ -68,8 +82,6 @@ namespace cbpp::cml {
         if(pFile == NULL) {
             return EErrorType::NoFile;
         }
-
-        printf("INCLUDING FROM %li\n", m_iLine);
 
         m_aFilesStack.Push( {sPath, pFile, m_iLine} );
 
@@ -162,13 +174,21 @@ namespace cbpp::cml {
         return EErrorType::UnexpectedEOF;
     }
 
-    CObject CParser::ResolveFileRef() {
+    CObject CParser::ResolveFileRef(EErrorType& iCode) {
         cbpp::IFile* pFile = OpenFile(m_sLexemBuffer.Data(), "rb");
 
-        if(pFile == NULL) { return cml::NIL; }
+        if(pFile == NULL) {
+            iCode = EErrorType::BadFileRef;
+            return cml::NIL;
+        }
 
         char* pBuffer = NULL;
         const size_t iFileLen = pFile->Length();
+
+        if(iFileLen > CBPP_CML_MAX_REFFILE) {
+            iCode = EErrorType::RefHugeFile;
+            return cml::NIL;
+        }
 
         CObject pRet;
 
@@ -208,7 +228,7 @@ namespace cbpp::cml {
         m_pRootObject = cml::NIL;
     }
 
-    EErrorType CParser::Parse(const char* sPath) {
+    EErrorType CParser::Parse(const char* sPath, bool bAllowIncludes) {
         this->Reset();
 
         EErrorType iRet = AddFile(sPath);
@@ -260,21 +280,21 @@ namespace cbpp::cml {
                     return EErrorType::StrayString;
                 }
 
-                
-
                 EErrorType iRet = this->ParseString(iCurrent);
                 if(iRet != EErrorType::Ok) { return iRet; }
 
                 if(m_bExpectInclude) {
-                    iRet = AddFile(m_sLexemBuffer.Data());  // including
-                    if(iRet != EErrorType::Ok) {
-                        return iRet;
+                    if(bAllowIncludes) {
+                        iRet = AddFile(m_sLexemBuffer.Data());  // including
+                        if(iRet != EErrorType::Ok) {
+                            return iRet;
+                        }
                     }
 
                     m_bExpectInclude = false;
 
                 } else {
-                    CObject pStringObj;// = CreateObject(EObjectClass::String);
+                    CObject pStringObj;
 
                     CObject pHead = aStack.Head();
                     if(!bInsideArray && pHead[m_sCurrentName.String()] != cml::NIL) {
@@ -285,10 +305,10 @@ namespace cbpp::cml {
                         pStringObj = CreateObject(EObjectClass::String);
                         pStringObj = m_sLexemBuffer.Data();
                     } else {
-                        pStringObj = this->ResolveFileRef();
+                        pStringObj = this->ResolveFileRef(iRet);
 
                         if(pStringObj == cml::NIL) {
-                            return EErrorType::BadFileRef;
+                            return iRet;
                         }
 
                         m_iRefType = ERefType::NoLink;
@@ -485,8 +505,110 @@ namespace cbpp::cml {
         return snprintf(sBuffer, iBufferLn, "%s:%i.%i %s (near '%s')", sFile, m_iLine, m_iCol, sError, m_sLexemBuffer.Data());
     }
 
+    size_t CParser::FormatError(EPathError iCode, char* sBuffer, size_t iBufferLn) {
+        return snprintf( sBuffer, iBufferLn, "%s", StringError(iCode) );
+    }
+
     CObject CParser::Root() {
         return m_pRootObject;
+    }
+
+    EPathError CParser::GetPathError() const { return m_iPathError; }
+
+    CObject CParser::operator[](const char* sPath) {
+        char* pCurrent = (char*)sPath;
+
+        cbpp::CArray<char> sName, sNumber;
+        bool bInsideName = false;
+
+        CObject pCurrentObj = m_pRootObject;
+
+        while(*pCurrent != '\0') {
+            char iCurrent = *pCurrent;
+
+            if( IsValidNameStart(iCurrent) && !bInsideName) {   // name starts
+                bInsideName = true;
+                sName.PushBack(iCurrent);
+                pCurrent++;
+                continue;
+            }
+
+            if( isalnum(iCurrent) || iCurrent == '_' ) {        // name continues
+                sName.PushBack(iCurrent);
+            } else {                                            // name ended
+                sName.PushBack('\0');
+
+                if(pCurrentObj.Class() == EObjectClass::Array) {
+                    m_iPathError = EPathError::ArrayAccess;
+                    return cml::NIL;
+                }
+
+                CObject pTest = pCurrentObj[ (const char*)(sName.Data()) ];
+                if(pTest == cml::NIL) {
+                    m_iPathError = EPathError::NotFound;
+                    return cml::NIL;
+                }
+
+                pCurrentObj = pTest;
+
+                sName.Clear();
+                bInsideName = false;
+            }
+
+            if(iCurrent == '[') {
+                sNumber.Clear();
+
+                while(*pCurrent != '\0' && *pCurrent != ']') {
+                    if(isalnum(*pCurrent)) {
+                        sNumber.PushBack(*pCurrent);
+                    }
+                    pCurrent++;
+                }
+
+                sNumber.PushBack('\0');
+                int iNumberTest = cbpp::IsNumber(sNumber.Data());
+
+                if( iNumberTest == 0 ) {
+                    iNumberTest = atoi( sNumber.Data() );
+                } else {
+                    m_iPathError = EPathError::BadIndex;
+                    return cml::NIL;
+                }
+
+                CObject pTest = pCurrentObj[(size_t)iNumberTest];
+
+                if(pTest == cml::NIL) {
+                    m_iPathError = EPathError::NotFound;
+                    return cml::NIL;
+                }
+
+                pCurrentObj = pTest;
+                pCurrent++;
+                
+                continue;
+            }
+
+            if(iCurrent != '.' && !bInsideName) {
+                m_iPathError = EPathError::BadSeparator;
+                return cml::NIL;
+            }
+
+            pCurrent++;
+        }
+
+        if(sName.Length() > 0) {
+            sName.PushBack('\0');
+
+            CObject pTest = pCurrentObj[ (const char*)(sName.Data()) ];
+            if(pTest == cml::NIL) {
+                m_iPathError = EPathError::NotFound;
+                return cml::NIL;
+            }
+
+            return pTest;
+        }
+
+        return pCurrentObj;
     }
 
     CParser::~CParser() {

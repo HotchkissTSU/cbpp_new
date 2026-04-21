@@ -8,8 +8,9 @@
 #include "cbpp/Array.h"
 #include "cbpp/Stack.h"
 
-#define CBPP_CML_VERSION 100        // Actual language version
-#define CBPP_CML_VERSION_LEAST 100  // Any versions below this are considered deprecated
+#define CBPP_CML_VERSION 100                        // Actual language version
+#define CBPP_CML_VERSION_LEAST 100                  // Any versions below this are considered deprecated
+#define CBPP_CML_MAX_REFFILE (64 * (1 << 20))       // File reference size limit, 64 MB by default
 
 #define CBPP_CML_STACK_LIMIT 128
 
@@ -50,7 +51,8 @@ namespace cbpp::cml {
         BadVersion,             // Version is negative or is a float
 
         StackOverflow,          // Stack depth exceeded
-        StackUnderflow          // Attempt to pop an empty stack
+        StackUnderflow,         // Attempt to pop an empty stack
+        RefHugeFile             // The referenced file exceeds le limit
     };
 
     enum class EKeyword : uint32_t {
@@ -65,7 +67,18 @@ namespace cbpp::cml {
         Binary
     };
 
+    enum class EPathError : uint32_t {
+        Ok,                     // OK
+
+        NotFound,               // Subobject does not exist
+        ObjIndex,               // Indexing an object
+        ArrayAccess,            // Accessing an array with '.'
+        BadIndex,               // NaN or float is used as index
+        BadSeparator            // Something except '.' is used as a separator
+    };
+
     const char* StringError(EErrorType);
+    const char* StringError(EPathError);
 
     class IObject;
 
@@ -97,10 +110,12 @@ namespace cbpp::cml {
             void Push(CObject pObj);
             void Push(const char* sName, CObject pObj);
 
-            operator int_t() const;
-            operator float_t() const;
-            operator const char*() const;
-            operator uint8_t*();
+            explicit operator int_t() const;
+            explicit operator float_t() const;
+            explicit operator const char*() const;
+            explicit operator uint8_t*();
+
+            operator bool() const;
     };
 
     void PrintObject(CObject pObj, size_t iDepth = 0);
@@ -136,6 +151,8 @@ namespace cbpp::cml {
 
         ERefType m_iRefType = ERefType::NoLink;
 
+        EPathError m_iPathError = EPathError::Ok;
+
         int Peek();
 
         bool IsValidNameStart(int);
@@ -148,18 +165,34 @@ namespace cbpp::cml {
 
         EErrorType AddFile(const char*);
 
-        CObject ResolveFileRef();
+        CObject ResolveFileRef(EErrorType&);
 
         public:
             CParser() = default;
 
+            /*
+                Resets the parser. This is called automatically in
+                the Parse call.
+            */
             void Reset();
 
-            EErrorType Parse(const char* sPath);
+            /*
+                Parse the said CML file
+            */
+            EErrorType Parse(const char* sPath, bool bAllowIncludes = true);
 
             CObject Root();
-            CObject AccessPath(const char* sPath);
+            
+            /*
+                Path format is
+                "obj.sub_obj.target",
+                "obj.sub_array[2]", etc
+            */
+            CObject operator[](const char* sPath);
 
+            EPathError GetPathError() const;
+            
+            size_t FormatError(EPathError iCode, char* sBuffer, size_t iBufferLn);
             size_t FormatError(EErrorType iCode, char* sBuffer, size_t iBufferLn);
 
             ~CParser();

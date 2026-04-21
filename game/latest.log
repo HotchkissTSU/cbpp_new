@@ -281,3 +281,15 @@ Module 'bin/test.so' has finished with exit code 0
 Module 'bin/test.so' has finished with exit code 0
  == Log start == 
 Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Unable to open 'bin/test].so' as a shared library
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0

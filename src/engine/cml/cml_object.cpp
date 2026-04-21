@@ -41,6 +41,7 @@ namespace cbpp::cml {
     CObject::operator float_t() const { return m_pObj->AsFloat(); }
     CObject::operator const char*() const { return m_pObj->AsString(); }
     CObject::operator uint8_t*() { return m_pObj->AsBinary(); }
+    CObject::operator bool() const { return (*this) != cml::NIL; }
 }
 
 // CIntObject
@@ -429,6 +430,11 @@ namespace cbpp::cml {
     }
 
     void PrintObject(CObject pObj, size_t iDepth) {
+        if(pObj == cml::NIL) {
+            PrintTabs(iDepth);
+            puts("NIL");
+        }
+
         switch(pObj.Class()) {
             case EObjectClass::Array: {
                 for(size_t i = 0; i < pObj.Length(); i++) {
