@@ -1,0 +1,53 @@
+                               ++ CDF ++
+                            CB++ Data Files
+
+A binary datafile format, designed to provide more compact and optimized
+data storage than text-based CML.
+
+CDF and CML use the same runtime object model, so they are fully interchangeable.
+
+Name table index (NTI), uint32_t - bytes offset from the start of the name table to the 
+beginning of the targeted string.
+
+Object entry index (OEI), uint32_t - bytes offset from the beginning of 4.2 to
+the beginning of the targeted entry
+
+The CDF file consists of:
+
+1) Header
+    4 bytes long null-terminated string saying "CDF".
+
+2) Version info
+    struct {
+        uint16_t iMajor;
+        uint16_t iMinor;
+        uint16_t iPatch;
+    };
+
+3) Userdata
+    struct {
+        uint16_t iUserType;    <- A user-provided index of this file`s "type"
+    };
+
+4) Name table
+    3.1) Number of entries, uint32_t
+    3.2) N null-terminated strings written one after another, including 
+         their ending NULL bytes.
+
+         CDF objects` names are pooled in this table to save on disc space, since
+         same names can likely occur multiple times.
+
+5) Root object
+    5.1) Type index, uint8_t
+
+    5.2) Offsets table (only present in table objects)
+        5.2.1) Number of entries, uint32_t
+        5.2.2) N pairs of:
+            struct {
+                uint32_t iNTIndex;
+                uint32_t 
+            };
+
+    5.3) Array unit size (only present in array objects), uint32_t
+
+    5.3) Object`s binary data, possibly containing other objects

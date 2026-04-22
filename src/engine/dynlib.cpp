@@ -1,13 +1,14 @@
 #include "cbpp/Dynlib.h"
 
 #include "cbpp/Error.h"
+#include <errno.h>
 
 namespace cbpp {
     CDynamicLibrary::CDynamicLibrary(const char* sFilePath) : m_sLibName(sFilePath) {
         CBPP_ON_LINUX (
             m_hLibrary = dlopen(sFilePath, CBPP_DYNLIB_PARAMS);
             if(m_hLibrary == NULL) {
-                Throwf("Unable to open '%s' as a shared library", sFilePath);
+                Throwf("Unable to open '%s' as a shared library (%s)", sFilePath, strerror(errno));
             }
         )
 

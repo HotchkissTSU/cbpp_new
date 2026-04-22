@@ -137,24 +137,60 @@ namespace cbpp::cml {
 
         return EErrorType::UnexpectedEOF;
     }
-
+    
     EErrorType CParser::ParseString(int iChar) {
         m_sLexemBuffer.Clear();
+
+        bool bExpectEscape = false;
 
         int iCurrent;
         while(iCurrent != 0) {
             iCurrent = this->Peek();
-            if(iCurrent == '"' || iCurrent == '\'') {
-                m_sLexemBuffer.PushBack('\0');
-                return EErrorType::Ok;
-            }
 
-            m_sLexemBuffer.PushBack(iCurrent);
+            if(bExpectEscape == true) {
+                if(iCurrent == 'n') {
+                    m_sLexemBuffer.PushBack('\n');
+                    bExpectEscape = false;
+
+                } else if(iCurrent == 't') {
+                    m_sLexemBuffer.PushBack('\t');
+                    bExpectEscape = false;
+
+                } else if(iCurrent == '\\') {
+                    m_sLexemBuffer.PushBack('\\');
+                    bExpectEscape = false;
+
+                } else if(iCurrent == '"') {
+                    m_sLexemBuffer.PushBack('"');
+                    bExpectEscape = false;
+
+                } else if(iCurrent == '\'') {
+                    m_sLexemBuffer.PushBack('\'');
+                    bExpectEscape = false;
+
+                } else {
+                    m_sLexemBuffer.PushBack('\0');
+                    return EErrorType::BadEscapeChar;
+                }
+                
+            } else {
+                if(iCurrent == '\\') {
+                    bExpectEscape = true;
+                    continue;
+                }
+
+                if(iCurrent == '"' || iCurrent == '\'') {
+                    m_sLexemBuffer.PushBack('\0');
+                    return EErrorType::Ok;
+                }
+
+                m_sLexemBuffer.PushBack(iCurrent);
+            }
         }
 
         return EErrorType::UnexpectedEOF;
     }
-    
+
     EErrorType CParser::ParseNumber(int iChar) {
         m_sLexemBuffer.Clear();
         m_sLexemBuffer.PushBack(iChar);
@@ -526,7 +562,7 @@ namespace cbpp::cml {
         while(*pCurrent != '\0') {
             char iCurrent = *pCurrent;
 
-            if( IsValidNameStart(iCurrent) && !bInsideName) {   // name starts
+            if( IsValidNameStart(iCurrent) && !bInsideName ) {   // name starts
                 bInsideName = true;
                 sName.PushBack(iCurrent);
                 pCurrent++;

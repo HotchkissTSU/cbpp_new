@@ -7,7 +7,22 @@
 // CObject
 
 namespace cbpp::cml {
-    const CObject NIL = {NULL};
+    const CObject NIL = {};
+
+    CObject::CObject(int_t iValue) {
+        *this = CreateObject(EObjectClass::Integer);
+        m_pObj->SetValue(iValue);
+    }
+
+    CObject::CObject(float_t fValue) {
+        *this = CreateObject(EObjectClass::Float);
+        m_pObj->SetValue(fValue);
+    }
+
+    CObject::CObject(const char* sValue) {
+        *this = CreateObject(EObjectClass::String);
+        m_pObj->SetValue(sValue);
+    }
 
     CObject::CObject(IObject* pData) : m_pObj(pData) {}
     CObject::operator IObject*() const { return m_pObj; }

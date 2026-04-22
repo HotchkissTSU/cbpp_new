@@ -31,9 +31,9 @@ namespace cbpp::ent {
             float m_fMaxHealth, m_fHealth;
 
         public:
-            virtual void Construct();
-            virtual void Init(Datadesc*);
-            virtual void Destruct();
+            virtual void Construct() {};
+            virtual void Init(Datadesc*) {};
+            virtual void Destruct() {};
 
             virtual void OnTakeDamage(DamageInfo) {};
 

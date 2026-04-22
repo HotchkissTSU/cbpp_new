@@ -50,6 +50,34 @@ namespace cbpp {
                 m_aData.Clear();
             }
     };
+
+    /*
+        Binary stack for byte arrays reading/composing.
+        Only safe for primitive types, because it simply
+        moves bytes around without RAII stuff
+    */
+    class CBinaryStack {
+        uint8_t* m_pData = NULL;
+        size_t m_iSize = 0;
+
+        public:
+            CBinaryStack() = default;
+            CBinaryStack(const uint8_t* pData, size_t iLength);
+
+            void Clear();
+            const uint8_t* GetBuffer() const;
+            uint8_t* GetBuffer();
+
+            size_t Length() const;
+
+            void PushBytes(const uint8_t* pData, size_t iLength);
+            size_t PopBytes(uint8_t* pBuffer, size_t iLength);
+
+            template <typename T> void PushData(const T& Data) { PushBytes((uint8_t*)(&Data), sizeof(Data)); }
+            template <typename T> size_t PopData(T& Buffer) { return PopBytes((uint8_t*)(&Buffer), sizeof(T)); }
+
+            ~CBinaryStack();
+    };
 }
 
 #endif

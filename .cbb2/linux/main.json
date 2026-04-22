@@ -54,6 +54,17 @@
 			"src":["src/cbep/*.cpp"],
             "obj":".obj/cbep"
         },
+
+        "entloc":{
+			"type" : "EXE",
+			"out":"game/bin",
+            "link_static" : ["cbsv"],
+            "static" : ["game/bin"],
+            "link_params" : "-Wl,-rpath=.",
+            "comp_params":"-std=c++17 -g3",
+			"src":["src/entloc/*.cpp"],
+            "obj":".obj/sdk"
+        },
         
         "cbpp_client":{
             "type" : "OBJ",

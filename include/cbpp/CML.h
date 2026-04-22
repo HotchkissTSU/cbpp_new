@@ -49,6 +49,7 @@ namespace cbpp::cml {
         UnexpectedEOF,          // EOF jumpscare in the middle of something
         VersionMismatch,        // Source file`s CML version is newer or too old
         BadVersion,             // Version is negative or is a float
+        BadEscapeChar,          // Wrong escape character is detected inside a string
 
         StackOverflow,          // Stack depth exceeded
         StackUnderflow,         // Attempt to pop an empty stack
@@ -87,6 +88,11 @@ namespace cbpp::cml {
 
         public:
             CObject() = default;
+
+            CObject(int_t iValue);
+            CObject(float_t fValue);
+            CObject(const char* sValue);
+
             CObject(IObject* pData);
             operator IObject*() const;
             IObject* GetPointer() const;
@@ -141,7 +147,7 @@ namespace cbpp::cml {
 
         cbpp::CStack<IncludeNode> m_aFilesStack;
 
-        CObject m_pRootObject = NIL;
+        CObject m_pRootObject = cml::NIL;
 
         size_t m_iLine = 0, m_iCol = 0;
 
