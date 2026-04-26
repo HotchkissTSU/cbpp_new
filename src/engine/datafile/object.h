@@ -1,12 +1,12 @@
-#ifndef CBPP_CML_OBJECTS_H
-#define CBPP_CML_OBJECTS_H
+#ifndef CBPP_DATAFILE_OBJECTS_H
+#define CBPP_DATAFILE_OBJECTS_H
 
 #include "cbpp/CML.h"
 #include "cbpp/String.h"
 #include "cbpp/Array.h"
 #include "cbpp/Table.h"
 
-namespace cbpp::cml {
+namespace cbpp::cdf {
     class IObject {
         public:
             virtual IObject* At(const char*) = 0;

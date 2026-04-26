@@ -8,8 +8,8 @@ We have 7 supported types:
     - Numbers, which can be either integers or floats, both 32-bit
     - Strings with UTF-8 support
     - Raw binary data
-    - Arrays
-    - Objects
+    - Lists
+    - Tables
 
 Mostly all language syntax looks like [name] [value]. You don`t have to embed 
 all your entries inside a root object - the parser will do it for you.
@@ -26,34 +26,40 @@ Here are some examples:
     > MyFloatExp 5e-2
     > MyString "Hello world!"
 
-2) Defining an object
+2) Number type suffixes
+    You can type 'f' or 'i' after any number to force it`s type 
+    to float or integer accordingly.
 
-    > MyObject {
+3) Defining a table
+
+    > MyTable {
     >     [any sub-entries here]
     > }
 
-3) Defining an array 
+    The nesting depth is limited by the compile-time constant.
+
+4) Defining a list
 
     > MyArray [
     >     1
     >     2
     >     "string!"
     >     {
-    >         Value "i`m inside nameless object inside an array!"
+    >         Value "i`m inside nameless object inside a list!"
     >     }
     > ]
 
-    When describing array contents you only write values w/o their names.
+    When describing list contents you only write values w/o their names.
     These values can later be addressed by their indices.
 
-4) Comments
+5) Comments
 
     Any sequence of characters starting with '#' and ending with either '#' or '\n'
     is considered a comment. Yes, you can embed '#...#'-like comments everywhere you want.
 
-5) String functionalities
+6) String functionalities
 
-    5.1) Escape characters
+    6.1) Escape characters
         Strings support the following list of escape characters:
 
             \n  - newline
@@ -62,14 +68,14 @@ Here are some examples:
             \"  - double quote
             \\  - backslash
 
-    5.2) Text file reference
+    6.2) Text file reference
         > FileReference @"path/to/file"
 
         Any string prefixed by '@' is considered as a 'file reference'.
         The parser will try opening said file, reading it`s contents as text and then pasting
         it as this variable`s value. The path is relative to the current assets root path.
 
-    5.3) Binary file reference
+    6.3) Binary file reference
         > BinaryReference &"path/to/file"
 
         Works as a text reference, but interpretes file`s content as raw binary data.
@@ -79,14 +85,14 @@ Here are some examples:
     Also note that UTF-8 is supported only inside strings, and using unicode anywhere 
     else may lead to undefined behaviour.
 
-6) Keywords
+7) Keywords
 
-    6.1) version [int]
+    7.1) version [int]
 
         The 'version' keyword allows you to specify this file`s CML standart version. The parser will discard
         sources it`ll find incompatible (too old or newer than the current version)
 
-    6.2) include "path/to/file.cml"
+    7.2) include "path/to/file.cml"
 
         Allows you to include the specified file in the place of the keyword. The included file is
         copy-pasted in the place of the include.

@@ -45,7 +45,7 @@ The CDF file consists of:
         5.2.2) N pairs of:
             struct {
                 uint32_t iNTIndex;
-                uint32_t 
+                uint32_t iOffset;
             };
 
     5.3) Array unit size (only present in array objects), uint32_t

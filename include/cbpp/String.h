@@ -1,6 +1,11 @@
 #ifndef CBPP_STRING_API_H
 #define CBPP_STRING_API_H
 
+/*
+    CB++ string facilities.
+    All data is expected to be encoded in UTF-8 or plain ASCII
+*/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
@@ -60,8 +65,17 @@ namespace cbpp {
             
             const char* String() const;
             char* Pointer();
+
+            /*
+                Length in bytes, including the NULL-terminator
+            */
+            size_t Size() const;
             
+            /*
+                Length in bytes, excluding the NULL-terminator
+            */
             size_t Length() const;
+            
             size_t LengthUpdate();
 
             void Set(const CString& sData);
@@ -136,6 +150,49 @@ namespace cbpp {
 
             // Output the string to an external buffer, adding the null-terminator
             size_t Bufferize(char* pBuffer, size_t iBuffSize) const;
+    };
+
+    /*
+        String pool.
+        All of them are stored continuously, the 
+        memory layout looks like this:
+
+        string1 \0 string2 \0 string3 \0
+
+        'indices' here are byte offsets from the beginning of
+        the pool.
+    */
+    class CStringPool {
+        char* m_pData = NULL;
+        size_t m_iCount = 0;
+        size_t m_iBytes = 0;
+
+        size_t PushString(const char* sData);
+
+        public:
+            CStringPool() = default;
+
+            const char* Data() const;
+
+            /*
+                Byte length of the allocated memory
+            */
+            size_t Size() const;
+
+            /*
+                Amount of strings in the pool
+            */
+            size_t Length() const;
+
+            size_t AddOrRef(const char* sData);
+            size_t Find(const char* sData) const;
+
+            const char* At(size_t iIndex) const;
+            const char* operator[](size_t iIndex) const;
+
+            void Clear();
+
+            ~CStringPool();
     };
 
     /*

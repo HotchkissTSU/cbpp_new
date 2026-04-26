@@ -8,28 +8,16 @@
 #include "cbpp/Array.h"
 #include "cbpp/Stack.h"
 
+#include "engine/datafile/object_model.h"
+
 #define CBPP_CML_VERSION 100                        // Actual language version
 #define CBPP_CML_VERSION_LEAST 100                  // Any versions below this are considered deprecated
 #define CBPP_CML_MAX_REFFILE (64 * (1 << 20))       // File reference size limit, 64 MB by default
 
-#define CBPP_CML_STACK_LIMIT 128
+#define CBPP_CML_STACK_LIMIT 128                    // Nesting depth limit
 
-namespace cbpp::cml {
-    typedef int32_t int_t;
-    typedef float float_t;
-
-    enum class EObjectClass {
-        Object,
-        Array,
-        Binary,
-        Integer,
-        Float,
-        String
-    };
-
-    const char* ClassString(EObjectClass);
-
-    enum class EErrorType : uint32_t {
+namespace cbpp::cdf {
+    enum class ETextError : uint32_t {
         Ok,                     // We`re cool
 
         Redefinition,           // Multiple definition of an identifier in the single scope
@@ -47,25 +35,14 @@ namespace cbpp::cml {
         BadNumber,              // Badly formatted number
         NoFile,                 // Source file not found
         UnexpectedEOF,          // EOF jumpscare in the middle of something
-        VersionMismatch,        // Source file`s CML version is newer or too old
+        VersionMismatch,        // Source file`s CML version is incompatible
         BadVersion,             // Version is negative or is a float
         BadEscapeChar,          // Wrong escape character is detected inside a string
+        BadNumberSuffix,        // Wrong number type suffix
 
         StackOverflow,          // Stack depth exceeded
         StackUnderflow,         // Attempt to pop an empty stack
         RefHugeFile             // The referenced file exceeds le limit
-    };
-
-    enum class EKeyword : uint32_t {
-        Name,
-        Include,
-        Version
-    };
-
-    enum class ERefType : uint32_t {
-        NoLink,
-        Text,
-        Binary
     };
 
     enum class EPathError : uint32_t {
@@ -78,61 +55,13 @@ namespace cbpp::cml {
         BadSeparator            // Something except '.' is used as a separator
     };
 
-    const char* StringError(EErrorType);
+    const char* StringError(ETextError);
     const char* StringError(EPathError);
 
-    class IObject;
-
-    class CObject {
-        IObject* m_pObj = NULL;
-
-        public:
-            CObject() = default;
-
-            CObject(int_t iValue);
-            CObject(float_t fValue);
-            CObject(const char* sValue);
-
-            CObject(IObject* pData);
-            operator IObject*() const;
-            IObject* GetPointer() const;
-
-            EObjectClass Class() const;
-            size_t Length() const;
-
-            bool operator==(const CObject& pOther) const;
-            bool operator!=(const CObject& pOther) const;
-
-            CObject& operator=(int_t iValue);
-            CObject& operator=(float_t fValue);
-            CObject& operator=(const char* sValue);
-            void SetBinaryData(const uint8_t* pData, size_t iLength);
-
-            CObject operator[](size_t iIndex);
-            CObject operator[](const char* sName);
-
-            const char* IndexName(size_t iIndex) const;
-
-            void Push(CObject pObj);
-            void Push(const char* sName, CObject pObj);
-
-            explicit operator int_t() const;
-            explicit operator float_t() const;
-            explicit operator const char*() const;
-            explicit operator uint8_t*();
-
-            operator bool() const;
-    };
-
-    void PrintObject(CObject pObj, size_t iDepth = 0);
-
-    // Null value to signal errors
-    extern const CObject NIL;
-
-    CObject CreateObject(EObjectClass iClass);
-    void DeleteObject(CObject pObj);
-
-    class CParser {
+    /*
+        Parse an entire CML file to the CObject tree
+    */
+    class CTextParser {
         struct IncludeNode {
             cbpp::CString sPath;
             cbpp::IFile* pFile = NULL;
@@ -142,18 +71,38 @@ namespace cbpp::cml {
             ~IncludeNode();
         };
 
+        enum class EKeyword : uint32_t {
+            Name,
+            Include,
+            Version
+        };
+
+        enum class ERefType : uint32_t {
+            NoLink,
+            Text,
+            Binary
+        };
+
+        enum class EForceNumberType : uint32_t {
+            None,
+            ForceInteger,
+            ForceFloat
+        };
+        
         cbpp::CArray<char> m_sLexemBuffer;
         cbpp::CString m_sCurrentName;
 
         cbpp::CStack<IncludeNode> m_aFilesStack;
 
-        CObject m_pRootObject = cml::NIL;
+        CObject m_pRootObject = cdf::NIL;
 
         size_t m_iLine = 0, m_iCol = 0;
 
         bool m_bExpectValue = false;
         bool m_bExpectVersion = false;
         bool m_bExpectInclude = false;
+
+        EForceNumberType m_iForceNumberType = EForceNumberType::None;
 
         ERefType m_iRefType = ERefType::NoLink;
 
@@ -165,16 +114,18 @@ namespace cbpp::cml {
         bool CheckRedef(const char*);
         EKeyword IsKeyword(const char*);
 
-        EErrorType ParseName(int);
-        EErrorType ParseString(int);
-        EErrorType ParseNumber(int);
+        ETextError ParseName(int);
+        ETextError ParseString(int);
+        ETextError ParseNumber(int);
 
-        EErrorType AddFile(const char*);
+        ETextError AddFile(const char*);
 
-        CObject ResolveFileRef(EErrorType&);
-
+        CObject ResolveFileRef(ETextError&);
+        
         public:
-            CParser() = default;
+            CTextParser() = default;
+
+            CTextParser& operator=(const CTextParser& Other);
 
             /*
                 Resets the parser. This is called automatically in
@@ -183,9 +134,9 @@ namespace cbpp::cml {
             void Reset();
 
             /*
-                Parse the said CML file
+                Parse the said cdf file
             */
-            EErrorType Parse(const char* sPath, bool bAllowIncludes = true);
+            ETextError Parse(const char* sPath, bool bAllowIncludes = true);
 
             CObject Root();
             
@@ -199,9 +150,9 @@ namespace cbpp::cml {
             EPathError GetPathError() const;
             
             size_t FormatError(EPathError iCode, char* sBuffer, size_t iBufferLn);
-            size_t FormatError(EErrorType iCode, char* sBuffer, size_t iBufferLn);
+            size_t FormatError(ETextError iCode, char* sBuffer, size_t iBufferLn);
 
-            ~CParser();
+            ~CTextParser();
     };
 }
 

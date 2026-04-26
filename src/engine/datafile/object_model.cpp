@@ -2,11 +2,11 @@
 
 #include <math.h>
 
-#include "engine/cml/object.h"
+#include "engine/datafile/object.h"
 
 // CObject
 
-namespace cbpp::cml {
+namespace cbpp::cdf {
     const CObject NIL = {};
 
     CObject::CObject(int_t iValue) {
@@ -56,12 +56,12 @@ namespace cbpp::cml {
     CObject::operator float_t() const { return m_pObj->AsFloat(); }
     CObject::operator const char*() const { return m_pObj->AsString(); }
     CObject::operator uint8_t*() { return m_pObj->AsBinary(); }
-    CObject::operator bool() const { return (*this) != cml::NIL; }
+    CObject::operator bool() const { return (*this) != cdf::NIL; }
 }
 
 // CIntObject
 
-namespace cbpp::cml {
+namespace cbpp::cdf {
     int_t CIntObject::AsInt() const {
         return m_iData;
     }
@@ -118,7 +118,7 @@ namespace cbpp::cml {
 
 // CBinaryObject
 
-namespace cbpp::cml {
+namespace cbpp::cdf {
     int_t CBinaryObject::AsInt() const {
         return 0;
     }
@@ -169,7 +169,7 @@ namespace cbpp::cml {
 
 // CFloatObject
 
-namespace cbpp::cml {
+namespace cbpp::cdf {
     int_t CFloatObject::AsInt() const {
         return (int_t)(m_fData);
     }
@@ -226,7 +226,7 @@ namespace cbpp::cml {
 
 // CStringObject
 
-namespace cbpp::cml {
+namespace cbpp::cdf {
     int_t CStringObject::AsInt() const {
         return 0;
     }
@@ -277,7 +277,7 @@ namespace cbpp::cml {
 
 // CArrayObject
 
-namespace cbpp::cml {
+namespace cbpp::cdf {
     int_t CArrayObject::AsInt() const {
         return 0;
     }
@@ -338,7 +338,7 @@ namespace cbpp::cml {
 
 // CDictObject
 
-namespace cbpp::cml {
+namespace cbpp::cdf {
     int_t CDictObject::AsInt() const {
         return 0;
     }
@@ -400,7 +400,7 @@ namespace cbpp::cml {
     }
 }
 
-namespace cbpp::cml {
+namespace cbpp::cdf {
     CObject CreateObject(EObjectClass iClass) {
         IObject* pObj = NULL;
 
@@ -445,7 +445,7 @@ namespace cbpp::cml {
     }
 
     void PrintObject(CObject pObj, size_t iDepth) {
-        if(pObj == cml::NIL) {
+        if(pObj == cdf::NIL) {
             PrintTabs(iDepth);
             puts("NIL");
         }
@@ -476,28 +476,28 @@ namespace cbpp::cml {
             }
 
             case EObjectClass::Integer: {
-                //PrintTabs(iDepth);
                 printf("%d\n", (int_t)(pObj));
                 break;
             }
 
             case EObjectClass::String: {
-                //PrintTabs(iDepth);
                 printf("%s\n", (const char*)(pObj));
                 break;
             }
 
             case EObjectClass::Float: {
-                //PrintTabs(iDepth);
                 printf("%f\n", (float_t)pObj);
                 break;
             }
 
             case EObjectClass::Binary: {
-                //PrintTabs(iDepth);
                 printf("Binary [%li]\n", pObj.Length());
                 break;
             }
         }
+    }
+
+    CObject CopyObject(CObject pObj) {
+
     }
 }

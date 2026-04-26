@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "cbpp/CML.h"
+#include "cbpp/Benchmark.h"
 
 extern "C" int cbpp_main(int argc, char** argv) {
     printf("Module EP!\n");
@@ -10,11 +11,10 @@ extern "C" int cbpp_main(int argc, char** argv) {
 
     char sBuffer[512];
 
-    cml::CParser test;
+    cdf::CTextParser test;
+    cdf::ETextError iCode = test.Parse("assets/test.cml");
 
-    cml::EErrorType iCode = test.Parse("assets/test.cml");
-
-    if( iCode != cml::EErrorType::Ok ) {
+    if( iCode != cdf::ETextError::Ok ) {
         test.FormatError(iCode, sBuffer, sizeof(sBuffer));
         puts(sBuffer);
 
@@ -25,10 +25,10 @@ extern "C" int cbpp_main(int argc, char** argv) {
         printf("> ");
         scanf("%s", sBuffer);
 
-        cml::CObject pTest = test[sBuffer];
+        cdf::CObject pTest = test[sBuffer];
 
         if(pTest) {
-            cml::PrintObject( pTest );
+            cdf::PrintObject( pTest );
         } else {
             test.FormatError( test.GetPathError(), sBuffer, sizeof(sBuffer) );
             puts(sBuffer);
