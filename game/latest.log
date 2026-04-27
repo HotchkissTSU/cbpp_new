@@ -1308,3 +1308,39 @@ Module 'bin/test.so' has finished with exit code -1
 [CBEP] cmd option '--game' (or '-g') requires an argument
 [CBEP] No gamefile is specified, assuming default ('default')
 Unable to open 'bin/default.so' as a shared library (Success)
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1
+ == Log start == 
+Module 'bin/test.so' has finished with exit code -1

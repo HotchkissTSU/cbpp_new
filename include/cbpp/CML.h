@@ -23,6 +23,7 @@ namespace cbpp::cdf {
         Redefinition,           // Multiple definition of an identifier in the single scope
         StrayIdentifier,        // Random identifier that does not connect to anything
         StrayNumber,            // Random out-of-context number
+        StrayKeyword,           // Random out-of-context keyword
         StrayString,            // Random out-of-context string
         StrayBlock,             // Nameless block
         StrayArray,             // Nameless array
@@ -74,7 +75,9 @@ namespace cbpp::cdf {
         enum class EKeyword : uint32_t {
             Name,
             Include,
-            Version
+            Version,
+            True,
+            False
         };
 
         enum class ERefType : uint32_t {
@@ -93,6 +96,7 @@ namespace cbpp::cdf {
         cbpp::CString m_sCurrentName;
 
         cbpp::CStack<IncludeNode> m_aFilesStack;
+        cbpp::CStack<CObject> m_aStack;
 
         CObject m_pRootObject = cdf::NIL;
 
@@ -117,6 +121,9 @@ namespace cbpp::cdf {
         ETextError ParseName(int);
         ETextError ParseString(int);
         ETextError ParseNumber(int);
+
+        ETextError PushFloat(const char* sName, float_t fValue);
+        ETextError PushInt(const char* sName, int_t iValue);
 
         ETextError AddFile(const char*);
 
