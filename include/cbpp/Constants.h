@@ -17,6 +17,9 @@
     #define CBPP_ON_DEBUG(code)
 #endif
 
+// Macro to mark some declaration as non-threadsafe. Can later be changed to a static assert to quickly locate them.
+#define non_thread_safe
+
 /*
     A protected class cannot be copied or constructed from itself
 */

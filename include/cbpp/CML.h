@@ -46,16 +46,6 @@ namespace cbpp::cdf {
         RefHugeFile             // The referenced file exceeds le limit
     };
 
-    enum class EPathError : uint32_t {
-        Ok,                     // OK
-
-        NotFound,               // Subobject does not exist
-        ObjIndex,               // Indexing an object
-        ArrayAccess,            // Accessing an array with '.'
-        BadIndex,               // NaN or float is used as index
-        BadSeparator            // Something except '.' is used as a separator
-    };
-
     const char* StringError(ETextError);
     const char* StringError(EPathError);
 
@@ -113,8 +103,6 @@ namespace cbpp::cdf {
 
         ERefType m_iRefType = ERefType::NoLink;
 
-        EPathError m_iPathError = EPathError::Ok;
-
         int Peek();
 
         bool IsValidNameStart(int);
@@ -148,7 +136,7 @@ namespace cbpp::cdf {
             void Reset();
 
             /*
-                Parse the said cdf file
+                Parse the said CML file
             */
             ETextError Parse(const char* sPath, bool bAllowIncludes = true);
 
@@ -163,7 +151,6 @@ namespace cbpp::cdf {
 
             EPathError GetPathError() const;
             
-            size_t FormatError(EPathError iCode, char* sBuffer, size_t iBufferLn);
             size_t FormatError(ETextError iCode, char* sBuffer, size_t iBufferLn);
 
             ~CTextParser();

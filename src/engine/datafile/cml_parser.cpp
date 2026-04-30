@@ -225,25 +225,33 @@ namespace cbpp::cdf {
             iCurrent = this->Peek();
 
             if(bExpectEscape == true) {
-                if(iCurrent == 'n') {
-                    m_sLexemBuffer.PushBack('\n');
-                    bExpectEscape = false;
+                bExpectEscape = false;
 
-                } else if(iCurrent == 't') {
-                    m_sLexemBuffer.PushBack('\t');
-                    bExpectEscape = false;
+                switch (iCurrent) {
+                    case 'n': {
+                        m_sLexemBuffer.PushBack('\n');
+                        break;
+                    }
 
-                } else if(iCurrent == '\\') {
-                    m_sLexemBuffer.PushBack('\\');
-                    bExpectEscape = false;
+                    case 't': {
+                        m_sLexemBuffer.PushBack('\t');
+                        break;
+                    }
 
-                } else if(iCurrent == '"') {
-                    m_sLexemBuffer.PushBack('"');
-                    bExpectEscape = false;
+                    case '\\': {
+                        m_sLexemBuffer.PushBack('\\');
+                        break;
+                    }
 
-                } else {
-                    m_sLexemBuffer.PushBack('\0');
-                    return ETextError::BadEscapeChar;
+                    case '"': {
+                        m_sLexemBuffer.PushBack('"');
+                        break;
+                    }
+
+                    default: {
+                        m_sLexemBuffer.PushBack('\0');
+                        return ETextError::BadEscapeChar;
+                    }
                 }
                 
             } else {
@@ -350,24 +358,25 @@ namespace cbpp::cdf {
             if(isdigit(iCurrent) || (iCurrent == '.') || (iCurrent == 'e') || (iCurrent == 'E') || (iCurrent == '-')) {
                 m_sLexemBuffer.PushBack(iCurrent);
             } else {
-                if(isalpha(iCurrent) && islower(iCurrent)) { // type suffix
+                m_sLexemBuffer.PushBack('\0');
+
+                if(isalpha(iCurrent)) { // type suffix
                     if(iCurrent == 'i') {
                         m_iForceNumberType = EForceNumberType::ForceInteger;
                     } else if(iCurrent == 'f') {
                         m_iForceNumberType = EForceNumberType::ForceFloat;
                     } else {
-                        m_sLexemBuffer.PushBack('\0');
                         return ETextError::BadNumberSuffix;
                     }
                 }
 
-                m_sLexemBuffer.PushBack('\0');
-
                 ETextError iRet = this->ProcessNumber();
                 if(iRet != ETextError::Ok) { return iRet; }
                 
-                iRet = this->ProcessChar(iCurrent);
-                if(iRet != ETextError::Ok) { return iRet; }
+                if( m_iForceNumberType != EForceNumberType::None ) {
+                    iRet = this->ProcessChar(iCurrent);
+                    if(iRet != ETextError::Ok) { return iRet; }
+                }
 
                 return ETextError::Ok;
             }
@@ -508,7 +517,7 @@ namespace cbpp::cdf {
                     break;
                 }
             }
-
+            
         } else if(iCurrent == '@') {
             m_iRefType = ERefType::Text;                                            // REFERENCES
 
@@ -590,9 +599,6 @@ namespace cbpp::cdf {
             return ETextError::Redefinition;
         }
 
-        CObject pObj = CreateObject(EObjectClass::Float);
-        pObj = fValue;
-
         if( sName == NULL ) {
             pHead.Push(fValue);
         } else {
@@ -602,7 +608,7 @@ namespace cbpp::cdf {
         return ETextError::Ok;
     }
 
-    ETextError CTextParser::PushInt(const char* sName, int_t fValue) {
+    ETextError CTextParser::PushInt(const char* sName, int_t iValue) {
         if(m_aStack.Length() == 0) {
             return ETextError::StackUnderflow;
         }
@@ -613,13 +619,10 @@ namespace cbpp::cdf {
             return ETextError::Redefinition;
         }
 
-        CObject pObj = CreateObject(EObjectClass::Integer);
-        pObj = fValue;
-
         if( sName == NULL ) {
-            pHead.Push(fValue);
+            pHead.Push(iValue);
         } else {
-            pHead.Push(sName, fValue);
+            pHead.Push(sName, iValue);
         }
 
         return ETextError::Ok;
@@ -667,15 +670,9 @@ namespace cbpp::cdf {
         return snprintf(sBuffer, iBufferLn, "%s:%i.%i %s (near '%s')", sFile, m_iLine, m_iCol, sError, m_sLexemBuffer.Data());
     }
 
-    size_t CTextParser::FormatError(EPathError iCode, char* sBuffer, size_t iBufferLn) {
-        return snprintf( sBuffer, iBufferLn, "%s", StringError(iCode) );
-    }
-
     CObject CTextParser::Root() {
         return m_pRootObject;
     }
-
-    EPathError CTextParser::GetPathError() const { return m_iPathError; }
 
     CObject CTextParser::operator[](const char* sPath) {
         if(m_pRootObject == cdf::NIL) { return cdf::NIL; }

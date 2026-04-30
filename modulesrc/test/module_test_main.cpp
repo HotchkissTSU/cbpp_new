@@ -32,8 +32,7 @@ extern "C" int cbpp_main(int argc, char** argv) {
         if(pTest) {
             cdf::PrintObject( pTest );
         } else {
-            test.FormatError( test.GetPathError(), sBuffer, sizeof(sBuffer) );
-            puts(sBuffer);
+            continue;
         }
     }
 

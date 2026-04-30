@@ -8,11 +8,16 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "cbpp/Constants.h"
+
 namespace cbpp::cdf {
+    // Integer type to use
     typedef int32_t int_t;
+
+    // Floating-point type to use
     typedef float float_t;
 
-     enum class EObjectClass {
+    enum class EObjectClass {
         Object,
         Array,
         Binary,
@@ -23,9 +28,21 @@ namespace cbpp::cdf {
 
     const char* ClassString(EObjectClass);
 
+    enum class EPathError : uint32_t {
+        Ok,                     // OK
+
+        NotFound,               // Subobject does not exist
+        ObjIndex,               // Indexing an object
+        ArrayAccess,            // Accessing an array with '.'
+        BadIndex,               // NaN or float is used as index
+        BadSeparator            // Something except '.' is used as a separator
+    };
+
     class IObject;
 
     class CObject {
+        non_thread_safe static EPathError s_iPathError;
+
         IObject* m_pObj = NULL;
 
         public:
@@ -71,6 +88,8 @@ namespace cbpp::cdf {
 
             operator bool() const;
     };
+
+    EPathError GetPathAccessError();
 
     void PrintObject(CObject pObj, size_t iDepth = 0);
 
