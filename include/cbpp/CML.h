@@ -77,7 +77,8 @@ namespace cbpp::cdf {
             Include,
             Version,
             True,
-            False
+            False,
+            Inherit
         };
 
         enum class ERefType : uint32_t {
@@ -105,6 +106,8 @@ namespace cbpp::cdf {
         bool m_bExpectValue = false;
         bool m_bExpectVersion = false;
         bool m_bExpectInclude = false;
+        bool m_bInsideArray = false;
+        bool m_bAllowIncludes = true;
 
         EForceNumberType m_iForceNumberType = EForceNumberType::None;
 
@@ -128,6 +131,10 @@ namespace cbpp::cdf {
         ETextError AddFile(const char*);
 
         CObject ResolveFileRef(ETextError&);
+
+        ETextError ProcessChar(int iChar);
+        ETextError ProcessNumber();
+        ETextError ProcessName();
         
         public:
             CTextParser() = default;

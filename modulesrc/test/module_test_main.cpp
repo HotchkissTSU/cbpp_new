@@ -21,6 +21,8 @@ extern "C" int cbpp_main(int argc, char** argv) {
         return -1;
     }
 
+    cdf::PrintObject(test.Root());
+
     while(true) {
         printf("> ");
         scanf("%s", sBuffer);

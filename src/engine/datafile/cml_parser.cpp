@@ -9,7 +9,7 @@ namespace cbpp::cdf {
             case ETextError::Ok:                return "Ok";
             case ETextError::IllBlock:          return "Bad block";
             case ETextError::IllArray:          return "Bad array";
-            case ETextError::Redefinition:      return "Redifinition in the local scope";
+            case ETextError::Redefinition:      return "Redefinition in the local scope";
             case ETextError::StrayBlock:        return "Stray block";
             case ETextError::StrayArray:        return "Stray array";
             case ETextError::StrayIdentifier:   return "Stray identifier";
@@ -78,7 +78,9 @@ namespace cbpp::cdf {
             return EKeyword::True;
         } else if( strcmp(sName, "false") == 0 ) {
             return EKeyword::False;
-        } else {
+        } else if( strcmp(sName, "inherit") == 0 ) {
+            return EKeyword::Inherit;
+        } else {   
             return EKeyword::Name;
         }
     }
@@ -128,6 +130,64 @@ namespace cbpp::cdf {
         return iChar;
     }
 
+    ETextError CTextParser::ProcessName() {
+        EKeyword iKW = this->IsKeyword(m_sLexemBuffer.Data());
+
+        switch (iKW) {
+            case EKeyword::Name: {
+                if(m_bExpectValue || m_bInsideArray) {
+                    return ETextError::StrayIdentifier;
+                }
+
+                m_sCurrentName.Set( m_sLexemBuffer.Data() );
+                m_bExpectValue = true;
+                break;
+            }
+            
+            case EKeyword::Version: {
+                if(m_bExpectValue || m_bExpectVersion) {
+                    return ETextError::StrayKeyword;
+                }
+
+                m_bExpectVersion = true;
+                break;
+            }
+            
+            case EKeyword::Include: {
+                if(m_bExpectValue || m_bExpectInclude) {
+                    return ETextError::StrayKeyword;
+                }
+
+                m_bExpectInclude = true;
+                break;
+            }
+
+            case EKeyword::True: {
+                if(!m_bExpectValue && !m_bInsideArray) {
+                    return ETextError::StrayKeyword;
+                }
+
+                const char* sName = m_bInsideArray ? NULL : m_sCurrentName.String();
+                this->PushInt( sName, 1 );
+                m_bExpectValue = false;
+                break;
+            }
+
+            case EKeyword::False: {
+                if(!m_bExpectValue && !m_bInsideArray) {
+                    return ETextError::StrayKeyword;
+                }
+
+                const char* sName = m_bInsideArray ? NULL : m_sCurrentName.String();
+                this->PushInt( sName, 0 );
+                m_bExpectValue = false;
+                break;
+            }
+        }
+
+        return ETextError::Ok;
+    }
+
     ETextError CTextParser::ParseName(int iChar) {
         m_sLexemBuffer.Clear();
 
@@ -141,6 +201,13 @@ namespace cbpp::cdf {
                 m_sLexemBuffer.PushBack(iCurrent);
             } else {    // name ends
                 m_sLexemBuffer.PushBack('\0');
+
+                ETextError iRet = this->ProcessName();
+                if(iRet != ETextError::Ok) { return iRet; }
+
+                iRet = this->ProcessChar(iCurrent);
+                if(iRet != ETextError::Ok) { return iRet; }
+
                 return ETextError::Ok;
             }
         }
@@ -174,10 +241,6 @@ namespace cbpp::cdf {
                     m_sLexemBuffer.PushBack('"');
                     bExpectEscape = false;
 
-                } else if(iCurrent == '\'') {
-                    m_sLexemBuffer.PushBack('\'');
-                    bExpectEscape = false;
-
                 } else {
                     m_sLexemBuffer.PushBack('\0');
                     return ETextError::BadEscapeChar;
@@ -189,7 +252,7 @@ namespace cbpp::cdf {
                     continue;
                 }
 
-                if(iCurrent == '"' || iCurrent == '\'') {
+                if(iCurrent == '"') {
                     m_sLexemBuffer.PushBack('\0');
                     return ETextError::Ok;
                 }
@@ -199,6 +262,81 @@ namespace cbpp::cdf {
         }
 
         return ETextError::UnexpectedEOF;
+    }
+
+    ETextError CTextParser::ProcessNumber() {
+        if(!m_bExpectValue && !m_bInsideArray && !m_bExpectVersion) {
+            return ETextError::StrayNumber;
+        }
+
+        if(m_iRefType != ERefType::NoLink) {
+            return ETextError::BadReference;
+        }
+
+        int iNumberTest = cbpp::IsNumber(m_sLexemBuffer.Data());
+
+        float_t fData = 0.0f;
+        int_t iData = 0;
+        EObjectClass iClass = EObjectClass::Integer;
+
+        switch (iNumberTest) {
+            case 1: {
+                iClass = EObjectClass::Float;
+                fData = (float_t)strtof(m_sLexemBuffer.Data(), NULL);
+                break;
+            }
+                
+            case 0: {
+                iClass = EObjectClass::Integer;
+                iData = (int_t)atoi(m_sLexemBuffer.Data());
+                break;
+            }
+
+            case -1: {
+                return ETextError::BadNumber;
+            }
+        }
+        
+        switch (m_iForceNumberType) {
+            case EForceNumberType::ForceInteger: {
+                iClass = EObjectClass::Integer;
+                iData = (fData != 0.0f) ? (int_t)fData : iData;         // apply the forced number type
+                break;
+            }
+
+            case EForceNumberType::ForceFloat: {
+                iClass = EObjectClass::Float;
+                fData = (iData != 0) ? (float_t)iData : fData;
+                break;
+            }
+        }
+        
+        m_iForceNumberType = EForceNumberType::None;
+        
+        if(m_bExpectVersion) {
+            if(iNumberTest != 0 || iData <= 0) {
+                return ETextError::BadVersion;
+            }
+
+            if(iData > CBPP_CML_VERSION || iData < CBPP_CML_VERSION_LEAST) {
+                return ETextError::VersionMismatch;
+            }
+
+            m_bExpectVersion = false;
+
+        } else {
+            const char* sName = m_bInsideArray ? NULL : m_sCurrentName.String();
+
+            if(iClass == EObjectClass::Integer) {
+                this->PushInt(sName, iData);
+            } else {
+                this->PushFloat(sName, fData);
+            }
+
+            m_bExpectValue = false;
+        }
+
+        return ETextError::Ok;
     }
 
     ETextError CTextParser::ParseNumber(int iChar) {
@@ -224,11 +362,167 @@ namespace cbpp::cdf {
                 }
 
                 m_sLexemBuffer.PushBack('\0');
+
+                ETextError iRet = this->ProcessNumber();
+                if(iRet != ETextError::Ok) { return iRet; }
+                
+                iRet = this->ProcessChar(iCurrent);
+                if(iRet != ETextError::Ok) { return iRet; }
+
                 return ETextError::Ok;
             }
         }
         
         return ETextError::UnexpectedEOF;
+    }
+
+    ETextError CTextParser::ProcessChar(int iCurrent) {
+        if(this->IsValidNameStart(iCurrent)) {                                      // NAME
+            ETextError iRet = this->ParseName(iCurrent);
+            if(iRet != ETextError::Ok) { return iRet; }
+            
+        } else if(iCurrent == '"') {                                                // STRING
+            if(!m_bExpectValue && !m_bInsideArray && !m_bExpectInclude) {
+                return ETextError::StrayString;
+            }
+
+            ETextError iRet = this->ParseString(iCurrent);
+            if(iRet != ETextError::Ok) { return iRet; }
+
+            if(m_bExpectInclude) {
+                if(m_bAllowIncludes) {
+                    iRet = AddFile(m_sLexemBuffer.Data());  // including
+                    if(iRet != ETextError::Ok) {
+                        return iRet;
+                    }
+                }
+
+                m_bExpectInclude = false;
+
+            } else {
+                CObject pStringObj;
+
+                CObject pHead = m_aStack.Head();
+                if(!m_bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
+                    return ETextError::Redefinition;
+                }
+
+                if(m_iRefType == ERefType::NoLink) {
+                    pStringObj = CreateObject(EObjectClass::String);
+                    pStringObj = m_sLexemBuffer.Data();
+                } else {
+                    pStringObj = this->ResolveFileRef(iRet);
+
+                    if(pStringObj == cdf::NIL) {
+                        return iRet;
+                    }
+
+                    m_iRefType = ERefType::NoLink;
+                }
+
+                if(!m_bInsideArray) {
+                    pHead.Push(m_sCurrentName.String(), pStringObj);
+                } else {
+                    pHead.Push(pStringObj);
+                }
+
+                m_bExpectValue = false;
+            }
+            
+        } else if(isdigit(iCurrent) || (iCurrent == '-') || (iCurrent == '.')) {    // NUMBER
+            ETextError iRet = this->ParseNumber(iCurrent);
+            if(iRet != ETextError::Ok) { return iRet; }
+            
+        } else if(iCurrent == '{') {                                                // BLOCK OPENING
+            if(!m_bExpectValue && !m_bInsideArray) {
+                return ETextError::StrayBlock;
+            }
+
+            if(m_iRefType != ERefType::NoLink) {
+                return ETextError::BadReference;
+            }
+
+            if(m_aStack.Length() == CBPP_CML_STACK_LIMIT) {
+                return ETextError::StackOverflow;
+            }
+            
+            CObject pHead = m_aStack.Head();
+            if(!m_bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
+                return ETextError::Redefinition;
+            }
+            
+            CObject pDict = CreateObject(EObjectClass::Object);
+
+            if(!m_bInsideArray) {
+                pHead.Push(m_sCurrentName.String(), pDict);
+            } else {
+                pHead.Push(pDict);
+            }
+
+            m_aStack.Push(pDict);
+            
+            m_bExpectValue = false;
+
+        } else if(iCurrent == '}' || iCurrent == ']') {                             // SCOPE CLOSING
+            if(m_aStack.Length() <= 1) {
+                return ETextError::StackUnderflow;
+            }
+
+            m_aStack.Pop();
+
+        } else if(iCurrent == '[') {                                                // ARRAY OPENING
+            if(!m_bExpectValue && !m_bInsideArray) {
+                return ETextError::StrayArray;
+            }
+
+            if(m_iRefType != ERefType::NoLink) {
+                return ETextError::BadReference;
+            }
+
+            if(m_aStack.Length() == CBPP_CML_STACK_LIMIT) {
+                return ETextError::StackOverflow;
+            }
+
+            CObject pHead = m_aStack.Head();
+            if(!m_bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
+                return ETextError::Redefinition;
+            }
+
+            CObject pArr = CreateObject(EObjectClass::Array);
+    
+            if(!m_bInsideArray) {
+                pHead.Push(m_sCurrentName.String(), pArr);
+            } else {
+                pHead.Push(pArr);
+            }
+
+            m_aStack.Push(pArr);
+
+            m_bExpectValue = false;
+
+        } else if(iCurrent == '#') {                                                // COMMENTARY
+            int iCommChar = 1;
+            while(iCommChar != 0) {
+                iCommChar = this->Peek();
+                if(iCommChar == '\n' || iCommChar == '#') {
+                    break;
+                }
+            }
+
+        } else if(iCurrent == '@') {
+            m_iRefType = ERefType::Text;                                            // REFERENCES
+
+        } else if(iCurrent == '&') {
+            m_iRefType = ERefType::Binary;
+            
+        } else if(iCurrent == '\n') {
+            if(m_bExpectInclude || m_bExpectVersion) {
+                m_iLine -= 2;
+                return ETextError::StrayKeyword;
+            }
+        }
+
+        return ETextError::Ok;
     }
 
     CObject CTextParser::ResolveFileRef(ETextError& iCode) {
@@ -276,6 +570,7 @@ namespace cbpp::cdf {
         m_bExpectInclude = false;
         m_bExpectValue = false;
         m_bExpectVersion = false;
+        m_bInsideArray = false;
 
         m_aFilesStack.Clear();
         m_aStack.Clear();
@@ -333,6 +628,8 @@ namespace cbpp::cdf {
     ETextError CTextParser::Parse(const char* sPath, bool bAllowIncludes) {
         this->Reset();
 
+        m_bAllowIncludes = bAllowIncludes;
+
         ETextError iRet = AddFile(sPath);
 
         if(iRet != ETextError::Ok) { return iRet; }
@@ -341,290 +638,14 @@ namespace cbpp::cdf {
 
         m_aStack.Push(m_pRootObject);
 
-        bool bInsideArray = false;
-
         int iCurrent = 1;
         while(iCurrent != 0) {
             iCurrent = this->Peek();
 
-            if(this->IsValidNameStart(iCurrent)) {                  // NAME
-                ETextError iRet = this->ParseName(iCurrent);
-                if(iRet != ETextError::Ok) { return iRet; }
+            m_bInsideArray = m_aStack.Head().Class() == EObjectClass::Array;
 
-                EKeyword iKW = this->IsKeyword(m_sLexemBuffer.Data());
-
-                switch (iKW) {
-                    case EKeyword::Name: {
-                        if(m_bExpectValue || bInsideArray) {
-                            return ETextError::StrayIdentifier;
-                        }
-
-                        m_sCurrentName.Set( m_sLexemBuffer.Data() );
-                        m_bExpectValue = true;
-                        break;
-                    }
-                    
-                    case EKeyword::Version: {
-                        if(m_bExpectValue || m_bExpectVersion) {
-                            return ETextError::StrayKeyword;
-                        }
-
-                        m_bExpectVersion = true;
-                        break;
-                    }
-                    
-                    case EKeyword::Include: {
-                        if(m_bExpectValue || m_bExpectInclude) {
-                            return ETextError::StrayKeyword;
-                        }
-
-                        m_bExpectInclude = true;
-                        break;
-                    }
-
-                    case EKeyword::True: {
-                        if(!m_bExpectValue) {
-                            return ETextError::StrayKeyword;
-                        }
-
-                        const char* sName = bInsideArray ? NULL : m_sCurrentName.String();
-                        this->PushInt( sName, 1 );
-                        m_bExpectValue = false;
-                        break;
-                    }
-
-                    case EKeyword::False: {
-                        if(!m_bExpectValue) {
-                            return ETextError::StrayKeyword;
-                        }
-
-                        const char* sName = bInsideArray ? NULL : m_sCurrentName.String();
-                        this->PushInt( sName, 0 );
-                        m_bExpectValue = false;
-                        break;
-                    }
-                }
-                
-            } else if(iCurrent == '"' || iCurrent == '\'') {        // STRING
-                if(!m_bExpectValue && !bInsideArray && !m_bExpectInclude) {
-                    return ETextError::StrayString;
-                }
-
-                ETextError iRet = this->ParseString(iCurrent);
-                if(iRet != ETextError::Ok) { return iRet; }
-
-                if(m_bExpectInclude) {
-                    if(bAllowIncludes) {
-                        iRet = AddFile(m_sLexemBuffer.Data());  // including
-                        if(iRet != ETextError::Ok) {
-                            return iRet;
-                        }
-                    }
-
-                    m_bExpectInclude = false;
-
-                } else {
-                    CObject pStringObj;
-
-                    CObject pHead = m_aStack.Head();
-                    if(!bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
-                        return ETextError::Redefinition;
-                    }
-
-                    if(m_iRefType == ERefType::NoLink) {
-                        pStringObj = CreateObject(EObjectClass::String);
-                        pStringObj = m_sLexemBuffer.Data();
-                    } else {
-                        pStringObj = this->ResolveFileRef(iRet);
-
-                        if(pStringObj == cdf::NIL) {
-                            return iRet;
-                        }
-
-                        m_iRefType = ERefType::NoLink;
-                    }
-
-                    if(!bInsideArray) {
-                        pHead.Push(m_sCurrentName.String(), pStringObj);
-                    } else {
-                        pHead.Push(pStringObj);
-                    }
-
-                    m_bExpectValue = false;
-                }
-
-            } else if(isdigit(iCurrent) || (iCurrent == '-') || (iCurrent == '.')) {    // NUMBER
-                if(!m_bExpectValue && !bInsideArray && !m_bExpectVersion) {
-                    return ETextError::StrayNumber;
-                }
-
-                if(m_iRefType != ERefType::NoLink) {
-                    return ETextError::BadReference;
-                }
-
-                ETextError iRet = this->ParseNumber(iCurrent);
-                if(iRet != ETextError::Ok) { return iRet; }
-
-                int iNumberTest = cbpp::IsNumber(m_sLexemBuffer.Data());
-
-                float_t fData = 0.0f;
-                int_t iData = 0;
-                EObjectClass iClass = EObjectClass::Integer;
-
-                switch (iNumberTest) {
-                    case 1: {
-                        iClass = EObjectClass::Float;
-                        fData = (float_t)strtof(m_sLexemBuffer.Data(), NULL);
-                        break;
-                    }
-                        
-                    case 0: {
-                        iClass = EObjectClass::Integer;
-                        iData = (int_t)atoi(m_sLexemBuffer.Data());
-                        break;
-                    }
-
-                    case -1: {
-                        return ETextError::BadNumber;
-                    }
-                }
-                
-                switch (m_iForceNumberType) {
-                    case EForceNumberType::ForceInteger: {
-                        iClass = EObjectClass::Integer;
-                        iData = (fData != 0.0f) ? (int_t)fData : iData;         // apply the forced number type
-                        break;
-                    }
-
-                    case EForceNumberType::ForceFloat: {
-                        iClass = EObjectClass::Float;
-                        fData = (iData != 0) ? (float_t)iData : fData;
-                        break;
-                    }
-                }
-                
-                m_iForceNumberType = EForceNumberType::None;
-                
-                if(m_bExpectVersion) {
-                    if(iNumberTest != 0 || iData <= 0) {
-                        return ETextError::BadVersion;
-                    }
-
-                    if(iData > CBPP_CML_VERSION || iData < CBPP_CML_VERSION_LEAST) {
-                        return ETextError::VersionMismatch;
-                    }
-
-                    m_bExpectVersion = false;
-
-                } else {
-                    const char* sName = bInsideArray ? NULL : m_sCurrentName.String();
-
-                    if(iClass == EObjectClass::Integer) {
-                        this->PushInt(sName, iData);
-                    } else {
-                        this->PushFloat(sName, fData);
-                    }
-
-                    m_bExpectValue = false;
-                }
-                
-            } else if(iCurrent == '{') {                    // BLOCK OPENING
-                if(!m_bExpectValue && !bInsideArray) {
-                    return ETextError::StrayBlock;
-                }
-
-                if(m_iRefType != ERefType::NoLink) {
-                    return ETextError::BadReference;
-                }
-
-                if(m_aStack.Length() == CBPP_CML_STACK_LIMIT) {
-                    return ETextError::StackOverflow;
-                }
-                
-                CObject pHead = m_aStack.Head();
-                if(!bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
-                    return ETextError::Redefinition;
-                }
-                
-                CObject pDict = CreateObject(EObjectClass::Object);
-
-                if(!bInsideArray) {
-                    pHead.Push(m_sCurrentName.String(), pDict);
-                } else {
-                    pHead.Push(pDict);
-                }
-
-                m_aStack.Push(pDict);
-                
-                m_bExpectValue = false;
-
-            } else if(iCurrent == '}') {                    // BLOCK CLOSING
-                if(m_aStack.Length() <= 1) {
-                    return ETextError::StackUnderflow;
-                }
-
-                m_aStack.Pop();
-
-            } else if(iCurrent == '[') {                    // ARRAY OPENING
-                if(!m_bExpectValue && !bInsideArray) {
-                    return ETextError::StrayArray;
-                }
-
-                if(m_iRefType != ERefType::NoLink) {
-                    return ETextError::BadReference;
-                }
-
-                if(m_aStack.Length() == CBPP_CML_STACK_LIMIT) {
-                    return ETextError::StackOverflow;
-                }
-
-                CObject pHead = m_aStack.Head();
-                if(!bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
-                    return ETextError::Redefinition;
-                }
-
-                CObject pArr = CreateObject(EObjectClass::Array);
-        
-                if(!bInsideArray) {
-                    pHead.Push(m_sCurrentName.String(), pArr);
-                } else {
-                    pHead.Push(pArr);
-                }
-
-                m_aStack.Push(pArr);
-
-                m_bExpectValue = false;
-
-            } else if(iCurrent == ']') {                    // ARRAY CLOSING
-                if(m_aStack.Length() <= 1) {
-                    return ETextError::StackUnderflow;
-                }
-
-                m_aStack.Pop();
-
-            } else if(iCurrent == '#') {                    // COMMENTARY
-                int iCommChar = 1;
-                while(iCommChar != 0) {
-                    iCommChar = this->Peek();
-                    if(iCommChar == '\n' || iCommChar == '#') {
-                        break;
-                    }
-                }
-
-            } else if(iCurrent == '@') {
-                m_iRefType = ERefType::Text;
-
-            } else if(iCurrent == '&') {
-                m_iRefType = ERefType::Binary;
-                
-            } else if(iCurrent == '\n') {
-                if(m_bExpectInclude || m_bExpectVersion) {
-                    m_iLine -= 2;
-                    return ETextError::StrayKeyword;
-                }
-            }
-            
-            bInsideArray = m_aStack.Head().Class() == EObjectClass::Array;
+            iRet = this->ProcessChar(iCurrent);
+            if(iRet != ETextError::Ok) { return iRet; }
         }
         
         return ETextError::Ok;
@@ -657,99 +678,8 @@ namespace cbpp::cdf {
     EPathError CTextParser::GetPathError() const { return m_iPathError; }
 
     CObject CTextParser::operator[](const char* sPath) {
-        char* pCurrent = (char*)sPath;
-
-        cbpp::CArray<char> sName, sNumber;
-        bool bInsideName = false;
-
-        CObject pCurrentObj = m_pRootObject;
-
-        while(*pCurrent != '\0') {
-            char iCurrent = *pCurrent;
-
-            if( IsValidNameStart(iCurrent) && !bInsideName ) {   // name starts
-                bInsideName = true;
-                sName.PushBack(iCurrent);
-                pCurrent++;
-                continue;
-            }
-
-            if( isalnum(iCurrent) || iCurrent == '_' ) {        // name continues
-                sName.PushBack(iCurrent);
-            } else {                                            // name ended
-                sName.PushBack('\0');
-
-                if(pCurrentObj.Class() == EObjectClass::Array) {
-                    m_iPathError = EPathError::ArrayAccess;
-                    return cdf::NIL;
-                }
-
-                CObject pTest = pCurrentObj[ (const char*)(sName.Data()) ];
-                if(pTest == cdf::NIL) {
-                    m_iPathError = EPathError::NotFound;
-                    return cdf::NIL;
-                }
-
-                pCurrentObj = pTest;
-
-                sName.Clear();
-                bInsideName = false;
-            }
-
-            if(iCurrent == '[') {
-                sNumber.Clear();
-
-                while(*pCurrent != '\0' && *pCurrent != ']') {
-                    if(isalnum(*pCurrent)) {
-                        sNumber.PushBack(*pCurrent);
-                    }
-                    pCurrent++;
-                }
-
-                sNumber.PushBack('\0');
-                int iNumberTest = cbpp::IsNumber(sNumber.Data());
-
-                if( iNumberTest == 0 ) {
-                    iNumberTest = atoi( sNumber.Data() );
-                } else {
-                    m_iPathError = EPathError::BadIndex;
-                    return cdf::NIL;
-                }
-
-                CObject pTest = pCurrentObj[(size_t)iNumberTest];
-
-                if(pTest == cdf::NIL) {
-                    m_iPathError = EPathError::NotFound;
-                    return cdf::NIL;
-                }
-
-                pCurrentObj = pTest;
-                pCurrent++;
-                
-                continue;
-            }
-
-            if(iCurrent != '.' && !bInsideName) {
-                m_iPathError = EPathError::BadSeparator;
-                return cdf::NIL;
-            }
-
-            pCurrent++;
-        }
-
-        if(sName.Length() > 0) {
-            sName.PushBack('\0');
-
-            CObject pTest = pCurrentObj[ (const char*)(sName.Data()) ];
-            if(pTest == cdf::NIL) {
-                m_iPathError = EPathError::NotFound;
-                return cdf::NIL;
-            }
-
-            return pTest;
-        }
-
-        return pCurrentObj;
+        if(m_pRootObject == cdf::NIL) { return cdf::NIL; }
+        return m_pRootObject.Access(sPath);
     }
 
     CTextParser::~CTextParser() {

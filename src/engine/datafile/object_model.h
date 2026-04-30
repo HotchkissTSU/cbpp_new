@@ -52,6 +52,7 @@ namespace cbpp::cdf {
 
             CObject operator[](size_t iIndex);
             CObject operator[](const char* sName);
+            CObject Access(const char* sPath);
 
             const char* IndexName(size_t iIndex) const;
 
