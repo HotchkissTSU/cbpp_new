@@ -59,6 +59,11 @@ namespace cbpp::cdf {
     CObject::operator uint8_t*() { return m_pObj->AsBinary(); }
     CObject::operator bool() const { return (*this) != cdf::NIL; }
 
+    int_t CObject::AsInt() const { return m_pObj->AsInt(); }
+    float_t CObject::AsFloat() const { return m_pObj->AsFloat(); }
+    const char* CObject::AsString() const { return m_pObj->AsString(); }
+    uint8_t* CObject::AsBinary() { return m_pObj->AsBinary(); }
+
     #define OBJ_ADVANCE                                             \
         sName.PushBack('\0');                                       \
         CObject pTest = pObject[(const char*)(sName.Data())];       \
@@ -563,6 +568,61 @@ namespace cbpp::cdf {
     }
 
     CObject CopyObject(CObject pObj) {
+        if(pObj == cdf::NIL) { return cdf::NIL; }
 
+        switch( pObj.Class() ) {
+            case EObjectClass::Integer: {
+                CObject pNew = CreateObject(EObjectClass::Integer);
+                pNew = pObj.AsInt();
+                return pNew;
+            }
+
+            case EObjectClass::Float: {
+                CObject pNew = CreateObject(EObjectClass::Float);
+                pNew = pObj.AsFloat();
+                return pNew;
+            }
+
+            case EObjectClass::String: {
+                CObject pNew = CreateObject(EObjectClass::String);
+                pNew = pObj.AsString();
+                return pNew;
+            }
+
+            case EObjectClass::Binary: {
+                CObject pNew = CreateObject(EObjectClass::Binary);
+                pNew.SetBinaryData( pObj.AsBinary(), pObj.Length() );
+                return pNew;
+            }
+
+            case EObjectClass::Array: {
+                CObject pNew = CreateObject(EObjectClass::Array);
+
+                for(size_t i = 0; i < pObj.Length(); i++) {
+                    pNew.Push( CopyObject(pObj[i]) );
+                }
+
+                return pNew;
+            }
+
+            case EObjectClass::Object: {
+                CObject pNew = CreateObject(EObjectClass::Object);
+
+                for(size_t i = 0; i < pObj.Length(); i++) {
+                    const char* sName = pObj.IndexName(i);
+                    CObject pValue = pObj[i];
+
+                    pNew.Push( sName, CopyObject(pValue) );
+                }
+
+                return pNew;
+            }
+        }
+
+        return cdf::NIL;
+    }
+
+    EPathError GetPathAccessError() {
+        return CObject::s_iPathError;
     }
 }

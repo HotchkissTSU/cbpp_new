@@ -32,6 +32,8 @@ namespace cbpp::cdf {
 
         BadFileRef,             // Can`t open said file path
         BadReference,           // Anything except string is marked as reference
+        BadInheritance,         // Inheriting is used on non-table objects
+        ParentNotFound,         // Parent object not found
 
         BadNumber,              // Badly formatted number
         NoFile,                 // Source file not found
@@ -98,6 +100,7 @@ namespace cbpp::cdf {
         bool m_bExpectInclude = false;
         bool m_bInsideArray = false;
         bool m_bAllowIncludes = true;
+        bool m_bExpectInherit = false;
 
         EForceNumberType m_iForceNumberType = EForceNumberType::None;
 

@@ -41,7 +41,8 @@ namespace cbpp::cdf {
     class IObject;
 
     class CObject {
-        non_thread_safe static EPathError s_iPathError;
+        non_thread_safe constexpr static EPathError s_iPathError = EPathError::Ok;
+        friend EPathError GetPathAccessError();
 
         IObject* m_pObj = NULL;
 
@@ -96,8 +97,19 @@ namespace cbpp::cdf {
     // Null value to signal errors
     extern const CObject NIL;
 
+    /*
+        Create a new object of the given type
+    */
     CObject CreateObject(EObjectClass iClass);
+
+    /*
+        Deallocate the given object
+    */
     void DeleteObject(CObject pObj);
+
+    /*
+        Get an independent copy of the given object
+    */
     CObject CopyObject(CObject pObj);
 }
 

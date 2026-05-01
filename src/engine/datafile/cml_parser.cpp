@@ -27,6 +27,8 @@ namespace cbpp::cdf {
             case ETextError::RefHugeFile:       return "The referenced file is too big";
             case ETextError::BadNumberSuffix:   return "Bad number type suffix";
             case ETextError::StrayKeyword:      return "Stray keyword";
+            case ETextError::BadInheritance:    return "Only tables can inherit";
+            case ETextError::ParentNotFound:    return "Parent object not found";
 
             default:                            return "(null)";
         }
@@ -183,6 +185,20 @@ namespace cbpp::cdf {
                 m_bExpectValue = false;
                 break;
             }
+
+            case EKeyword::Inherit: {
+                if(m_bExpectValue || m_bExpectInherit) {
+                    return ETextError::StrayKeyword;
+                }
+
+                if( m_aStack.Head().Class() != EObjectClass::Object ) {
+                    return ETextError::BadInheritance;
+                }
+
+                m_bExpectInherit = true;
+
+                break;
+            }
         }
 
         return ETextError::Ok;
@@ -319,8 +335,6 @@ namespace cbpp::cdf {
             }
         }
         
-        m_iForceNumberType = EForceNumberType::None;
-        
         if(m_bExpectVersion) {
             if(iNumberTest != 0 || iData <= 0) {
                 return ETextError::BadVersion;
@@ -360,7 +374,7 @@ namespace cbpp::cdf {
             } else {
                 m_sLexemBuffer.PushBack('\0');
 
-                if(isalpha(iCurrent)) { // type suffix
+                if(isalpha(iCurrent)) { // we have a type suffix
                     if(iCurrent == 'i') {
                         m_iForceNumberType = EForceNumberType::ForceInteger;
                     } else if(iCurrent == 'f') {
@@ -369,14 +383,17 @@ namespace cbpp::cdf {
                         return ETextError::BadNumberSuffix;
                     }
                 }
-
+                
                 ETextError iRet = this->ProcessNumber();
                 if(iRet != ETextError::Ok) { return iRet; }
-                
-                if( m_iForceNumberType != EForceNumberType::None ) {
+
+                if( m_iForceNumberType == EForceNumberType::None ) {
                     iRet = this->ProcessChar(iCurrent);
-                    if(iRet != ETextError::Ok) { return iRet; }
+                } else {
+                    m_iForceNumberType = EForceNumberType::None;
                 }
+
+                if(iRet != ETextError::Ok) { return iRet; }
 
                 return ETextError::Ok;
             }
@@ -391,14 +408,40 @@ namespace cbpp::cdf {
             if(iRet != ETextError::Ok) { return iRet; }
             
         } else if(iCurrent == '"') {                                                // STRING
-            if(!m_bExpectValue && !m_bInsideArray && !m_bExpectInclude) {
+            if(!m_bExpectValue && !m_bInsideArray && !m_bExpectInclude && !m_bExpectInherit) {
                 return ETextError::StrayString;
             }
-
+            
             ETextError iRet = this->ParseString(iCurrent);
             if(iRet != ETextError::Ok) { return iRet; }
 
-            if(m_bExpectInclude) {
+            if(m_bExpectInherit) {
+                CObject pHead = m_aStack.Head();
+                CObject pParent = m_pRootObject.Access(m_sLexemBuffer.Data());
+
+                if(pParent == cdf::NIL) {
+                    return ETextError::ParentNotFound;
+                }
+
+                for(size_t i = 0; i < pParent.Length(); i++) {
+                    const char* sName = pParent.IndexName(i);
+                    CObject pValue = pParent[i];
+
+                    CObject pOurs = pHead[sName];
+                    
+                    if( pOurs != cdf::NIL && pValue.Class() == EObjectClass::Array && pOurs.Class() == EObjectClass::Array ) { // arrays are concatenated
+                        for(size_t k = 0; k < pValue.Length(); k++) {
+                            pOurs.Push( CopyObject(pValue[k]) );
+                        }
+
+                    } else {
+                        pHead.Push(sName, CopyObject(pValue));
+                    }
+                }
+
+                m_bExpectInherit = false;
+
+            } else if(m_bExpectInclude) {
                 if(m_bAllowIncludes) {
                     iRet = AddFile(m_sLexemBuffer.Data());  // including
                     if(iRet != ETextError::Ok) {
@@ -677,6 +720,16 @@ namespace cbpp::cdf {
     CObject CTextParser::operator[](const char* sPath) {
         if(m_pRootObject == cdf::NIL) { return cdf::NIL; }
         return m_pRootObject.Access(sPath);
+    }
+
+    CTextParser& CTextParser::operator=(const CTextParser& Other) {
+        if(m_pRootObject != cdf::NIL) {
+            DeleteObject(m_pRootObject);
+        }
+
+        m_pRootObject = CopyObject(Other.m_pRootObject);
+
+        return *this;
     }
 
     CTextParser::~CTextParser() {
