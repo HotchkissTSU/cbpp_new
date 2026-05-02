@@ -9,7 +9,6 @@ namespace cbpp::cdf {
             case ETextError::Ok:                return "Ok";
             case ETextError::IllBlock:          return "Bad block";
             case ETextError::IllArray:          return "Bad array";
-            case ETextError::Redefinition:      return "Redefinition in the local scope";
             case ETextError::StrayBlock:        return "Stray block";
             case ETextError::StrayArray:        return "Stray array";
             case ETextError::StrayIdentifier:   return "Stray identifier";
@@ -29,7 +28,7 @@ namespace cbpp::cdf {
             case ETextError::StrayKeyword:      return "Stray keyword";
             case ETextError::BadInheritance:    return "Only tables can inherit, and only from tables";
             case ETextError::ParentNotFound:    return "Parent object not found";
-            case ETextError::InheritTypeMix:    return "Can`t overwrite values of different types";
+            case ETextError::OverrideTypeMix:   return "Can`t overwrite values of different types";
 
             default:                            return "(null)";
         }
@@ -81,7 +80,7 @@ namespace cbpp::cdf {
             return EKeyword::True;
         } else if( strcmp(sName, "false") == 0 ) {
             return EKeyword::False;
-        } else if( strcmp(sName, "inherit") == 0 ) {
+        } else if( strcmp(sName, "concat") == 0 ) {
             return EKeyword::Inherit;
         } else {   
             return EKeyword::Name;
@@ -442,7 +441,7 @@ namespace cbpp::cdf {
                             
                         } else {
                             if(pOurs.Class() != pParents.Class()) {
-                                return ETextError::InheritTypeMix;
+                                return ETextError::OverrideTypeMix;
                             }
                             
                             if(pOurs.Class() == EObjectClass::Array) {          // arrays are concatenated
@@ -479,10 +478,12 @@ namespace cbpp::cdf {
                     CObject pStringObj;
 
                     CObject pHead = m_aStack.Head();
-                    if(!m_bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
-                        return ETextError::Redefinition;
-                    }
+                    CObject pTest = pHead[m_sCurrentName.String()];
 
+                    if(!m_bInsideArray && pTest != cdf::NIL) { // overwriting
+                        DeleteObject(pTest);
+                    }
+                    
                     if(m_iRefType == ERefType::NoLink) {
                         pStringObj = CreateObject(EObjectClass::String);
                         pStringObj = m_sLexemBuffer.Data();
@@ -524,11 +525,11 @@ namespace cbpp::cdf {
             }
             
             CObject pHead = m_aStack.Head();
-            if(!m_bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
-                return ETextError::Redefinition;
+            CObject pDict = pHead[m_sCurrentName.String()];
+
+            if(pDict == cdf::NIL) {
+                pDict = CreateObject(EObjectClass::Object);
             }
-            
-            CObject pDict = CreateObject(EObjectClass::Object);
 
             if(!m_bInsideArray) {
                 pHead.Push(m_sCurrentName.String(), pDict);
@@ -561,12 +562,12 @@ namespace cbpp::cdf {
             }
 
             CObject pHead = m_aStack.Head();
-            if(!m_bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
-                return ETextError::Redefinition;
+            CObject pArr = pHead[m_sCurrentName.String()];
+            
+            if(pArr == cdf::NIL) {
+                pArr = CreateObject(EObjectClass::Array);
             }
 
-            CObject pArr = CreateObject(EObjectClass::Array);
-    
             if(!m_bInsideArray) {
                 pHead.Push(m_sCurrentName.String(), pArr);
             } else {
@@ -659,16 +660,25 @@ namespace cbpp::cdf {
     }
 
     ETextError CTextParser::PushFloat(const char* sName, float_t fValue) {
-        CObject pHead = m_aStack.Head();
-
-        if(pHead[sName] != cdf::NIL) {
-            return ETextError::Redefinition;
+        if(m_aStack.Length() == 0) {
+            return ETextError::StackUnderflow;
         }
 
-        if( sName == NULL ) {
-            pHead.Push(fValue);
+        CObject pHead = m_aStack.Head();
+        CObject pTest = pHead[sName];
+
+        if(pTest != cdf::NIL) {
+            if( pTest.Class() == EObjectClass::Float ) {
+                pTest = fValue;
+            } else {
+                return ETextError::OverrideTypeMix;
+            }
         } else {
-            pHead.Push(sName, fValue);
+            if( sName == NULL ) {
+                pHead.Push(fValue);
+            } else {
+                pHead.Push(sName, fValue);
+            }
         }
 
         return ETextError::Ok;
@@ -680,15 +690,20 @@ namespace cbpp::cdf {
         }
 
         CObject pHead = m_aStack.Head();
+        CObject pTest = pHead[sName];
 
-        if(pHead[sName] != cdf::NIL) {
-            return ETextError::Redefinition;
-        }
-
-        if( sName == NULL ) {
-            pHead.Push(iValue);
+        if(pTest != cdf::NIL) {
+            if( pTest.Class() == EObjectClass::Integer ) {
+                pTest = iValue;
+            } else {
+                return ETextError::OverrideTypeMix;
+            }
         } else {
-            pHead.Push(sName, iValue);
+            if( sName == NULL ) {
+                pHead.Push(iValue);
+            } else {
+                pHead.Push(sName, iValue);
+            }
         }
 
         return ETextError::Ok;

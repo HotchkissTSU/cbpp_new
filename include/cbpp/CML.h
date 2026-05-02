@@ -20,7 +20,6 @@ namespace cbpp::cdf {
     enum class ETextError : uint32_t {
         Ok,                     // We`re cool
 
-        Redefinition,           // Multiple definition of an identifier in the single scope
         StrayIdentifier,        // Random identifier that does not connect to anything
         StrayNumber,            // Random out-of-context number
         StrayKeyword,           // Random out-of-context keyword
@@ -34,7 +33,7 @@ namespace cbpp::cdf {
         BadReference,           // Anything except string is marked as reference
         BadInheritance,         // Inheriting is used on non-table objects
         ParentNotFound,         // Parent object not found
-        InheritTypeMix,         // The child value we are about to overwrite is of different type than parent`s one
+        OverrideTypeMix,        // The child value we are about to overwrite is of different type than parent`s one
 
         BadNumber,              // Badly formatted number
         NoFile,                 // Source file not found
