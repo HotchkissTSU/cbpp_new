@@ -9,6 +9,8 @@
 #define CBPP_CDF_VERSION_MINOR 0
 #define CBPP_CDF_VERSION_PATCH 0
 
+#define CBPP_CDF_BLOCK_SIZE 512
+
 namespace cbpp::cdf {
     enum class EBinaryError : uint32_t {
         Ok,                                 // Success
@@ -19,7 +21,7 @@ namespace cbpp::cdf {
         InvalidName,                        // Nametable entry has an invalid name in it
     };
 
-    struct Header {
+    struct BinaryHeader {
         union {
             char aHead[4];
             uint32_t iHead;
@@ -31,10 +33,20 @@ namespace cbpp::cdf {
 
         uint16_t iUserType;
     };
+    
+    struct BinaryBlockHeader {
+        uint8_t iNameIndex;
+        uint8_t iTypeIndex;
 
-    struct ObjectHeader {
-        uint8_t iTypeIndex : 7;
-        uint8_t bCompressed : 1;
+        uint32_t iDataLength;
+    };
+
+    struct BinaryBlock {
+        union {
+            BinaryBlockHeader Head;
+
+            char aBytes[CBPP_CDF_BLOCK_SIZE];
+        };
     };
 
     class CBinaryParser {

@@ -27,8 +27,9 @@ namespace cbpp::cdf {
             case ETextError::RefHugeFile:       return "The referenced file is too big";
             case ETextError::BadNumberSuffix:   return "Bad number type suffix";
             case ETextError::StrayKeyword:      return "Stray keyword";
-            case ETextError::BadInheritance:    return "Only tables can inherit";
+            case ETextError::BadInheritance:    return "Only tables can inherit, and only from tables";
             case ETextError::ParentNotFound:    return "Parent object not found";
+            case ETextError::InheritTypeMix:    return "Can`t overwrite values of different types";
 
             default:                            return "(null)";
         }
@@ -137,57 +138,62 @@ namespace cbpp::cdf {
 
         switch (iKW) {
             case EKeyword::Name: {
-                if(m_bExpectValue || m_bInsideArray) {
+                if(m_iPromise == EPromise::Value || m_bInsideArray) {
                     return ETextError::StrayIdentifier;
                 }
 
+                m_iPromise = EPromise::Value;
+
                 m_sCurrentName.Set( m_sLexemBuffer.Data() );
-                m_bExpectValue = true;
                 break;
             }
             
             case EKeyword::Version: {
-                if(m_bExpectValue || m_bExpectVersion) {
+                if(m_iPromise != EPromise::None) {
                     return ETextError::StrayKeyword;
                 }
 
-                m_bExpectVersion = true;
+                m_iPromise = EPromise::Version;
+
                 break;
             }
             
             case EKeyword::Include: {
-                if(m_bExpectValue || m_bExpectInclude) {
+                if(m_iPromise != EPromise::None) {
                     return ETextError::StrayKeyword;
                 }
 
-                m_bExpectInclude = true;
+                m_iPromise = EPromise::IncludePath;
+
                 break;
             }
 
             case EKeyword::True: {
-                if(!m_bExpectValue && !m_bInsideArray) {
+                if(m_iPromise != EPromise::Value && !m_bInsideArray) {
                     return ETextError::StrayKeyword;
                 }
 
+                m_iPromise = EPromise::None;
+
                 const char* sName = m_bInsideArray ? NULL : m_sCurrentName.String();
                 this->PushInt( sName, 1 );
-                m_bExpectValue = false;
                 break;
             }
 
             case EKeyword::False: {
-                if(!m_bExpectValue && !m_bInsideArray) {
+                if(m_iPromise != EPromise::Value && !m_bInsideArray) {
                     return ETextError::StrayKeyword;
                 }
 
+                m_iPromise = EPromise::None;
+
                 const char* sName = m_bInsideArray ? NULL : m_sCurrentName.String();
                 this->PushInt( sName, 0 );
-                m_bExpectValue = false;
                 break;
             }
 
             case EKeyword::Inherit: {
-                if(m_bExpectValue || m_bExpectInherit) {
+                if(m_iPromise != EPromise::None) {
                     return ETextError::StrayKeyword;
                 }
 
@@ -195,7 +201,7 @@ namespace cbpp::cdf {
                     return ETextError::BadInheritance;
                 }
 
-                m_bExpectInherit = true;
+                m_iPromise = EPromise::ParentPath;
 
                 break;
             }
@@ -289,7 +295,7 @@ namespace cbpp::cdf {
     }
 
     ETextError CTextParser::ProcessNumber() {
-        if(!m_bExpectValue && !m_bInsideArray && !m_bExpectVersion) {
+        if(!m_bInsideArray && m_iPromise == EPromise::None) {
             return ETextError::StrayNumber;
         }
 
@@ -335,7 +341,7 @@ namespace cbpp::cdf {
             }
         }
         
-        if(m_bExpectVersion) {
+        if(m_iPromise == EPromise::Version) {
             if(iNumberTest != 0 || iData <= 0) {
                 return ETextError::BadVersion;
             }
@@ -343,10 +349,12 @@ namespace cbpp::cdf {
             if(iData > CBPP_CML_VERSION || iData < CBPP_CML_VERSION_LEAST) {
                 return ETextError::VersionMismatch;
             }
-
-            m_bExpectVersion = false;
-
+            
         } else {
+            if(!m_bInsideArray && m_iPromise == EPromise::None) {
+                return ETextError::StrayNumber;
+            }
+
             const char* sName = m_bInsideArray ? NULL : m_sCurrentName.String();
 
             if(iClass == EObjectClass::Integer) {
@@ -354,9 +362,9 @@ namespace cbpp::cdf {
             } else {
                 this->PushFloat(sName, fData);
             }
-
-            m_bExpectValue = false;
         }
+
+        m_iPromise = EPromise::None;
 
         return ETextError::Ok;
     }
@@ -408,85 +416,102 @@ namespace cbpp::cdf {
             if(iRet != ETextError::Ok) { return iRet; }
             
         } else if(iCurrent == '"') {                                                // STRING
-            if(!m_bExpectValue && !m_bInsideArray && !m_bExpectInclude && !m_bExpectInherit) {
+            if(!m_bInsideArray && m_iPromise == EPromise::None) {
                 return ETextError::StrayString;
             }
             
             ETextError iRet = this->ParseString(iCurrent);
             if(iRet != ETextError::Ok) { return iRet; }
 
-            if(m_bExpectInherit) {
-                CObject pHead = m_aStack.Head();
-                CObject pParent = m_pRootObject.Access(m_sLexemBuffer.Data());
+            switch(m_iPromise) {
+                case EPromise::ParentPath: {
+                    CObject pHead = m_aStack.Head();
+                    CObject pParent = m_pRootObject.Access(m_sLexemBuffer.Data());
 
-                if(pParent == cdf::NIL) {
-                    return ETextError::ParentNotFound;
-                }
-
-                for(size_t i = 0; i < pParent.Length(); i++) {
-                    const char* sName = pParent.IndexName(i);
-                    CObject pValue = pParent[i];
-
-                    CObject pOurs = pHead[sName];
+                    if(pParent == cdf::NIL) {
+                        return ETextError::ParentNotFound;
+                    }
                     
-                    if( pOurs != cdf::NIL && pValue.Class() == EObjectClass::Array && pOurs.Class() == EObjectClass::Array ) { // arrays are concatenated
-                        for(size_t k = 0; k < pValue.Length(); k++) {
-                            pOurs.Push( CopyObject(pValue[k]) );
+                    for(size_t i = 0; i < pParent.Length(); i++) {
+                        const char* sName = pParent.IndexName(i);
+                        CObject pParents = pParent[i];
+                        CObject pOurs = pHead[sName];
+
+                        if(pOurs == cdf::NIL) {
+                            pHead.Push(sName, CopyObject(pParents));            // new value
+                            
+                        } else {
+                            if(pOurs.Class() != pParents.Class()) {
+                                return ETextError::InheritTypeMix;
+                            }
+                            
+                            if(pOurs.Class() == EObjectClass::Array) {          // arrays are concatenated
+                                for(size_t k = 0; k < pParents.Length(); k++) {
+                                    pOurs.Push( CopyObject(pParents[k]) );
+                                }
+
+                            } else {
+                                DeleteObject(pOurs);                            // other values are overriden
+                                pHead.Push(sName, CopyObject(pParents)); 
+                            }
+                        }
+                    }
+                    
+                    break;
+                }
+                
+                case EPromise::IncludePath: {
+                    if(m_bAllowIncludes) {
+                        iRet = AddFile(m_sLexemBuffer.Data());  // including
+                        if(iRet != ETextError::Ok) {
+                            return iRet;
+                        }
+                    }
+
+                    break;
+                }
+                
+                default: {
+                    if(!m_bInsideArray && m_iPromise == EPromise::None) {
+                        return ETextError::StrayString;
+                    }
+
+                    CObject pStringObj;
+
+                    CObject pHead = m_aStack.Head();
+                    if(!m_bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
+                        return ETextError::Redefinition;
+                    }
+
+                    if(m_iRefType == ERefType::NoLink) {
+                        pStringObj = CreateObject(EObjectClass::String);
+                        pStringObj = m_sLexemBuffer.Data();
+                    } else {
+                        pStringObj = this->ResolveFileRef(iRet);
+
+                        if(pStringObj == cdf::NIL) {
+                            return iRet;
                         }
 
+                        m_iRefType = ERefType::NoLink;
+                    }
+
+                    if(!m_bInsideArray) {
+                        pHead.Push(m_sCurrentName.String(), pStringObj);
                     } else {
-                        pHead.Push(sName, CopyObject(pValue));
+                        pHead.Push(pStringObj);
                     }
-                }
-
-                m_bExpectInherit = false;
-
-            } else if(m_bExpectInclude) {
-                if(m_bAllowIncludes) {
-                    iRet = AddFile(m_sLexemBuffer.Data());  // including
-                    if(iRet != ETextError::Ok) {
-                        return iRet;
-                    }
-                }
-
-                m_bExpectInclude = false;
-
-            } else {
-                CObject pStringObj;
-
-                CObject pHead = m_aStack.Head();
-                if(!m_bInsideArray && pHead[m_sCurrentName.String()] != cdf::NIL) {
-                    return ETextError::Redefinition;
-                }
-
-                if(m_iRefType == ERefType::NoLink) {
-                    pStringObj = CreateObject(EObjectClass::String);
-                    pStringObj = m_sLexemBuffer.Data();
-                } else {
-                    pStringObj = this->ResolveFileRef(iRet);
-
-                    if(pStringObj == cdf::NIL) {
-                        return iRet;
-                    }
-
-                    m_iRefType = ERefType::NoLink;
-                }
-
-                if(!m_bInsideArray) {
-                    pHead.Push(m_sCurrentName.String(), pStringObj);
-                } else {
-                    pHead.Push(pStringObj);
-                }
-
-                m_bExpectValue = false;
+                }                    
             }
+            
+            m_iPromise = EPromise::None;
             
         } else if(isdigit(iCurrent) || (iCurrent == '-') || (iCurrent == '.')) {    // NUMBER
             ETextError iRet = this->ParseNumber(iCurrent);
             if(iRet != ETextError::Ok) { return iRet; }
             
         } else if(iCurrent == '{') {                                                // BLOCK OPENING
-            if(!m_bExpectValue && !m_bInsideArray) {
+            if(!m_bInsideArray && m_iPromise == EPromise::None) {
                 return ETextError::StrayBlock;
             }
 
@@ -513,7 +538,7 @@ namespace cbpp::cdf {
 
             m_aStack.Push(pDict);
             
-            m_bExpectValue = false;
+            m_iPromise = EPromise::None;
 
         } else if(iCurrent == '}' || iCurrent == ']') {                             // SCOPE CLOSING
             if(m_aStack.Length() <= 1) {
@@ -523,7 +548,7 @@ namespace cbpp::cdf {
             m_aStack.Pop();
 
         } else if(iCurrent == '[') {                                                // ARRAY OPENING
-            if(!m_bExpectValue && !m_bInsideArray) {
+            if(m_iPromise == EPromise::None && !m_bInsideArray) {
                 return ETextError::StrayArray;
             }
 
@@ -550,7 +575,7 @@ namespace cbpp::cdf {
 
             m_aStack.Push(pArr);
 
-            m_bExpectValue = false;
+            m_iPromise = EPromise::None;
 
         } else if(iCurrent == '#') {                                                // COMMENTARY
             int iCommChar = 1;
@@ -568,12 +593,12 @@ namespace cbpp::cdf {
             m_iRefType = ERefType::Binary;
             
         } else if(iCurrent == '\n') {
-            if(m_bExpectInclude || m_bExpectVersion) {
+            if(m_iPromise != EPromise::None) {
                 m_iLine -= 2;
                 return ETextError::StrayKeyword;
             }
         }
-
+        
         return ETextError::Ok;
     }
 
@@ -619,9 +644,7 @@ namespace cbpp::cdf {
     }
 
     void CTextParser::Reset() {
-        m_bExpectInclude = false;
-        m_bExpectValue = false;
-        m_bExpectVersion = false;
+        m_iPromise = EPromise::None;
         m_bInsideArray = false;
 
         m_aFilesStack.Clear();

@@ -34,6 +34,7 @@ namespace cbpp::cdf {
         BadReference,           // Anything except string is marked as reference
         BadInheritance,         // Inheriting is used on non-table objects
         ParentNotFound,         // Parent object not found
+        InheritTypeMix,         // The child value we are about to overwrite is of different type than parent`s one
 
         BadNumber,              // Badly formatted number
         NoFile,                 // Source file not found
@@ -84,6 +85,14 @@ namespace cbpp::cdf {
             ForceInteger,
             ForceFloat
         };
+
+        enum class EPromise : uint32_t {
+            None,
+            Value,
+            Version,
+            IncludePath,
+            ParentPath
+        };
         
         cbpp::CArray<char> m_sLexemBuffer;
         cbpp::CString m_sCurrentName;
@@ -95,12 +104,10 @@ namespace cbpp::cdf {
 
         size_t m_iLine = 0, m_iCol = 0;
 
-        bool m_bExpectValue = false;
-        bool m_bExpectVersion = false;
-        bool m_bExpectInclude = false;
-        bool m_bInsideArray = false;
         bool m_bAllowIncludes = true;
-        bool m_bExpectInherit = false;
+        bool m_bInsideArray = false;
+        
+        EPromise m_iPromise = EPromise::None; // remember the 4 bytes of promise
 
         EForceNumberType m_iForceNumberType = EForceNumberType::None;
 

@@ -104,3 +104,9 @@ Here are some examples:
 
         Allows you to include the specified file in the place of the keyword. The included file is
         copy-pasted in the place of the include.
+
+    8.3) inherit "path.to.parent_table"
+
+        Allows you to copy-paste parent`s entries in the current table (only tables are supported as child and parent objects).
+        If the child table has some objects with same names as the parent ones`, they are overriden.
+        Arrays are concatenated instead of being overriden.
