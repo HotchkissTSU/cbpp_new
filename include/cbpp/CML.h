@@ -65,7 +65,7 @@ namespace cbpp::cdf {
             ~IncludeNode();
         };
 
-        enum class EKeyword : uint32_t {
+        enum class EKeyword : uint8_t {
             Name,
             Include,
             Version,
@@ -74,19 +74,19 @@ namespace cbpp::cdf {
             Inherit
         };
 
-        enum class ERefType : uint32_t {
+        enum class ERefType : uint8_t {
             NoLink,
             Text,
             Binary
         };
 
-        enum class EForceNumberType : uint32_t {
+        enum class EForceNumberType : uint8_t {
             None,
             ForceInteger,
             ForceFloat
         };
 
-        enum class EPromise : uint32_t {
+        enum class EPromise : uint8_t {
             None,
             Value,
             Version,
@@ -107,7 +107,7 @@ namespace cbpp::cdf {
         bool m_bAllowIncludes = true;
         bool m_bInsideArray = false;
         
-        EPromise m_iPromise = EPromise::None; // remember the 4 bytes of promise
+        EPromise m_iPromise = EPromise::None; // remember our promise
 
         EForceNumberType m_iForceNumberType = EForceNumberType::None;
 
