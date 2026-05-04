@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdint.h>
 
 namespace cbpp {
     CBenchmarker::CBenchmarker(const char* sFuncName) : m_sFuncName(sFuncName) {
@@ -10,7 +11,9 @@ namespace cbpp {
 
     CBenchmarker::~CBenchmarker() {
         clock_t iEnd = clock();
-        int iMS = (int)(((double)(iEnd - m_iBegin) / (double)CLOCKS_PER_SEC) * 1000000.0);
-        printf("Benchmark for %s: %ims\n", m_sFuncName, iMS);
+
+        double fMS = (double)((1000.0 * (iEnd - m_iBegin)) / CLOCKS_PER_SEC);
+
+        printf("Benchmark for %s: %.3fms\n", m_sFuncName, fMS);
     }
 }

@@ -9,7 +9,7 @@
 #define CBPP_CDF_VERSION_MINOR 0
 #define CBPP_CDF_VERSION_PATCH 0
 
-#define CBPP_CDF_BLOCK_SIZE 512
+#define CBPP_CDF_BLOCK_SIZE 256
 
 namespace cbpp::cdf {
     enum class EBinaryError : uint32_t {
@@ -36,7 +36,11 @@ namespace cbpp::cdf {
     
     struct BinaryBlockHeader {
         uint8_t iNameIndex;
-        uint8_t iTypeIndex;
+
+        union {
+            uint8_t iTypeIndex : 7;
+            uint8_t iEndMark : 1;
+        };
 
         uint32_t iDataLength;
     };

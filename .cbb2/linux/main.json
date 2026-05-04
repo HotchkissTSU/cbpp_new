@@ -8,7 +8,7 @@
         "static" : ["lib"],
         "link_static":[],
 		"link_dynamic":[],
-        "comp_params":"-std=c++17 -fPIC -g3",
+        "comp_params":"-std=c++17 -fPIC -O2 -g3",
 		"link_params":"",
         "out_libfile":"lib",
         "include":["src", "include"],

@@ -26,8 +26,7 @@ namespace cbpp::cdf {
         StrayString,            // Random out-of-context string
         StrayBlock,             // Nameless block
         StrayArray,             // Nameless array
-        IllBlock,               // Badly formatted block (curvy braces mismatch)
-        IllArray,               // Badly formatted array (square braces mismatch)
+        ScobeMiss,              // Badly formatted block (curvy braces mismatch)
 
         BadFileRef,             // Can`t open said file path
         BadReference,           // Anything except string is marked as reference
@@ -64,6 +63,11 @@ namespace cbpp::cdf {
             ~IncludeNode();
         };
 
+        struct ScobeNode {
+            char iScobe = '\0';
+            size_t iLevel = 0;
+        };
+
         enum class EKeyword : uint8_t {
             Name,
             Include,
@@ -98,6 +102,7 @@ namespace cbpp::cdf {
 
         cbpp::CStack<IncludeNode> m_aFilesStack;
         cbpp::CStack<CObject> m_aStack;
+        cbpp::CStack<ScobeNode> m_aScobesStack;
 
         CObject m_pRootObject = cdf::NIL;
 
@@ -132,6 +137,8 @@ namespace cbpp::cdf {
         ETextError ProcessChar(int iChar);
         ETextError ProcessNumber();
         ETextError ProcessName();
+
+        ETextError CheckScobes(int iChar);
         
         public:
             CTextParser() = default;
@@ -163,6 +170,19 @@ namespace cbpp::cdf {
             size_t FormatError(ETextError iCode, char* sBuffer, size_t iBufferLn);
 
             ~CTextParser();
+    };
+
+    class CTextWriter {
+        CObject m_pRootObject = cdf::NIL;
+
+        public:
+            CTextWriter() = default;
+            ~CTextWriter() = default;
+
+            void SetObject(CObject pObj);
+
+            size_t WriteToBuffer(char* sBuffer, size_t iBufferLn, bool bPrettify = true);
+            size_t WriteToFile(const char* sPath, bool bPrettify = true);
     };
 }
 

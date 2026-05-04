@@ -7,8 +7,7 @@ namespace cbpp::cdf {
     const char* StringError(ETextError iType) {
         switch(iType) {
             case ETextError::Ok:                return "Ok";
-            case ETextError::IllBlock:          return "Bad block";
-            case ETextError::IllArray:          return "Bad array";
+            case ETextError::ScobeMiss:         return "Scobes mismatch";
             case ETextError::StrayBlock:        return "Stray block";
             case ETextError::StrayArray:        return "Stray array";
             case ETextError::StrayIdentifier:   return "Stray identifier";
@@ -208,13 +207,13 @@ namespace cbpp::cdf {
 
         return ETextError::Ok;
     }
-
+    
     ETextError CTextParser::ParseName(int iChar) {
         m_sLexemBuffer.Clear();
 
         m_sLexemBuffer.PushBack(iChar);
 
-        int iCurrent;
+        volatile int iCurrent = 1;
         while(iCurrent != 0) {
             iCurrent = this->Peek();
 
@@ -241,7 +240,7 @@ namespace cbpp::cdf {
 
         bool bExpectEscape = false;
         
-        int iCurrent;
+        volatile int iCurrent = 1;
         while(iCurrent != 0) {
             iCurrent = this->Peek();
 
@@ -372,7 +371,7 @@ namespace cbpp::cdf {
         m_sLexemBuffer.Clear();
         m_sLexemBuffer.PushBack(iChar);
 
-        int iCurrent;
+        volatile int iCurrent = 1;
         while(iCurrent != 0) {
             iCurrent = this->Peek();
 
@@ -407,6 +406,31 @@ namespace cbpp::cdf {
         }
         
         return ETextError::UnexpectedEOF;
+    }
+
+    int GetOppositeScobe(int iScobe) {
+        switch(iScobe) {
+            case '{' : return '}';
+            case '[' : return ']';
+            case '}' : return '{';
+            case ']' : return '[';
+        }
+
+        return '\0';
+    }
+
+    ETextError CTextParser::CheckScobes(int iCurrent) {
+        if(m_aScobesStack.Length() == 0) {
+            return ETextError::ScobeMiss;
+        }
+
+        ScobeNode Node = m_aScobesStack.Head();
+        if( Node.iLevel != m_aStack.Length() || Node.iScobe != GetOppositeScobe(iCurrent) ) {
+            return ETextError::ScobeMiss;
+        }
+        m_aScobesStack.Pop();
+
+        return ETextError::Ok;
     }
 
     ETextError CTextParser::ProcessChar(int iCurrent) {
@@ -538,16 +562,20 @@ namespace cbpp::cdf {
             }
 
             m_aStack.Push(pDict);
+            m_aScobesStack.Push( {'{', m_aStack.Length()} );
             
             m_iPromise = EPromise::None;
-
+            
         } else if(iCurrent == '}' || iCurrent == ']') {                             // SCOPE CLOSING
             if(m_aStack.Length() <= 1) {
                 return ETextError::StackUnderflow;
             }
 
+            ETextError iRet = this->CheckScobes(iCurrent);
+            if(iRet != ETextError::Ok) { return iRet; }
+            
             m_aStack.Pop();
-
+            
         } else if(iCurrent == '[') {                                                // ARRAY OPENING
             if(m_iPromise == EPromise::None && !m_bInsideArray) {
                 return ETextError::StrayArray;
@@ -573,8 +601,9 @@ namespace cbpp::cdf {
             } else {
                 pHead.Push(pArr);
             }
-
+            
             m_aStack.Push(pArr);
+            m_aScobesStack.Push( {'[', m_aStack.Length()} );
 
             m_iPromise = EPromise::None;
 
@@ -732,9 +761,13 @@ namespace cbpp::cdf {
             if(iRet != ETextError::Ok) { return iRet; }
         }
         
+        if( m_aScobesStack.Length() != 0 ) {
+            return ETextError::ScobeMiss;
+        }
+        
         return ETextError::Ok;
     }
-
+    
     size_t CTextParser::FormatError(ETextError iCode, char* sBuffer, size_t iBufferLn) {
         const char* sError = StringError(iCode);
         const char* sFileSrc;

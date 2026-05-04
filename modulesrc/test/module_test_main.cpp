@@ -10,18 +10,22 @@ extern "C" int cbpp_main(int argc, char** argv) {
     using namespace cbpp;
 
     char sBuffer[512];
-
     cdf::CTextParser test;
-    cdf::ETextError iCode = test.Parse("assets/test.cml");
 
-    if( iCode != cdf::ETextError::Ok ) {
-        test.FormatError(iCode, sBuffer, sizeof(sBuffer));
-        puts(sBuffer);
+    {
+        CbBenchmark();
+        
+        cdf::ETextError iCode = test.Parse("assets/test.cml");
 
-        return -1;
+        if( iCode != cdf::ETextError::Ok ) {
+            test.FormatError(iCode, sBuffer, sizeof(sBuffer));
+            puts(sBuffer);
+
+            return -1;
+        }
     }
 
-    cdf::PrintObject(test.Root());
+    /*cdf::PrintObject(test.Root());
 
     while(true) {
         printf("> ");
@@ -34,7 +38,7 @@ extern "C" int cbpp_main(int argc, char** argv) {
         } else {
             continue;
         }
-    }
+    }*/
 
     return 0;
 }
