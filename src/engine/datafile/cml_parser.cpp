@@ -4,59 +4,64 @@
 #include <stdio.h>
 
 namespace cbpp::cdf {
-    const char* StringError(ETextError iType) {
-        switch(iType) {
-            case ETextError::Ok:                return "Ok";
-            case ETextError::ScobeMiss:         return "Scobes mismatch";
-            case ETextError::StrayBlock:        return "Stray block";
-            case ETextError::StrayArray:        return "Stray array";
-            case ETextError::StrayIdentifier:   return "Stray identifier";
-            case ETextError::StrayNumber:       return "Stray number";
-            case ETextError::StrayString:       return "Stray string";
-            case ETextError::BadFileRef:        return "The referenced file could not be found";
-            case ETextError::BadNumber:         return "Not a number";
-            case ETextError::StackOverflow:     return "Stack overflow";
-            case ETextError::StackUnderflow:    return "Stack underflow";
-            case ETextError::NoFile:            return "Source file not found";
-            case ETextError::UnexpectedEOF:     return "Unexpected EOF";
-            case ETextError::VersionMismatch:   return "Source version is incompatible";
-            case ETextError::BadReference:      return "Non-string value is referenced";
-            case ETextError::BadVersion:        return "Bad version, must be a positive integer";
-            case ETextError::RefHugeFile:       return "The referenced file is too big";
-            case ETextError::BadNumberSuffix:   return "Bad number type suffix";
-            case ETextError::StrayKeyword:      return "Stray keyword";
-            case ETextError::BadInheritance:    return "Only tables can inherit, and only from tables";
-            case ETextError::ParentNotFound:    return "Parent object not found";
-            case ETextError::OverrideTypeMix:   return "Can`t overwrite values of different types";
+    static const char* g_aErrorTexts[] = {
+        "Ok",
 
-            default:                            return "(null)";
-        }
+        "Stray identifier",
+        "Stray number",
+        "Stray keyword",
+        "Stray string",
+        "Stray table",
+        "Stray array",
+        "Braces mismatch",
+
+        "Undefined file reference",
+        "A non-string value is marked as reference",
+        "Concat not is a table, or not from a table",
+        "Can`t find concat source",
+        "Can`t override value of different type",
+
+        "Not a number",
+        "Source file not found",
+        "Unexpected EOF",
+        "Source file version is incompatible",
+        "Bad version value",
+        "Undefined escape character",
+        "Undefined number type suffix",
+
+        "Stack overflow",
+        "Stack underflow",
+        "Referenced file size exceeds the limit"
+    };
+
+    static const char* g_aPathErrorTexts[] = {
+        "Ok",
+        "Entry not found",
+        "Indexing a table",
+        "Accessing an array with '.'",
+        "Bad array index",
+        "Bad name separator"
+    };
+
+    static const char* g_aClassNames[] = {
+        "Table",
+        "Array",
+        "Binary",
+        "Integer",
+        "Float",
+        "String"
+    };
+
+    const char* StringError(ETextError iType) {
+        return g_aErrorTexts[(size_t)iType];
     }
 
     const char* StringError(EPathError iType) {
-        switch(iType) {
-            case EPathError::Ok:                return "Ok";
-            case EPathError::ObjIndex:          return "Indexing an object";
-            case EPathError::NotFound:          return "Entry not found";
-            case EPathError::ArrayAccess:       return "Accessing an array as a table";
-            case EPathError::BadIndex:          return "Bad array index";
-            case EPathError::BadSeparator:      return "Bad name separator";
-
-            default:                            return "(null)";
-        }
+        return g_aPathErrorTexts[(size_t)iType];
     }
 
     const char* ClassString(EObjectClass iClass) {
-        switch (iClass) {
-            case EObjectClass::Array:           return "Array";
-            case EObjectClass::Binary:          return "Binary";
-            case EObjectClass::Float:           return "Float";
-            case EObjectClass::Integer:         return "Integer";
-            case EObjectClass::Object:          return "Table";
-            case EObjectClass::String:          return "String";
-            
-            default:                            return "(null)";
-        }
+        return g_aClassNames[(size_t)iClass];
     }
 
     CTextParser::IncludeNode::~IncludeNode() {
@@ -99,7 +104,7 @@ namespace cbpp::cdf {
 
         return ETextError::Ok;
     }
-
+    
     int CTextParser::Peek() {
         if(m_aFilesStack.Length() == 0) {
             return 0;
@@ -109,7 +114,7 @@ namespace cbpp::cdf {
 
         int iChar = pFile->GetChar();
 
-        if(iChar == EOF) {      // this file is over, step out and resume    
+        if( pFile->IsEOF() ) {          // this file is over, step out and resume    
             m_iCol = 1;
             m_iLine = m_aFilesStack.Head().iLine;  
 

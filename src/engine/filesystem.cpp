@@ -169,4 +169,8 @@ namespace cbpp {
     int CFile::GetChar() const {
         return fgetc(m_hFile);
     }
+
+    bool CFile::IsEOF() const {
+        return feof(m_hFile) != 0;
+    }
 }

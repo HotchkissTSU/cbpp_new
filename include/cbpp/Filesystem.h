@@ -57,6 +57,7 @@ namespace cbpp {
             virtual size_t Read(size_t iCount, void* pBuffer) = 0;
             virtual size_t ReadAll(char* pBuff) const = 0;
             virtual int GetChar() const = 0;
+            virtual bool IsEOF() const = 0;
 
             virtual size_t Length() const = 0;
             virtual bool IsOpen() const = 0;

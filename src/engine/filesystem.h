@@ -28,6 +28,7 @@ namespace cbpp {
             size_t ReadAll(char* pBuff) const override;
 
             int GetChar() const override;
+            bool IsEOF() const override;
 
             bool IsOpen() const override;
 

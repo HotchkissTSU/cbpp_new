@@ -6,14 +6,17 @@
 
 namespace cbpp {
     CBenchmarker::CBenchmarker(const char* sFuncName) : m_sFuncName(sFuncName) {
-        m_iBegin = clock();
+        m_iCPUBeg = GetCPUTime();
+        m_iWallBeg = GetTime();
     }
 
     CBenchmarker::~CBenchmarker() {
-        clock_t iEnd = clock();
+        uint64_t iCPUEnd = GetCPUTime();
+        uint64_t iWallEnd = GetTime();
 
-        double fMS = (double)((1000.0 * (iEnd - m_iBegin)) / CLOCKS_PER_SEC);
+        double fMSCPU = (double)((iCPUEnd - m_iCPUBeg)/1000000.0);
+        double fMSWall = (double)((iWallEnd - m_iWallBeg)/1000000.0);
 
-        printf("Benchmark for %s: %.3fms\n", m_sFuncName, fMS);
+        printf("Benchmark for %s: CPU: %.3fms WALL: %.3fms\n", m_sFuncName, fMSCPU, fMSWall);
     }
 }
