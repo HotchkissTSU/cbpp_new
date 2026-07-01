@@ -10,16 +10,23 @@
 #include "cbpp/Math.h"
 #include "cbpp/String.h"
 #include "cbpp/Constants.h"
+#include "cbpp/Error.h"
 
 #ifdef CBPP_LINUX
     #include <unistd.h>
     #include <limits.h>
     #define cbpp_getcwd(_buff, _size) getcwd(_buff, _size)
+
+    #include <fcntl.h>
+    #include <sys/mman.h>
+    #include <sys/stat.h>
+    #include <unistd.h>
 #endif
 
 #ifdef CBPP_WINDOWS
     #include <direct.h>
     #include <windef.h>
+    #include <windows.h>
     #define cbpp_getcwd(_buff, _size) _getcwd(_buff, _size)
 #endif
 
@@ -92,6 +99,33 @@ namespace cbpp {
     }
 
     IFile* OpenFile(const char* sPath, const char* sModes) {
+        SFileInfo fileData = GetFileInfo(sPath);
+
+        if(!fileData.exists) { return NULL; }
+
+        if( fileData.fileClass == EFSClass::File ) { // First, we try opening a real file
+            CFile* pFile = New<CFile>();
+            if( !pFile->Open(sPath, sModes) ) {
+                Delete(pFile);
+                return NULL;
+            }
+
+            return (IFile*)pFile;
+
+        } else if( fileData.fileClass == EFSClass::VFile) { // no real file found, open the VFS`s one
+            CVFile* pFile = New<CVFile>();
+            if( !pFile->Open(sPath, sModes) ) {
+                Delete(pFile);
+                return NULL;
+            }
+
+            return (IFile*)pFile;
+        }
+
+        return NULL;
+    }
+
+    /*IFile* OpenFile(const char* sPath, const char* sModes) {
         CFile* pFile = New<CFile>();
         bool bOpen = pFile->Open(sPath, sModes);
 
@@ -103,26 +137,51 @@ namespace cbpp {
             Delete(pFile);
             return NULL;
         }
-    }
-
-    IFile* OpenAsset(const char* sPath, const char* sModes) {
-        char sBuffer[PATH_MAX];
-        ValidatePath(sPath, sBuffer, sizeof(sBuffer));
-
-        return OpenFile(sBuffer, sModes);
-    }
+    }*/
 
     void CloseFile(IFile* hFile) {
         if(hFile != NULL) {
             hFile->Close();
         }
     }
+
+    SFileInfo GetFileInfo(const char* sPath) {
+        return GetFileInfoP(sPath); // PLACEHOLDER
+    }
+
+    SFileInfo GetFileInfoP(const char* sPath) {
+        SFileInfo out = {};
+        out.exists = false;
+
+        #ifdef CBPP_WINDOWS
+            CBPP_NO_WINDOWS_ASSERT
+        #endif
+
+        #ifdef CBPP_LINUX
+            int iFD = open(sPath, O_RDONLY);
+            if(iFD < 0) {
+                return out;
+            }
+
+            struct stat fileInfo;
+            if( fstat(iFD, &fileInfo) < 0 ) {
+                return out;
+            }
+
+            out.exists = true;
+
+            out.byteSize = fileInfo.st_size;
+            out.fileClass = EFSClass::File;
+
+            if(iFD) { close(iFD); }
+        #endif
+
+        return out;
+    }
 }
 
 // CFile
 namespace cbpp {
-    FILE* CFile::Handle() { return m_hFile; }
-
     size_t CFile::Length() const {
         if(!IsOpen()) {
             return 0;
@@ -135,6 +194,18 @@ namespace cbpp {
         fseek(m_hFile, iOldPos, SEEK_SET);
 
         return iLength;
+    }
+
+    void CFile::Rewind() {
+        rewind(m_hFile);
+    }
+
+    size_t CFile::GetPos() const {
+        return ftell(m_hFile);
+    }
+
+    size_t CFile::SetPos(size_t iOffset, EFileSeek iStart) {
+        return fseek(m_hFile, iOffset, (int)iStart);
     }
 
     bool CFile::IsOpen() const {
@@ -170,7 +241,147 @@ namespace cbpp {
         return fgetc(m_hFile);
     }
 
+    void CFile::PutChar(int iChar) {
+        putc(iChar, m_hFile);
+    }
+
     bool CFile::IsEOF() const {
         return feof(m_hFile) != 0;
+    }
+}
+
+// CVFile
+
+namespace cbpp {
+    bool CVFile::Open(const char* sFullPath, const char* sModes) {
+        return false;
+    }
+
+    void CVFile::Close() {
+
+    }
+
+    size_t CVFile::Write(size_t iCount, const void* pData) {
+        return 0;
+    }
+
+    size_t CVFile::Read(size_t iCount, void* pBuffer) {
+        return 0;
+    }
+
+    size_t CVFile::ReadAll(char* pBuffer) const {
+        return 0;
+    }
+
+    int CVFile::GetChar() const {
+        return 67;
+    }
+
+    void CVFile::PutChar(int iChar) {
+
+    }
+
+    bool CVFile::IsEOF() const {
+        if( m_pBegin == NULL ) { return true; }
+        return m_iPointer > m_iSize;
+    }
+
+    void CVFile::Rewind() {
+        m_iPointer = 0;
+    }
+
+    size_t CVFile::Length() const {
+        return m_iSize;
+    }
+
+    bool CVFile::IsOpen() const {
+        return m_pBegin != NULL;
+    }
+
+    size_t CVFile::GetPos() const {
+        return m_iPointer;
+    }
+
+    size_t CVFile::SetPos(size_t iOffset, EFileSeek iStart) {
+        switch( iStart ) {
+            case EFileSeek::Start:      m_iPointer = iOffset; break;
+            case EFileSeek::Current:    m_iPointer += iOffset; break;
+            case EFileSeek::End:        m_iPointer = m_iSize - iOffset; break;
+        }
+
+        return m_iPointer;
+    }
+}
+
+// CVFileSystem
+
+namespace cbpp {
+    bool MountAssetPack(const char* sName, int32_t iPriority) {
+        
+
+        return true;
+    }
+}
+
+// CFileMap
+
+namespace cbpp {        
+    CFileMap* MapFile(const char* sPath, bool bAllowWriting) {
+        #ifdef CBPP_WINDOWS
+            CBPP_NO_WINDOWS_ASSERT
+        #endif
+
+        #ifdef CBPP_LINUX
+            int iFD = open(sPath, bAllowWriting ? O_RDWR : O_RDONLY);
+
+            if(iFD < 0) {
+                WriteLogf(ELogLevel::Error, "Can`t open '%s' for mapping", sPath);
+                return NULL;
+            }
+            
+            struct stat fileInfo;
+            if( fstat(iFD, &fileInfo) < 0 ) {
+                WriteLogf(ELogLevel::Error, "fstat() failed: %s", strerror(errno));
+                close(iFD);
+                return NULL;
+            }
+
+            void* pData = mmap(NULL, fileInfo.st_size, bAllowWriting ? (PROT_READ | PROT_WRITE) : PROT_READ, MAP_SHARED, iFD, 0);
+
+            CFileMap* pMap = New<CFileMap>();
+            pMap->m_iFD = iFD;
+            pMap->m_pData = pData;
+            pMap->m_iLength = fileInfo.st_size;
+
+            return pMap;
+        #endif
+    }
+
+    bool UnmapFile(CFileMap* pMap) {
+        Delete(pMap);
+    }
+
+    void CFileMap::Sync(bool bAsync) {
+        msync(m_pData, m_iLength, bAsync ? MS_ASYNC : MS_SYNC);
+    }
+
+    CFileMap::operator uint8_t* () {
+        return (uint8_t*)m_pData;
+    }
+
+    uint8_t* CFileMap::Data() {
+        return (uint8_t*)m_pData;
+    }
+
+    size_t CFileMap::Length() const {
+        return m_iLength;
+    }
+
+    CFileMap::~CFileMap() {
+        if(m_iFD > 0) {
+            msync(m_pData, m_iLength, MS_SYNC);
+            close(m_iFD);
+            munmap(m_pData, m_iLength);
+        }
     }
 }

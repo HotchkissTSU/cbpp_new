@@ -43,7 +43,6 @@ namespace cbpp {
 		const size_t iMemorySize = sizeof(T) * iCount;
 		T* pMemory = (T*) GetAllocatorData().fpMalloc( iMemorySize );
 
-        //CbAssertf(pMemory == NULL, "Allocation of size %zu has failed", iMemorySize);
         if(pMemory == NULL) {
             Throwf("Failed to allocate %zu bytes of heap memory", iMemorySize);
         }
@@ -71,7 +70,6 @@ namespace cbpp {
 		const size_t iMemorySize = sizeof(T) * iNewSize;
 		T* pTemp = (T*) GetAllocatorData().fpRealloc( pMemory, iMemorySize );
 
-        //CbAssertf(pTemp == NULL, "Reallocation of 0x%x to size %zu has failed", pMemory, iMemorySize);
         if(pTemp == NULL) {
             Throwf("Failed to reallocate 0x%X to the new size of %zu", pMemory, iMemorySize);
         }
@@ -114,6 +112,9 @@ namespace cbpp {
         }
         Free(pArray);
     }
+
+    // Get this system`s memory page size
+    size_t GetPageSize();
 }
 
 #endif

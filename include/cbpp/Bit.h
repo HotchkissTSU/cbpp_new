@@ -5,23 +5,21 @@
 #include <stdio.h>
 
 namespace cbpp {
-	template<typename INT_T> bool TestBitmask(INT_T word, INT_T bmask){
+    bool HasZeroBits(uint64_t iNum);
+
+	template <typename INT_T> bool TestBitmask(INT_T word, INT_T bmask){
 		return (word & bmask) == bmask;
 	}
 	
-	template<typename INT_T> uint8_t GetBit(INT_T word, uint16_t index){
+	template <typename INT_T> uint8_t GetBit(INT_T word, uint16_t index){
 		return (word & (1 << index)) >> index;
 	}
 	
-	template<typename INT_T> void SetBit(INT_T& word, uint16_t index, uint8_t bit){
-		if(bit) {	
-			word = word | (1 << index);
-		}else {
-			word = word & ~(1 << index);
-		}
+	template <typename INT_T> void SetBit(INT_T& word, uint16_t index, uint8_t bit){
+        word = bit ? (word | (1 << index)) : (word & ~(1 << index));
 	}
 
-	template<typename INT_T> void PrintBits(INT_T word) {
+	template <typename INT_T> void PrintBits(INT_T word) {
 		for(uint8_t i = 0; i < sizeof(word)*8; i++) {
 			if(i % 8 == 0) {
 				printf(" ");

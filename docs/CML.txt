@@ -1,7 +1,12 @@
-                               ++ CML ++
+                              ________  _____ 
+                             / ____/  |/  / / 
+                            / /   / /|_/ / /  
+                           / /___/ /  / / /___
+                           \____/_/  /_/_____/
+                   
                          CB++ Markdown Language
 
-A human-readable markdown language with an extremely simple syntax.
+A human-readable markup language with an extremely simple syntax.
 Current standart version: 100
 
 We have 7 supported types:
@@ -26,20 +31,24 @@ Here are some examples:
     > MyFloatExp 5e-2
     > MyString "Hello world!"
 
-    If a duplicated entry name is occured, and if the duplicate one has the same type,
+    If a duplicated entry name occurs, and if the duplicate one has the same type,
     then the old one is overriden. Arrays are concatenated in this case.
+
+    > MySickNCoolValue 0
+    > ...
+    > MySickNCoolValue 52   # <- there will be one integer of value 52
 
 2) Number type suffixes
 
-    You can type 'f' or 'i' after any number to force it`s type 
+    You can type 'f' or 'i' after any number to force its type 
     to float or integer accordingly.
-
-    > MyFlag true
 
 3) Boolean values
 
+    > MyFlag true
+
     There are 'true' and 'false' keywords, which will be parsed as
-    an integer with value either 1 or 0
+    an integer with value either 1 or 0.
 
 4) Defining a table
 
@@ -51,7 +60,7 @@ Here are some examples:
 
 5) Defining a list
 
-    > MyArray [
+    > MyList [
     >     1
     >     2
     >     "string!"
@@ -61,7 +70,7 @@ Here are some examples:
     > ]
 
     When describing list contents you only write values w/o their names.
-    These values can later be addressed by their indices.
+    These values can later be accessed by their indices.
 
 6) Comments
 
@@ -75,7 +84,6 @@ Here are some examples:
 
             \n  - newline
             \t  - tabulation
-            \'  - single quote
             \"  - double quote
             \\  - backslash
 
@@ -106,8 +114,9 @@ Here are some examples:
     8.2) include "path/to/file.cml"
 
         Allows you to include the specified file in the place of the keyword. The included file is
-        copy-pasted in the place of the include.
+        copy-pasted in the place of the keyword.
 
     8.3) concat "path.to.parent_table"
 
-        Allows you to copy-paste parent`s entries in the current table (only tables are supported as child and parent objects).
+        Copies parent`s entries in the current table (only tables are supported as child and parent objects).
+        Parent base values can later be overriden by redefining them in the child object after the keyword invocation.

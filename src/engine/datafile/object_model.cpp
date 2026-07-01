@@ -8,7 +8,7 @@
 // CObject
 
 namespace cbpp::cdf {
-    const CObject NIL = {};
+    static const char* g_sNullString = "(null)";
 
     CObject::CObject(int_t iValue) {
         *this = CreateObject(EObjectClass::Integer);
@@ -39,6 +39,7 @@ namespace cbpp::cdf {
 
     EObjectClass CObject::Class() const { return m_pObj->Class(); }
     size_t CObject::Length() const { return m_pObj->Length(); }
+    size_t CObject::Size() const { return m_pObj->Size(); }
 
     CObject& CObject::operator=(int_t iValue) { m_pObj->SetValue(iValue); return *this; }
     CObject& CObject::operator=(float_t fValue) { m_pObj->SetValue(fValue); return *this; }
@@ -52,6 +53,7 @@ namespace cbpp::cdf {
     void CObject::Push(const char* sName, CObject pObj) { m_pObj->PushValue(sName, pObj.GetPointer()); }
 
     const char* CObject::IndexName(size_t iIndex) const { return m_pObj->IndexName(iIndex); }
+    CObject CObject::Index(size_t iIndex) { return CObject( m_pObj->At(iIndex) ); }
 
     CObject::operator int_t() const { return m_pObj->AsInt(); }
     CObject::operator float_t() const { return m_pObj->AsFloat(); }
@@ -59,10 +61,14 @@ namespace cbpp::cdf {
     CObject::operator uint8_t*() { return m_pObj->AsBinary(); }
     CObject::operator bool() const { return (*this) != cdf::NIL; }
 
+    void CObject::Serialize(char* pBuffer) const { m_pObj->Serialize(pBuffer); }
+
     int_t CObject::AsInt() const { return m_pObj->AsInt(); }
     float_t CObject::AsFloat() const { return m_pObj->AsFloat(); }
     const char* CObject::AsString() const { return m_pObj->AsString(); }
     uint8_t* CObject::AsBinary() { return m_pObj->AsBinary(); }
+
+    void CObject::Merge(CObject pSource) { m_pObj->Merge(pSource); }
 
     #define OBJ_ADVANCE                                             \
         sName.PushBack('\0');                                       \
@@ -129,6 +135,57 @@ namespace cbpp::cdf {
     #undef OBJ_ADVANCE
 }
 
+// CNullObject
+
+namespace cbpp::cdf {
+    int_t CNullObject::AsInt() const {
+        return 0;
+    }
+
+    float_t CNullObject::AsFloat() const {
+        return 0.0f;
+    }
+
+    const char* CNullObject::AsString() const {
+        return s_sName;
+    }
+
+    uint8_t* CNullObject::AsBinary() {
+        return NULL;
+    }
+
+    void CNullObject::SetValue(int_t iData) {}
+
+    void CNullObject::SetValue(float_t fData) {}
+
+    void CNullObject::SetValue(const char* sData) {}
+
+    void CNullObject::SetValue(const uint8_t* pData, size_t iLength) {}
+
+    IObject* CNullObject::At(const char* sName) { return this; }
+
+    IObject* CNullObject::At(size_t iIndex) { return this; }
+
+    const char* CNullObject::IndexName(size_t iIndex) { return g_sNullString; }
+
+    void CNullObject::PushValue(IObject* pObj) { }
+
+    void CNullObject::PushValue(const char* sName, IObject* pObj) { }
+
+    EObjectClass CNullObject::Class() const { return EObjectClass::Nil; }
+
+    size_t CNullObject::Length() const { return 0; }
+
+    size_t CNullObject::Size() const { return 1; }
+
+    void CNullObject::Serialize(char* pBuffer) const { *pBuffer = 0; }
+
+    void CNullObject::Merge(CObject pSource) { }
+
+    CNullObject g_pNullObject;
+    const CObject NIL(&g_pNullObject);
+}
+
 // CIntObject
 
 namespace cbpp::cdf {
@@ -141,7 +198,7 @@ namespace cbpp::cdf {
     }
 
     const char* CIntObject::AsString() const {
-        return NULL;
+        return s_sName;
     }
 
     uint8_t* CIntObject::AsBinary() {
@@ -165,14 +222,14 @@ namespace cbpp::cdf {
     }
 
     IObject* CIntObject::At(const char*) {
-        return NULL;
+        return &g_pNullObject;
     }
 
     IObject* CIntObject::At(size_t) {
-        return NULL;
+        return &g_pNullObject;
     }
 
-    const char* CIntObject::IndexName(size_t iIndex) { return "(null)"; }
+    const char* CIntObject::IndexName(size_t iIndex) { return g_sNullString; }
 
     void CIntObject::PushValue(IObject* pObj) {}
     void CIntObject::PushValue(const char* sName, IObject* pObj) {}
@@ -183,6 +240,18 @@ namespace cbpp::cdf {
 
     size_t CIntObject::Length() const {
         return 0;
+    }
+
+    size_t CIntObject::Size() const {
+        return sizeof(m_iData);
+    }
+
+    void CIntObject::Serialize(char* pBuffer) const {
+        memcpy( pBuffer, &m_iData, sizeof(m_iData) );
+    }
+
+    void CIntObject::Merge(CObject pSource) {
+        m_iData = pSource.AsInt();
     }
 }
 
@@ -198,7 +267,7 @@ namespace cbpp::cdf {
     }
 
     const char* CBinaryObject::AsString() const {
-        return "<binary>";
+        return s_sName;
     }
 
     uint8_t* CBinaryObject::AsBinary() {
@@ -216,14 +285,14 @@ namespace cbpp::cdf {
     }
 
     IObject* CBinaryObject::At(const char*) {
-        return NULL;
+        return &g_pNullObject;
     }
 
     IObject* CBinaryObject::At(size_t) {
-        return NULL;
+        return &g_pNullObject;
     }
 
-    const char* CBinaryObject::IndexName(size_t iIndex) { return "(null)"; }
+    const char* CBinaryObject::IndexName(size_t iIndex) { return g_sNullString; }
 
     void CBinaryObject::PushValue(IObject* pObj) {}
     void CBinaryObject::PushValue(const char* sName, IObject* pObj) {}
@@ -234,6 +303,18 @@ namespace cbpp::cdf {
 
     size_t CBinaryObject::Length() const {
         return m_aData.Length();
+    }
+
+    size_t CBinaryObject::Size() const {
+        return m_aData.Length();
+    }
+
+    void CBinaryObject::Serialize(char* pBuffer) const {
+        memcpy( pBuffer, m_aData.Data(), m_aData.Length() );
+    }
+
+    void CBinaryObject::Merge(CObject pSource) {
+        m_aData.SetArray( pSource.AsBinary(), pSource.Length() );
     }
 }
 
@@ -249,7 +330,7 @@ namespace cbpp::cdf {
     }
 
     const char* CFloatObject::AsString() const {
-        return NULL;
+        return s_sName;
     }
 
     uint8_t* CFloatObject::AsBinary() {
@@ -273,14 +354,14 @@ namespace cbpp::cdf {
     }
 
     IObject* CFloatObject::At(const char*) {
-        return NULL;
+        return &g_pNullObject;
     }
 
     IObject* CFloatObject::At(size_t) {
-        return NULL;
+        return &g_pNullObject;
     }
 
-    const char* CFloatObject::IndexName(size_t iIndex) { return "(null)"; }
+    const char* CFloatObject::IndexName(size_t iIndex) { return g_sNullString; }
 
     void CFloatObject::PushValue(IObject* pObj) {}
     void CFloatObject::PushValue(const char* sName, IObject* pObj) {}
@@ -291,6 +372,18 @@ namespace cbpp::cdf {
 
     size_t CFloatObject::Length() const {
         return 0;
+    }
+
+    size_t CFloatObject::Size() const {
+        return sizeof(m_fData);
+    }
+
+    void CFloatObject::Serialize(char* pBuffer) const {
+        memcpy( pBuffer, &m_fData, sizeof(m_fData) );
+    }
+
+    void CFloatObject::Merge(CObject pSource) {
+        m_fData = pSource.AsFloat();
     }
 }
 
@@ -324,14 +417,14 @@ namespace cbpp::cdf {
     void CStringObject::SetValue(const uint8_t* pData, size_t iLength) {}
 
     IObject* CStringObject::At(const char*) {
-        return NULL;
+        return &g_pNullObject;
     }
 
     IObject* CStringObject::At(size_t) {
-        return NULL;
+        return &g_pNullObject;
     }
-
-    const char* CStringObject::IndexName(size_t iIndex) { return "(null)"; }
+    
+    const char* CStringObject::IndexName(size_t iIndex) { return g_sNullString; }
 
     void CStringObject::PushValue(IObject* pObj) {}
     void CStringObject::PushValue(const char* sName, IObject* pObj) {}
@@ -342,6 +435,18 @@ namespace cbpp::cdf {
 
     size_t CStringObject::Length() const {
         return m_sData.Length();
+    }
+
+    size_t CStringObject::Size() const {
+        return m_sData.Length() + 1;
+    }
+
+    void CStringObject::Serialize(char* pBuffer) const {
+        memcpy( pBuffer, m_sData.String(), m_sData.Length() + 1 );
+    }
+
+    void CStringObject::Merge(CObject pSource) {
+        m_sData.Set( pSource.AsString() );
     }
 }
 
@@ -357,7 +462,7 @@ namespace cbpp::cdf {
     }
 
     const char* CArrayObject::AsString() const {
-        return "<array>";
+        return s_sName;
     }
 
     uint8_t* CArrayObject::AsBinary() {
@@ -373,15 +478,15 @@ namespace cbpp::cdf {
     void CArrayObject::SetValue(const uint8_t* pData, size_t iLength) {}
 
     IObject* CArrayObject::At(const char*) {
-        return NULL;
+        return &g_pNullObject;
     }
 
     IObject* CArrayObject::At(size_t iIndex) {
-        if(iIndex >= m_pData.Length()) { return NULL; }
+        if(iIndex >= m_pData.Length()) { return &g_pNullObject; }
         return m_pData[iIndex];
     }
 
-    const char* CArrayObject::IndexName(size_t iIndex) { return "(null)"; }
+    const char* CArrayObject::IndexName(size_t iIndex) { return g_sNullString; }
 
     void CArrayObject::PushValue(IObject* pObj) {
         m_pData.PushBack(pObj);
@@ -399,9 +504,31 @@ namespace cbpp::cdf {
         return m_pData.Length();
     }
 
+    size_t CArrayObject::Size() const {
+        if(m_pData.Length() == 0) { return 0; }
+
+        const size_t iUnit = m_pData[0]->Size();
+        return m_pData.Length() * iUnit;
+    }
+
     CArrayObject::~CArrayObject() {
         for(size_t i = 0; i < m_pData.Length(); i++) {
             DeleteObject(m_pData[i]);
+        }
+    }
+
+    void CArrayObject::Serialize(char* pBuffer) const {
+        for(size_t i = 0; i < m_pData.Length(); i++) {
+            IObject* pCurrent = m_pData[i];
+
+            pCurrent->Serialize(pBuffer);
+            pBuffer += pCurrent->Size();
+        }
+    }
+
+    void CArrayObject::Merge(CObject pSource) {
+        for(size_t i = 0; i < pSource.Length(); i++) {
+            m_pData.PushBack( CopyObject(pSource[i]) );
         }
     }
 }
@@ -418,7 +545,7 @@ namespace cbpp::cdf {
     }
 
     const char* CDictObject::AsString() const {
-        return "<table>";
+        return s_sName;
     }
 
     uint8_t* CDictObject::AsBinary() {
@@ -435,17 +562,17 @@ namespace cbpp::cdf {
 
     IObject* CDictObject::At(const char* sName) {
         IObject** pObj = m_dTable.At(sName);
-        if(pObj == NULL) { return NULL; }
+        if(pObj == NULL) { return &g_pNullObject; }
         return *pObj;
     }
 
     IObject* CDictObject::At(size_t iIndex) {
-        if(iIndex >= m_dTable.Length()) { return NULL; }
+        if(iIndex >= m_dTable.Length()) { return &g_pNullObject; }
         return m_dTable.Index(iIndex);
     }
 
     const char* CDictObject::IndexName(size_t iIndex) {
-        if(iIndex >= m_dTable.Length()) { return "(null)"; }
+        if(iIndex >= m_dTable.Length()) { return g_sNullString; }
         return m_dTable.IndexKey(iIndex);
     }
 
@@ -463,9 +590,42 @@ namespace cbpp::cdf {
         return m_dTable.Length();
     }
 
+    size_t CDictObject::Size() const {
+        size_t iLen = 0;
+
+        for( size_t i = 0; i < m_dTable.Length(); i++ ) {
+            iLen += m_dTable.Index(i)->Size();
+        }
+
+        return iLen;
+    }
+
     CDictObject::~CDictObject() {
         for(size_t i = 0; i < m_dTable.Length(); i++) {
             DeleteObject(m_dTable.Index(i));
+        }
+    }
+
+    void CDictObject::Serialize(char* pBuffer) const {
+        for(size_t i = 0; i < m_dTable.Length(); i++) {
+            IObject* pCurrent = m_dTable.Index(i);
+
+            pCurrent->Serialize(pBuffer);
+            pBuffer += pCurrent->Size();
+        }
+    }
+
+    void CDictObject::Merge(CObject pSource) {
+        for(size_t i = 0; i < pSource.Length(); i++) {
+            const char* sCurrentName = pSource.IndexName(i);
+
+            IObject** pTest = m_dTable.At(sCurrentName);
+
+            if(pTest == NULL) {
+                m_dTable.Insert( sCurrentName, CopyObject(pSource[i]) );
+            } else {
+                (*pTest)->Merge(pSource[i]);
+            }
         }
     }
 }
@@ -493,6 +653,9 @@ namespace cbpp::cdf {
             case EObjectClass::String:
                 pObj = cbpp::New<CStringObject>(); break;
 
+            case EObjectClass::Nil:
+                return NIL;
+
             default:
                 CbAssertf(true, "Unknown object type (%i), update le enum", iClass);
         }
@@ -501,7 +664,7 @@ namespace cbpp::cdf {
     }
 
     void DeleteObject(CObject pObj) {
-        if( pObj.GetPointer() == NULL ) {
+        if( pObj == cdf::NIL ) {
             return;
         }
 

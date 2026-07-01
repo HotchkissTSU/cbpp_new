@@ -20,6 +20,8 @@ namespace cbpp::cdf {
             virtual const char* AsString() const = 0;
             virtual uint8_t* AsBinary() = 0;
 
+            virtual void Serialize(char*) const = 0;
+
             virtual void SetValue(int_t) = 0;
             virtual void SetValue(float_t) = 0;
             virtual void SetValue(const char*) = 0;
@@ -29,11 +31,16 @@ namespace cbpp::cdf {
             virtual void PushValue(const char*, IObject*) = 0;
 
             virtual size_t Length() const = 0;
+            virtual size_t Size() const = 0;
+
+            virtual void Merge(CObject) = 0;
 
             virtual ~IObject() = default;
     };
 
     class CBinaryObject final : public IObject {
+        constexpr static const char* s_sName = "<binary>";
+
         cbpp::CArray<uint8_t> m_aData;
 
         public:
@@ -46,6 +53,8 @@ namespace cbpp::cdf {
             void SetValue(float_t);
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
+
+            void Serialize(char*) const;
             
             IObject* At(const char*);
             IObject* At(size_t);
@@ -57,11 +66,16 @@ namespace cbpp::cdf {
             EObjectClass Class() const;
 
             size_t Length() const;
+            size_t Size() const;
+
+            void Merge(CObject);
 
             virtual ~CBinaryObject() override = default;
     };
 
     class CIntObject final : public IObject {
+        constexpr static const char* s_sName = "<integer>";
+
         int_t m_iData = 0;
 
         public:
@@ -75,6 +89,8 @@ namespace cbpp::cdf {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
+            void Serialize(char*) const;
+
             IObject* At(const char*);
             IObject* At(size_t);
             const char* IndexName(size_t);
@@ -85,11 +101,16 @@ namespace cbpp::cdf {
             EObjectClass Class() const;
 
             size_t Length() const;
+            size_t Size() const;
+
+            void Merge(CObject);
 
             virtual ~CIntObject() override = default;
     };
 
     class CFloatObject final : public IObject {
+        constexpr static const char* s_sName = "<float>";
+
         float_t m_fData = 0;
 
         public:
@@ -103,6 +124,8 @@ namespace cbpp::cdf {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
+            void Serialize(char*) const;
+
             IObject* At(const char*);
             IObject* At(size_t);
             const char* IndexName(size_t);
@@ -113,6 +136,9 @@ namespace cbpp::cdf {
             EObjectClass Class() const;
 
             size_t Length() const;
+            size_t Size() const;
+
+            void Merge(CObject);
 
             virtual ~CFloatObject() override = default;
     };
@@ -131,6 +157,8 @@ namespace cbpp::cdf {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
+            void Serialize(char*) const;
+
             IObject* At(const char*);
             IObject* At(size_t);
             const char* IndexName(size_t);
@@ -141,11 +169,16 @@ namespace cbpp::cdf {
             EObjectClass Class() const;
 
             size_t Length() const;
+            size_t Size() const;
+
+            void Merge(CObject);
 
             virtual ~CStringObject() override = default;
     };
 
     class CArrayObject final : public IObject {
+        constexpr static const char* s_sName = "<array>";
+
         cbpp::CArray<IObject*> m_pData;
 
         public:
@@ -159,6 +192,8 @@ namespace cbpp::cdf {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
+            void Serialize(char*) const;
+
             IObject* At(const char*);
             IObject* At(size_t);
             const char* IndexName(size_t);
@@ -169,11 +204,16 @@ namespace cbpp::cdf {
             EObjectClass Class() const;
 
             size_t Length() const;
+            size_t Size() const;
+
+            void Merge(CObject);
 
             virtual ~CArrayObject() override;
     };
 
     class CDictObject final : public IObject {
+        constexpr static const char* s_sName = "<table>";
+
         cbpp::CBinTable<cbpp::CString, IObject*> m_dTable;
 
         public:
@@ -187,6 +227,8 @@ namespace cbpp::cdf {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
+            void Serialize(char*) const;
+
             IObject* At(const char*);
             IObject* At(size_t);
             const char* IndexName(size_t);
@@ -197,8 +239,44 @@ namespace cbpp::cdf {
             EObjectClass Class() const;
 
             size_t Length() const;
+            size_t Size() const;
+
+            void Merge(CObject);
 
             virtual ~CDictObject() override;
+    };
+    
+    class CNullObject final : public IObject {
+        constexpr static const char* s_sName = "<NIL>";
+
+        public:
+            int_t AsInt() const;
+            float_t AsFloat() const;
+            const char* AsString() const;
+            uint8_t* AsBinary();
+
+            void SetValue(int_t);
+            void SetValue(float_t);
+            void SetValue(const char*);
+            void SetValue(const uint8_t*, size_t);
+
+            void Serialize(char*) const;
+
+            IObject* At(const char*);
+            IObject* At(size_t);
+            const char* IndexName(size_t);
+
+            void PushValue(IObject*);
+            void PushValue(const char*, IObject*);
+
+            EObjectClass Class() const;
+
+            size_t Length() const;
+            size_t Size() const;
+
+            void Merge(CObject);
+
+            virtual ~CNullObject() override = default;
     };
 }
 

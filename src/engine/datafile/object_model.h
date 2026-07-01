@@ -18,6 +18,7 @@ namespace cbpp::cdf {
     typedef float float_t;
 
     enum class EObjectClass {
+        Nil,
         Object,
         Array,
         Binary,
@@ -42,6 +43,12 @@ namespace cbpp::cdf {
 
     class CObject {
         non_thread_safe constexpr static EPathError s_iPathError = EPathError::Ok;
+
+        /*
+            CDF objects dont behave like RAII and only get deleted manually
+            or when the parent object gets deleted.
+        */
+
         friend EPathError GetPathAccessError();
 
         IObject* m_pObj = NULL;
@@ -58,7 +65,19 @@ namespace cbpp::cdf {
             IObject* GetPointer() const;
 
             EObjectClass Class() const;
+
+            /*
+                'Length' of the object:
+                Number of entries of an array or table, or
+                actual length of bytearray or string (excluding the null-terminator)
+            */
             size_t Length() const;
+
+            // Size of the object in bytes, if serialized
+            size_t Size() const;
+
+            // Dump object`s data to a buffer
+            void Serialize(char* pBuffer) const;
 
             bool operator==(const CObject& pOther) const;
             bool operator!=(const CObject& pOther) const;
@@ -73,6 +92,7 @@ namespace cbpp::cdf {
             CObject Access(const char* sPath);
 
             const char* IndexName(size_t iIndex) const;
+            CObject Index(size_t iIndex);
 
             void Push(CObject pObj);
             void Push(const char* sName, CObject pObj);
@@ -86,6 +106,8 @@ namespace cbpp::cdf {
             float_t AsFloat() const;
             const char* AsString() const;
             uint8_t* AsBinary();
+
+            void Merge(CObject);
 
             operator bool() const;
     };
@@ -103,7 +125,7 @@ namespace cbpp::cdf {
     CObject CreateObject(EObjectClass iClass);
 
     /*
-        Deallocate the given object
+        Deallocate the given object and all of it`s children
     */
     void DeleteObject(CObject pObj);
 
@@ -111,6 +133,8 @@ namespace cbpp::cdf {
         Get an independent copy of the given object
     */
     CObject CopyObject(CObject pObj);
+
+    CObject BinaryToObject(char* pBuffer, size_t iBufferLn);
 }
 
 #endif

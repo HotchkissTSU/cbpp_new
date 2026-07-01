@@ -7,6 +7,7 @@
 #include "cbpp/Filesystem.h"
 #include "cbpp/Array.h"
 #include "cbpp/Stack.h"
+#include "cbpp/String.h"
 
 #include "engine/datafile/object_model.h"
 
@@ -172,18 +173,8 @@ namespace cbpp::cdf {
             ~CTextParser();
     };
 
-    class CTextWriter {
-        CObject m_pRootObject = cdf::NIL;
-
-        public:
-            CTextWriter() = default;
-            ~CTextWriter() = default;
-
-            void SetObject(CObject pObj);
-
-            size_t WriteToBuffer(char* sBuffer, size_t iBufferLn, bool bPrettify = true);
-            size_t WriteToFile(const char* sPath, bool bPrettify = true);
-    };
+    size_t WriteObject(CObject pObj, char* sBuffer, size_t iBufferLen, bool bPretty = true);
+    size_t WriteObject(CObject pObj, const char* sPath, bool bPretty = true);
 }
 
 #endif

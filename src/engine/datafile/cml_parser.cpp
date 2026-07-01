@@ -17,7 +17,7 @@ namespace cbpp::cdf {
 
         "Undefined file reference",
         "A non-string value is marked as reference",
-        "Concat not is a table, or not from a table",
+        "Concat not in a table, or not from a table",
         "Can`t find concat source",
         "Can`t override value of different type",
 
@@ -509,7 +509,7 @@ namespace cbpp::cdf {
                     CObject pHead = m_aStack.Head();
                     CObject pTest = pHead[m_sCurrentName.String()];
 
-                    if(!m_bInsideArray && pTest != cdf::NIL) { // overwriting
+                    if(!m_bInsideArray && pTest != cdf::NIL) { // overriding
                         DeleteObject(pTest);
                     }
                     
@@ -810,5 +810,31 @@ namespace cbpp::cdf {
 
     CTextParser::~CTextParser() {
         DeleteObject(m_pRootObject);
+    }
+
+    // Writing functions
+
+    bool WriteChar(int iChar, void* pTarget, bool bIsFile) {
+        if(bIsFile) {
+            cbpp::IFile* pFile = (cbpp::IFile*)pTarget;
+
+            if(pFile->Write(1, &iChar) != 1) {
+                return false;
+            }
+
+            return true;
+        }
+
+        *(char*)(pTarget) = (char)iChar;
+        
+        return true;
+    }
+
+    size_t WriteObject(CObject pObj, char* sBuffer, size_t iBufferLen, bool bPretty) {
+        return 0;
+    }
+
+    size_t WriteObject(CObject pObj, const char* sPath, bool bPretty) {
+        return 0;
     }
 }

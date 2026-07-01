@@ -1,4 +1,9 @@
-                               ++ CDF ++
+                               __________  ______
+                              / ____/ __ \/ ____/
+                             / /   / / / / /_    
+                            / /___/ /_/ / __/    
+                            \____/_____/_/       
+                     
                             CB++ Data Files
 
 A binary datafile format, designed to provide more compact and optimized
