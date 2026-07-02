@@ -43,11 +43,10 @@ namespace cbpp {
             CBPP_PROTECTED_CLASS(IFile)
 
             virtual size_t Write(size_t iCount, const void* pData) = 0;
-
             virtual size_t Read(size_t iCount, void* pBuffer) = 0;
             virtual size_t ReadAll(char* pBuff) const = 0;
 
-            virtual int GetChar() const = 0;
+            virtual int GetChar() = 0;
             virtual void PutChar(int iChar) = 0;
             virtual bool IsEOF() const = 0;
             virtual void Rewind() = 0;
@@ -85,7 +84,7 @@ namespace cbpp {
 
     class CFileMap {
         friend CFileMap* MapFile(const char*, bool);
-        friend bool UnmapFile(CFileMap*);
+        friend void UnmapFile(CFileMap*);
 
         void* m_pData = NULL;
         size_t m_iLength = 0;          // user length
@@ -116,7 +115,7 @@ namespace cbpp {
     CFileMap* MapFile(const char* sPath, bool bAllowWriting = true);
 
     // Unmap a file
-    bool UnmapFile(CFileMap*);
+    void UnmapFile(CFileMap*);
 }
 
 #endif

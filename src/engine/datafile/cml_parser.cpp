@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#include "cbpp/Filesystem.h"
+
 namespace cbpp::cdf {
     static const char* g_aErrorTexts[] = {
         "Ok",
@@ -454,7 +456,9 @@ namespace cbpp::cdf {
             switch(m_iPromise) {
                 case EPromise::ParentPath: {
                     CObject pHead = m_aStack.Head();
-                    CObject pParent = m_pRootObject.Access(m_sLexemBuffer.Data());
+                    CPathAccess access = AccessObject(m_pRootObject, m_sLexemBuffer.Data());//m_pRootObject.Access(m_sLexemBuffer.Data());
+
+                    CObject pParent = access.Object();
 
                     if(pParent == cdf::NIL) {
                         return ETextError::ParentNotFound;
@@ -793,9 +797,9 @@ namespace cbpp::cdf {
         return m_pRootObject;
     }
 
-    CObject CTextParser::operator[](const char* sPath) {
-        if(m_pRootObject == cdf::NIL) { return cdf::NIL; }
-        return m_pRootObject.Access(sPath);
+    CPathAccess CTextParser::operator[](const char* sPath) {
+        if(m_pRootObject == cdf::NIL) { return CPathAccess(cdf::NIL, EPathError::NotFound); }
+        return AccessObject(m_pRootObject, sPath);
     }
 
     CTextParser& CTextParser::operator=(const CTextParser& Other) {

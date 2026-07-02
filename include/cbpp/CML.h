@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "cbpp/Filesystem.h"
 #include "cbpp/Array.h"
 #include "cbpp/Stack.h"
 #include "cbpp/String.h"
@@ -16,6 +15,10 @@
 #define CBPP_CML_MAX_REFFILE (64 * (1 << 20))       // File reference size limit, 64 MB by default
 
 #define CBPP_CML_STACK_LIMIT 128                    // Nesting depth limit
+
+namespace cbpp {
+    class IFile;
+}
 
 namespace cbpp::cdf {
     enum class ETextError : uint32_t {
@@ -164,7 +167,7 @@ namespace cbpp::cdf {
                 "obj.sub_obj.target",
                 "obj.sub_array[2]", etc
             */
-            CObject operator[](const char* sPath);
+            CPathAccess operator[](const char* sPath);
 
             EPathError GetPathError() const;
             

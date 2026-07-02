@@ -237,7 +237,7 @@ namespace cbpp {
         return fread(pBuffer, 1, iLength, m_hFile);
     }
 
-    int CFile::GetChar() const {
+    int CFile::GetChar() {
         return fgetc(m_hFile);
     }
 
@@ -253,32 +253,45 @@ namespace cbpp {
 // CVFile
 
 namespace cbpp {
-    bool CVFile::Open(const char* sFullPath, const char* sModes) {
-        return false;
-    }
-
-    void CVFile::Close() {
-
-    }
+    bool CVFile::Open(const char* sFullPath, const char* sModes) { return false; }
+    void CVFile::Close() {}
 
     size_t CVFile::Write(size_t iCount, const void* pData) {
-        return 0;
-    }
+        if( m_bReadOnly == true ) { return 0; }
+        if( this->IsEOF() ) { return 0; }
 
+        size_t iWrite = (m_iPointer + iCount < m_iSize) ? iCount : (m_iSize - m_iPointer);
+
+        memcpy( (char*)(m_pBegin) + m_iPointer, pData, iWrite );
+        m_iPointer += iWrite;
+
+        return iWrite;
+    }
+    
     size_t CVFile::Read(size_t iCount, void* pBuffer) {
-        return 0;
+        if(this->IsEOF()) { return 0; }
+
+        size_t iRead = (m_iPointer + iCount < m_iSize) ? iCount : (m_iSize - m_iPointer);
+
+        memcpy( pBuffer, (char*)(m_pBegin) + m_iPointer, iCount );
+        m_iPointer += iRead;
+
+        return iRead;
     }
 
     size_t CVFile::ReadAll(char* pBuffer) const {
-        return 0;
+        memcpy(pBuffer, m_pBegin, m_iSize);
+        return m_iSize;
     }
-
-    int CVFile::GetChar() const {
-        return 67;
+    
+    int CVFile::GetChar() {
+        if( this->IsEOF() ) { return -1; }
+        return *((char*)m_pBegin + (m_iPointer++));
     }
 
     void CVFile::PutChar(int iChar) {
-
+        if(this->IsEOF()) { return; }
+        *((char*)m_pBegin + (m_iPointer++)) = (char)(iChar);
     }
 
     bool CVFile::IsEOF() const {
@@ -335,7 +348,7 @@ namespace cbpp {
             int iFD = open(sPath, bAllowWriting ? O_RDWR : O_RDONLY);
 
             if(iFD < 0) {
-                WriteLogf(ELogLevel::Error, "Can`t open '%s' for mapping", sPath);
+                WriteLogf(ELogLevel::Error, "Can`t open '%s' for mapping (%s)", sPath, strerror(errno));
                 return NULL;
             }
             
@@ -357,7 +370,7 @@ namespace cbpp {
         #endif
     }
 
-    bool UnmapFile(CFileMap* pMap) {
+    void UnmapFile(CFileMap* pMap) {
         Delete(pMap);
     }
 
@@ -378,10 +391,12 @@ namespace cbpp {
     }
 
     CFileMap::~CFileMap() {
-        if(m_iFD > 0) {
-            msync(m_pData, m_iLength, MS_SYNC);
-            close(m_iFD);
-            munmap(m_pData, m_iLength);
-        }
+        #ifdef CBPP_LINUX
+            if(m_iFD > 0) {
+                msync(m_pData, m_iLength, MS_SYNC);
+                close(m_iFD);
+                munmap(m_pData, m_iLength);
+            }
+        #endif
     }
 }

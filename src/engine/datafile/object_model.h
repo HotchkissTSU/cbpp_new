@@ -40,12 +40,9 @@ namespace cbpp::cdf {
     };
 
     class IObject;
-
     class CObject {
-        non_thread_safe constexpr static EPathError s_iPathError = EPathError::Ok;
-
         /*
-            CDF objects dont behave like RAII and only get deleted manually
+            CDF objects don`t behave like RAII (eek!) and only get deleted manually
             or when the parent object gets deleted.
         */
 
@@ -89,7 +86,6 @@ namespace cbpp::cdf {
 
             CObject operator[](size_t iIndex);
             CObject operator[](const char* sName);
-            CObject Access(const char* sPath);
 
             const char* IndexName(size_t iIndex) const;
             CObject Index(size_t iIndex);
@@ -112,12 +108,25 @@ namespace cbpp::cdf {
             operator bool() const;
     };
 
-    EPathError GetPathAccessError();
-
-    void PrintObject(CObject pObj, size_t iDepth = 0);
-
     // Null value to signal errors
     extern const CObject NIL;
+
+    class CPathAccess {
+        EPathError m_iStatus = EPathError::Ok;
+        CObject m_pPathObj = cdf::NIL;
+
+        public:
+            CPathAccess( CObject, EPathError );
+
+            operator CObject() const;
+            CObject Object() const;
+            EPathError Status() const;
+    };
+
+    // Access a subobject using the path string
+    CPathAccess AccessObject(CObject pObj, const char* sPath);
+
+    void PrintObject(CObject pObj, size_t iDepth = 0);
 
     /*
         Create a new object of the given type

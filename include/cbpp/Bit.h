@@ -12,21 +12,20 @@ namespace cbpp {
 	}
 	
 	template <typename INT_T> uint8_t GetBit(INT_T word, uint16_t index){
-		return (word & (1 << index)) >> index;
+		return (word & ((INT_T)(1) << index)) >> index;
 	}
 	
 	template <typename INT_T> void SetBit(INT_T& word, uint16_t index, uint8_t bit){
-        word = bit ? (word | (1 << index)) : (word & ~(1 << index));
+        word = bit ? (word | ((INT_T)(1) << index)) : (word & ~((INT_T)(1) << index));
 	}
 
 	template <typename INT_T> void PrintBits(INT_T word) {
 		for(uint8_t i = 0; i < sizeof(word)*8; i++) {
 			if(i % 8 == 0) {
-				printf(" ");
+				putc(' ', stdout);
 			}
-			printf("%u", GetBit<INT_T>(word, 8-i-1));
+			printf("%u", GetBit<INT_T>(word, 8-i-1) ? 1 : 0 );
 		}
-		printf("\n");
 	}
 }
 

@@ -7,22 +7,24 @@
 #include "cbpp/Array.h"
 
 namespace cbpp {
-
     /*
         An array with occupation awareness - unlike 
         CArray, this one can have holes
     */
     template <typename value_t> class CStorage {
         enum class ENodeState {
-            Free = 1,               // free nodes are marked 0 to allow fast checks for free ones with ! operator
+            Free = 1,               // free nodes are marked 1 to allow fast checks for free ones with the ! operator
             Busy = 0
         };
 
-        struct Block {
-            uint64_t m_iMask = UINT64_MAX;
-            char m_aData[sizeof(uint64_t)*8*sizeof(value_t)];
+        constexpr static size_t s_iBlockSize = sizeof(uint64_t)*8*sizeof(value_t);
+        constexpr static size_t s_iBlockCapacity = sizeof(uint64_t)*8;
 
-            bool HasFreeSpace() { return !m_iMask; }
+        struct Block {
+            char m_aData[ s_iBlockSize ];
+            uint64_t m_iMask = UINT64_MAX;
+
+            bool HasFreeSpace() { return m_iMask != 0; }
 
             int FindFreeIndex() {
                 if( !this->HasFreeSpace() ) { return -1; }
@@ -36,13 +38,29 @@ namespace cbpp {
 
                 return -1;
             }
-
+            
             void SetIndexState(int iIndex, ENodeState iState) {
                 SetBit(m_iMask, iIndex, (bool)iState);
             }
 
+            ENodeState GetIndexState(int iIndex) {
+                return (ENodeState)(GetBit(m_iMask, iIndex));
+            }
+
             value_t* operator[](int iIndex) {
                 return (value_t*)(m_aData + iIndex*sizeof(value_t));
+            }
+
+            value_t* At(int iIndex) {
+                return (value_t*)(m_aData + iIndex*sizeof(value_t));
+            }
+
+            void DestroyIndex(int iIndex) {
+                if( this->GetIndexState(iIndex) == ENodeState::Free ) { return; }
+                value_t* pValue = this->At(iIndex);
+
+                pValue->~value_t();
+                memset(pValue, 0, sizeof(value_t));
             }
         };
 
@@ -64,13 +82,16 @@ namespace cbpp {
                     m_aBlocks.PushBack(Buff);
                 }
             }
-
-            value_t* Allocate() {
+            
+            template <typename... args_t> value_t* Allocate(args_t&&... Args) {
                 for(size_t i = 0; i < m_aBlocks.Length(); i++) {
                     Block& Current = m_aBlocks[i];
 
                     if(Current.HasFreeSpace()) {
                         int iIndex = Current.FindFreeIndex();
+                        Current.SetIndexState(iIndex, ENodeState::Busy);
+
+                        new(Current[iIndex]) value_t( std::forward<args_t>(Args)... );
 
                         return Current[iIndex];
 
@@ -79,13 +100,57 @@ namespace cbpp {
                     }
                 }
 
+                // no free space was found, push a new block
+
                 m_aBlocks.PushEmpty();
 
                 Block& Last = m_aBlocks.Last();
-                Last.m_iMask = (uint64_t)(-1) & (~-1); // set first index as occupied
+                Last.m_iMask = (uint64_t)-1;
+                SetBit(Last.m_iMask, 0, (int)ENodeState::Busy);
                 memset(Last.m_aData, 0, sizeof(Last.m_aData));
 
                 return Last[0];
+            }
+            
+            void Free(value_t* pData) {
+                if( (size_t)pData < (size_t)m_aBlocks.Data() ) { return; }      // pointer lays before the blocks array, definitely wrong one
+
+                size_t iOffset = (char*)(pData) - (char*)(m_aBlocks.Data());
+                size_t iBlockIndex = iOffset / sizeof(Block);
+
+                if( iBlockIndex >= m_aBlocks.Length() ) { return; } // outside of the scope
+
+                size_t iBlockOffset = iOffset - (iOffset / sizeof(Block));
+
+                if(iBlockOffset % sizeof(value_t) != 0) { return; }   // points inside a value
+
+                size_t iIndex = iBlockOffset / sizeof(value_t);
+
+                Block* pBlock = &m_aBlocks[iBlockIndex];
+                if( pBlock->GetIndexState(iIndex) == ENodeState::Free ) { return; } // the node is free
+
+                value_t* pValue = pBlock->At(iIndex);
+
+                pValue->~value_t();
+                pBlock->SetIndexState(iIndex, ENodeState::Free);
+            }
+            
+            void PrintInfo() {
+                printf("Storage with %d blocks:\n", m_aBlocks.Length());
+
+                for(size_t i = 0; i < m_aBlocks.Length(); i++) {
+                    Block& block = m_aBlocks[i];
+
+                    printf("\tBLOCK %d: [", i);
+
+                    for(size_t j = 0; j < sizeof(uint64_t)*8; j++) {
+                        putc((block.GetIndexState(j) == ENodeState::Busy) ? '#' : '-', stdout);
+                    }
+
+                    puts("]");
+                    PrintBits( block.m_iMask );
+                    putc('\n', stdout);
+                }
             }
     };
 }

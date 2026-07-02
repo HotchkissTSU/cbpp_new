@@ -28,7 +28,7 @@ namespace cbpp {
             size_t Read(size_t iCount, void* pData) override;
             size_t ReadAll(char* pBuff) const override;
 
-            int GetChar() const override;
+            int GetChar() override;
             void PutChar(int iChar) override;
             bool IsEOF() const override;
 
@@ -47,9 +47,12 @@ namespace cbpp {
         void* m_pBegin = NULL;
         size_t m_iSize = 0;
         size_t m_iPointer = 0;
+        bool m_bReadOnly = false;
 
         bool Open(const char* sFullPath, const char* sModes) override;
         void Close() override;
+
+        void SetReadonly(bool);
 
         public:
             size_t Write(size_t iCount, const void* pData) override;
@@ -60,7 +63,7 @@ namespace cbpp {
             // Read an entire file to the buffer
             size_t ReadAll(char* pBuff) const override;
 
-            int GetChar() const override;
+            int GetChar() override;
             void PutChar(int iChar) override;
             bool IsEOF() const override;
             void Rewind() override;

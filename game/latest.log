@@ -1,10 +1,34 @@
  == Log start == 
-[CBEP] cmd option '--game' (or '-g') requires an argument
-[CBEP] No gamefile is specified, assuming default ('default')
-Unable to open 'bin/default.so' as a shared library (Success)
+Can`t open 'assets/map_test.txt' for mapping
+Module 'bin/test.so' has finished with exit code 0
  == Log start == 
-[CBEP] No gamefile is specified, assuming default ('default')
-Unable to open 'bin/default.so' as a shared library (Success)
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
  == Log start == 
 Module 'bin/test.so' has finished with exit code 0
  == Log start == 
@@ -36,14 +60,36 @@ Module 'bin/test.so' has finished with exit code 0
  == Log start == 
 Module 'bin/test.so' has finished with exit code 0
  == Log start == 
-[CBEP] cmd option '--game' (or '-g') requires an argument
-[CBEP] No gamefile is specified, assuming default ('default')
-Unable to open 'bin/default.so' as a shared library (Success)
+Module 'bin/test.so' has finished with exit code 0
  == Log start == 
-Module 'bin/test.so' has finished with exit code -1
+Module 'bin/test.so' has finished with exit code 0
  == Log start == 
-Module 'bin/test.so' has finished with exit code -1
+Module 'bin/test.so' has finished with exit code 0
  == Log start == 
-Module 'bin/test.so' has finished with exit code -1
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
+ == Log start == 
+Module 'bin/test.so' has finished with exit code 0
  == Log start == 
 Module 'bin/test.so' has finished with exit code 0

@@ -69,73 +69,7 @@ namespace cbpp::cdf {
     uint8_t* CObject::AsBinary() { return m_pObj->AsBinary(); }
 
     void CObject::Merge(CObject pSource) { m_pObj->Merge(pSource); }
-
-    #define OBJ_ADVANCE                                             \
-        sName.PushBack('\0');                                       \
-        CObject pTest = pObject[(const char*)(sName.Data())];       \
-        sName.Clear();                                              \
-        if(pTest == cdf::NIL) { return cdf::NIL; }                  \
-        pObject = pTest;
-
-    CObject CObject::Access(const char* sPath) {
-        char* pCurrent = (char*)(sPath);
-
-        CObject pObject = *this;
-        cbpp::CArray<char> sName, sIndex;
-        
-        while(*pCurrent != '\0') {
-            if(*pCurrent == '/') { // separator
-                OBJ_ADVANCE
-
-            } else if(*pCurrent == '[') { // index access
-                OBJ_ADVANCE
-
-                pCurrent++;
-                while((*pCurrent != '\0') && (*pCurrent != ']')) {
-                    if(isdigit(*pCurrent)) {
-                        sIndex.PushBack(*pCurrent);
-                    } else {
-                        return cdf::NIL;
-                    }
-
-                    pCurrent++;
-                }
-                
-                sIndex.PushBack('\0');
-                int iIndex = atoi(sIndex.Data());
-                sIndex.Clear();
-
-                CObject pTestArr = pObject[iIndex];
-
-                if(pTestArr == cdf::NIL) { return cdf::NIL; }
-
-                pObject = pTestArr;
-
-            } else if( isalnum(*pCurrent) || *pCurrent == '_' ) {
-                if(sName.Length() == 0 && isdigit(*pCurrent)) { // name starts with a number
-                    return cdf::NIL;
-                }
-
-                sName.PushBack(*pCurrent);
-
-            } else {
-                return cdf::NIL;
-            }
-
-            pCurrent++;
-        }
-
-        if( sName.Length() > 0 ) {
-            OBJ_ADVANCE
-        }
-        
-        return pObject;
-    }
-
-    #undef OBJ_ADVANCE
 }
-
-// CNullObject
 
 namespace cbpp::cdf {
     int_t CNullObject::AsInt() const {
@@ -785,7 +719,22 @@ namespace cbpp::cdf {
         return cdf::NIL;
     }
 
-    EPathError GetPathAccessError() {
-        return CObject::s_iPathError;
+    CPathAccess::CPathAccess(CObject pObj, EPathError iStatus) : m_pPathObj(pObj), m_iStatus(iStatus) { }
+
+    CPathAccess::operator CObject() const {
+        return m_pPathObj;
+    }
+
+    CObject CPathAccess::Object() const {
+        return m_pPathObj;
+    }
+
+    EPathError CPathAccess::Status() const {
+        return m_iStatus;
+    }
+
+    CPathAccess AccessObject(CObject pObj, const char* sPath) {
+        CbAssert(true, "FEATURE NOT IMPLEMENTED");
+        return CPathAccess( cdf::NIL, EPathError::NotFound );
     }
 }

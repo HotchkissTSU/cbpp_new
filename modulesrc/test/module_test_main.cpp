@@ -3,6 +3,9 @@
 
 #include "cbpp/CML.h"
 #include "cbpp/Benchmark.h"
+#include "cbpp/Filesystem.h"
+
+#include "cbpp/Storage.h"
 
 extern "C" int cbpp_main(int argc, char** argv) {
     printf("Module EP!\n");
@@ -10,9 +13,9 @@ extern "C" int cbpp_main(int argc, char** argv) {
     using namespace cbpp;
 
     char sBuffer[512];
-    cdf::CTextParser test;
+    //cdf::CTextParser test;
 
-    {
+    /*{
         CbBenchmark();
         
         cdf::ETextError iCode = test.Parse("assets/test.cml");
@@ -23,7 +26,19 @@ extern "C" int cbpp_main(int argc, char** argv) {
 
             return -1;
         }
-    }
+    }*/
+
+    /*{
+        CbBenchmark();
+        
+        CFileMap* pMapTest = MapFile("assets/map_test_huge.txt", false);
+        if(pMapTest != NULL) {
+            for(int i = 0; i < 50; i++) {
+                printf("[%i] '%c'\n",i, pMapTest->Data()[i]);
+            }
+            UnmapFile(pMapTest);
+        }
+    }*/
 
     /*cdf::PrintObject(test.Root());
 
