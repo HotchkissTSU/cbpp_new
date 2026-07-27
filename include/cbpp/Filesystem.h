@@ -54,6 +54,8 @@ namespace cbpp {
             virtual size_t Length() const = 0;
             virtual bool IsOpen() const = 0;
 
+            virtual bool IsVirtual() const = 0;
+
             virtual size_t GetPos() const = 0;
             virtual size_t SetPos(size_t, EFileSeek) = 0;
     };
@@ -116,6 +118,8 @@ namespace cbpp {
 
     // Unmap a file
     void UnmapFile(CFileMap*);
+
+    bool MountAssetPack(const char* sName);
 }
 
 #endif

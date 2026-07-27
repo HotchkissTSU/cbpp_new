@@ -248,6 +248,10 @@ namespace cbpp {
     bool CFile::IsEOF() const {
         return feof(m_hFile) != 0;
     }
+
+    bool CFile::IsVirtual() const {
+        return false;
+    }
 }
 
 // CVFile
@@ -285,7 +289,7 @@ namespace cbpp {
     }
     
     int CVFile::GetChar() {
-        if( this->IsEOF() ) { return -1; }
+        if( this->IsEOF() ) { return EOF; }
         return *((char*)m_pBegin + (m_iPointer++));
     }
 
@@ -324,12 +328,25 @@ namespace cbpp {
 
         return m_iPointer;
     }
+
+    bool CVFile::IsVirtual() const { return true; }
+
+    void CVFile::SetReadonly(bool bReadonly) {
+        m_bReadOnly = bReadonly;
+    }
+
+    void CVFile::SetBaseAddress(void* pAddr) {
+        m_pBegin = pAddr;
+    }
 }
 
 // CVFileSystem
 
 namespace cbpp {
-    bool MountAssetPack(const char* sName, int32_t iPriority) {
+    CFileWrapper::CFileWrapper(CVFile* pFile) : m_pFile(pFile) {}
+    CFileWrapper::~CFileWrapper() { CloseFile(m_pFile); }
+
+    bool MountAssetPack(const char* sName) {
         
 
         return true;

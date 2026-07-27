@@ -9,6 +9,7 @@
 #include "cbpp/Filesystem.h"
 #include "cbpp/Array.h"
 #include "cbpp/Table.h"
+#include "cbpp/Storage.h"
 
 namespace cbpp {
     // File from OS disk
@@ -37,10 +38,11 @@ namespace cbpp {
             size_t SetPos(size_t iOffset, EFileSeek iStart) override;
 
             bool IsOpen() const override;
+            bool IsVirtual() const override;
     };
 
     // File from the VFS
-    class CVFile : public IFile {
+    class CVFile final : public IFile {
         friend IFile* OpenFile(const char*, const char*);
         friend void CloseFile(IFile*);
 
@@ -53,14 +55,12 @@ namespace cbpp {
         void Close() override;
 
         void SetReadonly(bool);
+        void SetBaseAddress(void*);
 
         public:
             size_t Write(size_t iCount, const void* pData) override;
-
-            // Attempt to read N bytes from the file. Returns the amount read successfully
             size_t Read(size_t iCount, void* pBuffer) override;
 
-            // Read an entire file to the buffer
             size_t ReadAll(char* pBuff) const override;
 
             int GetChar() override;
@@ -73,16 +73,42 @@ namespace cbpp {
 
             size_t GetPos() const override;
             size_t SetPos(size_t iOffset, EFileSeek iStart) override;
+
+            bool IsVirtual() const override;
+    };
+
+    /*
+        RAII can easily be turned on this way, but can not be disabled by any comprehensive means.
+        So file handles are RAII-free by default.
+    */
+    class CFileWrapper {
+        CVFile* m_pFile = NULL;
+
+        public:
+            CFileWrapper(CVFile* pFile);
+            ~CFileWrapper();
     };
 
     class CVFileSystem {
         friend bool MountAssetPack(const char* sName, int32_t iPriority);
 
+        CStorage<CFileWrapper> m_aFiles;
+        CArray<CFileMap*> m_aMaps;
+
         public:
             SFileInfo GetFileInfo(const char* sPath) const;
+
+            /*
+                Open a virtual file.
+                Note that if this file`s asset pack is mapped as read-only, file also will be so
+            */
+            IFile* OpenFile(const char* sPath, const char* sModes);
+
+            void CloseFile(IFile* pFile);
     };
 
-    bool MountAssetPack(const char* sName, int32_t iPriority = -1);
+    // Get a virtual file system handler
+    CVFileSystem* GetVFS();
 }
 
 #endif
