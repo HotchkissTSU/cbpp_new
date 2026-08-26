@@ -1,0 +1,32 @@
+#!/bin/sh
+
+NAME="libbitum.so"
+
+CC="g++"
+CC_ARGS="-std=c++17 -O2 -fno-exceptions -fPIC"
+LD_ARGS="-shared"
+
+FILES=$(find . -maxdepth 1 -name "*.cpp")
+
+mkdir -p ./.obj
+rm ./.obj/*
+
+for FILE in $FILES; do
+	$CC $CC_FLAGS -c "$FILE" -o "./.obj/$FILE.o" -I"../../include" -I"../../hotchlib/include"
+
+	if [ $? -ne 0 ]; then
+        echo "Compilation failed"
+        exit 1
+    fi	
+done
+
+rm -r ./.obj
+
+mkdir -p ./out
+
+$CC $LD_ARGS $(find ./.obj -maxdepth 1 -name "*.o") -o "./out/$NAME"
+
+if [ $? -ne 0 ]; then
+	echo "Linking failed"
+	exit 1
+fi

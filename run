@@ -1,4 +1,0 @@
-#!/bin/sh
-
-cd game
-./cbep -g $1

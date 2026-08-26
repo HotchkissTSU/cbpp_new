@@ -1,7 +1,0 @@
-Images:
-    - JPEG baseline & progressive (12 bpc/arithmetic not supported, same as stock IJG lib)          read / write
-    - PNG 1/2/4/8/16-bit-per-channel                                                                read / write
-    - TGA (not sure what subset, if a subset)                                                       read / write
-    - BMP non-1bpp, non-RLE                                                                         read / write
-
-    - PNM (PPM and PGM binary only)                                                                 read only
